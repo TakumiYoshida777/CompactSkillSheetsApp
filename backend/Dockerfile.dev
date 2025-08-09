@@ -1,0 +1,21 @@
+# backend/Dockerfile.dev
+FROM node:20-alpine
+
+WORKDIR /app
+
+# package.jsonをコピー
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# 依存関係をインストール
+RUN npm ci || npm install
+
+# Prismaクライアント生成
+RUN npx prisma generate
+
+# ソースコードをコピー
+COPY . .
+
+# 開発サーバー起動
+EXPOSE 8000 9229
+CMD ["npm", "run", "dev"]

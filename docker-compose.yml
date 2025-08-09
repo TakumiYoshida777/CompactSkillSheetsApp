@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  # フロントエンド（React）
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000/api/v1
+      - VITE_WS_URL=ws://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - skillsheet-network
+
+  # バックエンド（Node.js）
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+      - "9229:9229"  # デバッガー用
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://skillsheet:password@postgres:5432/skillsheet_dev
+      - REDIS_URL=redis://redis:6379
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - JWT_SECRET=dev-jwt-secret-change-in-production
+      - JWT_EXPIRES_IN=7d
+      - CORS_ORIGIN=http://localhost:3000
+      - LOG_LEVEL=debug
+      - PORT=8000
+    depends_on:
+      - postgres
+      - redis
+      - elasticsearch
+    networks:
+      - skillsheet-network
+
+  # PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: skillsheet-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=skillsheet
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=skillsheet_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - skillsheet-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skillsheet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: skillsheet-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - skillsheet-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Elasticsearch
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: skillsheet-elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - skillsheet-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  skillsheet-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  es_data:

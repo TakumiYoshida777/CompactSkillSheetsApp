@@ -1,0 +1,917 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 企業
+model Company {
+  id             BigInt    @id @default(autoincrement())
+  companyType    CompanyType
+  name           String    @db.VarChar(255)
+  emailDomain    String?   @db.VarChar(255)
+  address        String?   @db.Text
+  phone          String?   @db.VarChar(20)
+  websiteUrl     String?   @db.VarChar(500)
+  contactEmail   String?   @db.VarChar(255)
+  maxEngineers   Int       @default(6000)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  users           User[]
+  engineers       Engineer[]
+  sesPartners     BusinessPartner[] @relation("SESCompany")
+  clientPartners  BusinessPartner[] @relation("ClientCompany")
+  emailTemplates  EmailTemplate[]
+  sentApproaches  Approach[] @relation("FromCompany")
+  receivedApproaches Approach[] @relation("ToCompany")
+  exclusions      Exclusion[]
+  targetExclusions Exclusion[] @relation("TargetCompany")
+  contracts       Contract[]
+  usageLogs       UsageLog[]
+  accountLocks    AccountLock[]
+  adminLogs       AdminLog[]
+
+  @@map("companies")
+}
+
+// ユーザー
+model User {
+  id                  BigInt    @id @default(autoincrement())
+  companyId           BigInt?
+  email               String    @unique @db.VarChar(255)
+  personalEmail       String?   @db.VarChar(255)
+  passwordHash        String    @db.VarChar(255)
+  name                String    @db.VarChar(100)
+  phone               String?   @db.VarChar(20)
+  lastLoginAt         DateTime?
+  failedLoginCount    Int       @default(0)
+  accountLockedUntil  DateTime?
+  passwordChangedAt   DateTime  @default(now())
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  company         Company?      @relation(fields: [companyId], references: [id])
+  userRoles       UserRole[]
+  engineer        Engineer?
+  sentApproaches  Approach[]
+  excludedBy      Exclusion[]
+  accountLocks    AccountLock[]
+  targetAdminLogs AdminLog[]
+
+  @@index([companyId])
+  @@index([isActive])
+  @@map("users")
+}
+
+// ロール
+model Role {
+  id          BigInt    @id @default(autoincrement())
+  name        String    @unique @db.VarChar(50)
+  displayName String    @db.VarChar(100)
+  description String?   @db.Text
+  isSystem    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  userRoles        UserRole[]
+  rolePermissions  RolePermission[]
+
+  @@map("roles")
+}
+
+// ユーザーロール
+model UserRole {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt
+  roleId    BigInt
+  grantedBy BigInt
+  createdAt DateTime @default(now())
+
+  user    User @relation(fields: [userId], references: [id])
+  role    Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// 権限
+model Permission {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique @db.VarChar(100)
+  displayName String   @db.VarChar(100)
+  resource    String   @db.VarChar(50)
+  action      String   @db.VarChar(50)
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+// ロール権限
+model RolePermission {
+  id           BigInt   @id @default(autoincrement())
+  roleId       BigInt
+  permissionId BigInt
+  createdAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// エンジニア
+model Engineer {
+  id              BigInt         @id @default(autoincrement())
+  userId          BigInt?        @unique
+  companyId       BigInt?
+  employeeNumber  String?        @db.VarChar(50)
+  name            String         @db.VarChar(100)
+  nameKana        String?        @db.VarChar(100)
+  email           String         @db.VarChar(255)
+  phone           String?        @db.VarChar(20)
+  birthDate       DateTime?      @db.Date
+  gender          Gender?
+  nearestStation  String?        @db.VarChar(100)
+  githubUrl       String?        @db.VarChar(500)
+  engineerType    EngineerType
+  currentStatus   EngineerStatus @default(WORKING)
+  availableDate   DateTime?      @db.Date
+  isPublic        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  user             User?              @relation(fields: [userId], references: [id])
+  company          Company?           @relation(fields: [companyId], references: [id])
+  skillSheet       SkillSheet?
+  freelancer       Freelancer?
+  engineerProjects EngineerProject[]
+  targetExclusions Exclusion[]
+
+  @@index([companyId])
+  @@index([currentStatus])
+  @@index([engineerType])
+  @@index([isPublic])
+  @@index([availableDate])
+  @@map("engineers")
+}
+
+// スキルシート
+model SkillSheet {
+  id                    BigInt    @id @default(autoincrement())
+  engineerId            BigInt    @unique
+  summary               String?   @db.Text
+  totalExperienceYears  Int?
+  programmingLanguages  Json?
+  frameworks            Json?
+  databases             Json?
+  cloudServices         Json?
+  tools                 Json?
+  certifications        Json?
+  possibleRoles         Json?
+  possiblePhases        Json?
+  educationBackground   Json?
+  careerSummary         String?   @db.Text
+  specialSkills         String?   @db.Text
+  isCompleted           Boolean   @default(false)
+  lastUpdatedBy         BigInt?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  engineer Engineer @relation(fields: [engineerId], references: [id])
+
+  @@map("skill_sheets")
+}
+
+// プロジェクト
+model Project {
+  id                     BigInt        @id @default(autoincrement())
+  name                   String        @db.VarChar(255)
+  clientCompany          String?       @db.VarChar(255)
+  startDate              DateTime      @db.Date
+  endDate                DateTime?     @db.Date
+  plannedEndDate         DateTime?     @db.Date
+  projectScale           ProjectScale?
+  industry               String?       @db.VarChar(100)
+  businessType           String?       @db.VarChar(100)
+  developmentMethodology String?       @db.VarChar(100)
+  teamSize               Int?
+  description            String?       @db.Text
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  engineerProjects EngineerProject[]
+
+  @@index([startDate, endDate])
+  @@index([plannedEndDate])
+  @@map("projects")
+}
+
+// エンジニアプロジェクト
+model EngineerProject {
+  id               BigInt    @id @default(autoincrement())
+  engineerId       BigInt
+  projectId        BigInt
+  role             String?   @db.VarChar(100)
+  responsibilities String?   @db.Text
+  phases           Json?
+  technologies     Json?
+  startDate        DateTime  @db.Date
+  endDate          DateTime? @db.Date
+  isCurrent        Boolean   @default(false)
+  achievements     String?   @db.Text
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  engineer Engineer @relation(fields: [engineerId], references: [id])
+  project  Project  @relation(fields: [projectId], references: [id])
+
+  @@index([engineerId])
+  @@index([isCurrent])
+  @@index([startDate, endDate])
+  @@map("engineer_projects")
+}
+
+// フリーランス
+model Freelancer {
+  id             BigInt       @id @default(autoincrement())
+  engineerId     BigInt       @unique
+  businessName   String?      @db.VarChar(255)
+  taxNumber      String?      @db.VarChar(50)
+  hourlyRateMin  Int?
+  hourlyRateMax  Int?
+  monthlyRateMin Int?
+  monthlyRateMax Int?
+  workStyle      WorkStyle    @default(HYBRID)
+  contractType   ContractType @default(CONTRACT)
+  isPublic       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  engineer  Engineer   @relation(fields: [engineerId], references: [id])
+  approaches Approach[]
+
+  @@map("freelancers")
+}
+
+// 取引先企業
+model BusinessPartner {
+  id              BigInt   @id @default(autoincrement())
+  sesCompanyId    BigInt
+  clientCompanyId BigInt
+  accessUrl       String   @unique @db.VarChar(500)
+  urlToken        String   @unique @db.VarChar(255)
+  isActive        Boolean  @default(true)
+  createdBy       BigInt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  sesCompany    Company @relation("SESCompany", fields: [sesCompanyId], references: [id])
+  clientCompany Company @relation("ClientCompany", fields: [clientCompanyId], references: [id])
+
+  @@map("business_partners")
+}
+
+// アプローチ履歴
+model Approach {
+  id              BigInt       @id @default(autoincrement())
+  fromCompanyId   BigInt
+  toCompanyId     BigInt?
+  toFreelancerId  BigInt?
+  approachType    ApproachType
+  contactMethods  Json?
+  targetEngineers Json?
+  projectDetails  String?      @db.Text
+  messageContent  String?      @db.Text
+  emailTemplateId BigInt?
+  status          ApproachStatus @default(SENT)
+  sentBy          BigInt
+  sentAt          DateTime
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  fromCompany    Company        @relation("FromCompany", fields: [fromCompanyId], references: [id])
+  toCompany      Company?       @relation("ToCompany", fields: [toCompanyId], references: [id])
+  toFreelancer   Freelancer?    @relation(fields: [toFreelancerId], references: [id])
+  emailTemplate  EmailTemplate? @relation(fields: [emailTemplateId], references: [id])
+  sentByUser     User           @relation(fields: [sentBy], references: [id])
+  emailLogs      EmailLog[]
+
+  @@index([fromCompanyId])
+  @@index([toCompanyId])
+  @@index([toFreelancerId])
+  @@index([sentAt])
+  @@index([approachType])
+  @@map("approaches")
+}
+
+// 除外設定
+model Exclusion {
+  id               BigInt        @id @default(autoincrement())
+  companyId        BigInt
+  targetCompanyId  BigInt?
+  targetEngineerId BigInt?
+  exclusionType    ExclusionType
+  reason           String?       @db.Text
+  excludedBy       BigInt
+  isActive         Boolean       @default(true)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  company        Company   @relation(fields: [companyId], references: [id])
+  targetCompany  Company?  @relation("TargetCompany", fields: [targetCompanyId], references: [id])
+  targetEngineer Engineer? @relation(fields: [targetEngineerId], references: [id])
+  excludedByUser User      @relation(fields: [excludedBy], references: [id])
+
+  @@map("exclusions")
+}
+
+// メールテンプレート
+model EmailTemplate {
+  id           BigInt       @id @default(autoincrement())
+  companyId    BigInt
+  templateType TemplateType
+  name         String       @db.VarChar(255)
+  subject      String       @db.VarChar(255)
+  body         String       @db.Text
+  senderName   String?      @db.VarChar(100)
+  senderEmail  String?      @db.VarChar(255)
+  isDefault    Boolean      @default(false)
+  isActive     Boolean      @default(true)
+  createdBy    BigInt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  company    Company    @relation(fields: [companyId], references: [id])
+  approaches Approach[]
+  emailLogs  EmailLog[]
+
+  @@map("email_templates")
+}
+
+// メール送信ログ
+model EmailLog {
+  id           BigInt      @id @default(autoincrement())
+  approachId   BigInt?
+  templateId   BigInt?
+  fromEmail    String      @db.VarChar(255)
+  toEmail      String      @db.VarChar(255)
+  subject      String      @db.VarChar(255)
+  body         String      @db.Text
+  status       EmailStatus @default(QUEUED)
+  errorMessage String?     @db.Text
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  approach      Approach?      @relation(fields: [approachId], references: [id])
+  emailTemplate EmailTemplate? @relation(fields: [templateId], references: [id])
+
+  @@map("email_logs")
+}
+
+// 管理者ユーザー
+model AdminUser {
+  id                  BigInt    @id @default(autoincrement())
+  username            String    @unique @db.VarChar(100)
+  email               String    @unique @db.VarChar(255)
+  passwordHash        String    @db.VarChar(255)
+  name                String    @db.VarChar(100)
+  department          String?   @db.VarChar(100)
+  phone               String?   @db.VarChar(20)
+  lastLoginAt         DateTime?
+  failedLoginCount    Int       @default(0)
+  accountLockedUntil  DateTime?
+  passwordChangedAt   DateTime  @default(now())
+  isActive            Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  adminUserRoles        AdminUserRole[]
+  createdContracts      Contract[]
+  updatedContracts      Contract[]        @relation("UpdatedContracts")
+  createdInvoices       Invoice[]
+  createdPayments       Payment[]
+  lockedAccounts        AccountLock[]     @relation("LockedBy")
+  unlockedAccounts      AccountLock[]     @relation("UnlockedBy")
+  adminLogs             AdminLog[]
+  maintenanceSchedules  MaintenanceSchedule[]
+  announcements         Announcement[]
+
+  @@index([isActive])
+  @@map("admin_users")
+}
+
+// 管理者ロール
+model AdminRole {
+  id          BigInt   @id @default(autoincrement())
+  name        String   @unique @db.VarChar(50)
+  displayName String   @db.VarChar(100)
+  description String?  @db.Text
+  permissions Json
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  adminUserRoles AdminUserRole[]
+
+  @@map("admin_roles")
+}
+
+// 管理者ユーザーロール
+model AdminUserRole {
+  id          BigInt   @id @default(autoincrement())
+  adminUserId BigInt
+  adminRoleId BigInt
+  grantedBy   BigInt
+  createdAt   DateTime @default(now())
+
+  adminUser AdminUser @relation(fields: [adminUserId], references: [id])
+  adminRole AdminRole @relation(fields: [adminRoleId], references: [id])
+
+  @@unique([adminUserId, adminRoleId])
+  @@map("admin_user_roles")
+}
+
+// 契約情報
+model Contract {
+  id                 BigInt         @id @default(autoincrement())
+  companyId          BigInt
+  contractPlanId     BigInt
+  contractNumber     String         @unique @db.VarChar(100)
+  contractStatus     ContractStatus @default(PENDING)
+  startDate          DateTime       @db.Date
+  endDate            DateTime?      @db.Date
+  billingCycle       BillingCycle   @default(MONTHLY)
+  billingAmount      Int
+  maxUsers           Int
+  maxEngineers       Int
+  contractOptions    Json?
+  salesRepresentative String?       @db.VarChar(100)
+  contractNotes      String?        @db.Text
+  createdBy          BigInt
+  updatedBy          BigInt?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  company      Company      @relation(fields: [companyId], references: [id])
+  contractPlan ContractPlan @relation(fields: [contractPlanId], references: [id])
+  creator      AdminUser    @relation(fields: [createdBy], references: [id])
+  updater      AdminUser?   @relation("UpdatedContracts", fields: [updatedBy], references: [id])
+  invoices     Invoice[]
+  usageLogs    UsageLog[]
+
+  @@index([companyId])
+  @@index([contractPlanId])
+  @@index([contractStatus])
+  @@index([startDate, endDate])
+  @@map("contracts")
+}
+
+// 契約プラン
+model ContractPlan {
+  id              BigInt   @id @default(autoincrement())
+  planName        String   @db.VarChar(100)
+  planCode        String   @unique @db.VarChar(50)
+  description     String?  @db.Text
+  basePrice       Int
+  pricePerUser    Int      @default(0)
+  pricePerEngineer Int     @default(0)
+  maxUsers        Int?
+  maxEngineers    Int?
+  features        Json
+  billingCycles   Json
+  isActive        Boolean  @default(true)
+  displayOrder    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  contracts Contract[]
+
+  @@map("contract_plans")
+}
+
+// 請求書
+model Invoice {
+  id                 BigInt        @id @default(autoincrement())
+  contractId         BigInt
+  invoiceNumber      String        @unique @db.VarChar(100)
+  billingPeriodStart DateTime      @db.Date
+  billingPeriodEnd   DateTime      @db.Date
+  issueDate          DateTime      @db.Date
+  dueDate            DateTime      @db.Date
+  subtotal           Int
+  taxAmount          Int
+  totalAmount        Int
+  invoiceStatus      InvoiceStatus @default(DRAFT)
+  usageDetails       Json?
+  notes              String?       @db.Text
+  createdBy          BigInt
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  contract  Contract  @relation(fields: [contractId], references: [id])
+  creator   AdminUser @relation(fields: [createdBy], references: [id])
+  payments  Payment[]
+
+  @@index([contractId])
+  @@index([invoiceStatus])
+  @@index([issueDate, dueDate])
+  @@map("invoices")
+}
+
+// 入金情報
+model Payment {
+  id              BigInt        @id @default(autoincrement())
+  invoiceId       BigInt
+  paymentDate     DateTime      @db.Date
+  paymentAmount   Int
+  paymentMethod   PaymentMethod
+  paymentReference String?      @db.VarChar(255)
+  bankName        String?       @db.VarChar(100)
+  notes           String?       @db.Text
+  createdBy       BigInt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  invoice Invoice   @relation(fields: [invoiceId], references: [id])
+  creator AdminUser @relation(fields: [createdBy], references: [id])
+
+  @@index([invoiceId])
+  @@index([paymentDate])
+  @@index([paymentMethod])
+  @@map("payments")
+}
+
+// 利用ログ
+model UsageLog {
+  id              BigInt   @id @default(autoincrement())
+  companyId       BigInt
+  contractId      BigInt
+  date            DateTime @db.Date
+  activeUsers     Int      @default(0)
+  totalEngineers  Int      @default(0)
+  activeEngineers Int      @default(0)
+  approachCount   Int      @default(0)
+  emailSentCount  Int      @default(0)
+  loginCount      Int      @default(0)
+  storageUsageMb  Int      @default(0)
+  apiCallCount    Int      @default(0)
+  featureUsage    Json?
+  createdAt       DateTime @default(now())
+
+  company  Company  @relation(fields: [companyId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id])
+
+  @@index([companyId, date])
+  @@index([contractId])
+  @@map("usage_logs")
+}
+
+// アカウントロック
+model AccountLock {
+  id                BigInt         @id @default(autoincrement())
+  userId            BigInt?
+  companyId         BigInt?
+  lockType          LockType
+  lockReason        LockReason
+  lockStatus        LockStatus     @default(ACTIVE)
+  lockedAt          DateTime
+  unlockScheduledAt DateTime?
+  unlockedAt        DateTime?
+  lockDetails       String?        @db.Text
+  lockedBy          BigInt
+  unlockedBy        BigInt?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  user       User?     @relation(fields: [userId], references: [id])
+  company    Company?  @relation(fields: [companyId], references: [id])
+  locker     AdminUser @relation("LockedBy", fields: [lockedBy], references: [id])
+  unlocker   AdminUser? @relation("UnlockedBy", fields: [unlockedBy], references: [id])
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([lockStatus])
+  @@index([lockType])
+  @@map("account_locks")
+}
+
+// 管理者ログ
+model AdminLog {
+  id                BigInt       @id @default(autoincrement())
+  adminUserId       BigInt
+  targetCompanyId   BigInt?
+  targetUserId      BigInt?
+  actionType        ActionType
+  resourceType      String       @db.VarChar(100)
+  resourceId        BigInt?
+  actionDescription String       @db.Text
+  beforeData        Json?
+  afterData         Json?
+  ipAddress         String?      @db.VarChar(45)
+  userAgent         String?      @db.Text
+  severity          LogSeverity  @default(INFO)
+  createdAt         DateTime     @default(now())
+
+  adminUser     AdminUser @relation(fields: [adminUserId], references: [id])
+  targetCompany Company?  @relation(fields: [targetCompanyId], references: [id])
+  targetUser    User?     @relation(fields: [targetUserId], references: [id])
+
+  @@index([adminUserId])
+  @@index([targetCompanyId])
+  @@index([resourceType, resourceId])
+  @@index([createdAt])
+  @@map("admin_logs")
+}
+
+// メンテナンス予定
+model MaintenanceSchedule {
+  id                BigInt           @id @default(autoincrement())
+  title             String           @db.VarChar(255)
+  description       String?          @db.Text
+  maintenanceType   MaintenanceType
+  scheduledStart    DateTime
+  scheduledEnd      DateTime
+  actualStart       DateTime?
+  actualEnd         DateTime?
+  status            MaintenanceStatus @default(SCHEDULED)
+  affectedServices  Json?
+  notificationSent  Boolean          @default(false)
+  createdBy         BigInt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  creator AdminUser @relation(fields: [createdBy], references: [id])
+
+  @@index([scheduledStart, scheduledEnd])
+  @@index([status])
+  @@map("maintenance_schedules")
+}
+
+// お知らせ
+model Announcement {
+  id              BigInt             @id @default(autoincrement())
+  title           String             @db.VarChar(255)
+  content         String             @db.Text
+  announcementType AnnouncementType  @default(INFO)
+  targetAudience  TargetAudience    @default(ALL)
+  targetCompanies Json?
+  priority        Priority          @default(NORMAL)
+  publishStart    DateTime
+  publishEnd      DateTime?
+  isPopup         Boolean           @default(false)
+  isEmail         Boolean           @default(false)
+  status          AnnouncementStatus @default(DRAFT)
+  createdBy       BigInt
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  creator AdminUser @relation(fields: [createdBy], references: [id])
+
+  @@index([publishStart, publishEnd])
+  @@index([status])
+  @@index([announcementType])
+  @@map("announcements")
+}
+
+// Enums
+enum CompanyType {
+  SES
+  CLIENT
+
+  @@map("company_type")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+
+  @@map("gender")
+}
+
+enum EngineerType {
+  EMPLOYEE
+  FREELANCE
+
+  @@map("engineer_type")
+}
+
+enum EngineerStatus {
+  WORKING
+  WAITING
+  WAITING_SOON
+
+  @@map("engineer_status")
+}
+
+enum ProjectScale {
+  SMALL
+  MEDIUM
+  LARGE
+
+  @@map("project_scale")
+}
+
+enum WorkStyle {
+  REMOTE
+  ONSITE
+  HYBRID
+
+  @@map("work_style")
+}
+
+enum ContractType {
+  CONTRACT
+  DISPATCH
+
+  @@map("contract_type")
+}
+
+enum ApproachType {
+  MANUAL
+  PERIODIC
+  ASSIGN_REQUEST
+
+  @@map("approach_type")
+}
+
+enum ApproachStatus {
+  SENT
+  OPENED
+  REPLIED
+  REJECTED
+
+  @@map("approach_status")
+}
+
+enum ExclusionType {
+  NG_ENGINEER
+  PERIODIC_EXCLUSION
+  MANUAL_EXCLUSION
+
+  @@map("exclusion_type")
+}
+
+enum TemplateType {
+  APPROACH
+  PERIODIC
+  FREELANCE_APPROACH
+
+  @@map("template_type")
+}
+
+enum EmailStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  BOUNCED
+
+  @@map("email_status")
+}
+
+enum ContractStatus {
+  ACTIVE
+  SUSPENDED
+  TERMINATED
+  PENDING
+
+  @@map("contract_status")
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+
+  @@map("billing_cycle")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  OVERDUE
+  CANCELLED
+
+  @@map("invoice_status")
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CREDIT_CARD
+  OTHER
+
+  @@map("payment_method")
+}
+
+enum LockType {
+  USER_LOCK
+  COMPANY_LOCK
+  SECURITY_LOCK
+
+  @@map("lock_type")
+}
+
+enum LockReason {
+  PAYMENT_OVERDUE
+  CONTRACT_VIOLATION
+  SECURITY_INCIDENT
+  MANUAL_LOCK
+
+  @@map("lock_reason")
+}
+
+enum LockStatus {
+  ACTIVE
+  RELEASED
+  EXPIRED
+
+  @@map("lock_status")
+}
+
+enum ActionType {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  LOCK
+  UNLOCK
+
+  @@map("action_type")
+}
+
+enum LogSeverity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+
+  @@map("log_severity")
+}
+
+enum MaintenanceType {
+  REGULAR
+  EMERGENCY
+  FEATURE_UPDATE
+  SECURITY_PATCH
+
+  @@map("maintenance_type")
+}
+
+enum MaintenanceStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+
+  @@map("maintenance_status")
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  MAINTENANCE
+  FEATURE
+  IMPORTANT
+
+  @@map("announcement_type")
+}
+
+enum TargetAudience {
+  ALL
+  SPECIFIC_COMPANIES
+  ADMIN_ONLY
+
+  @@map("target_audience")
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+
+  @@map("priority")
+}
+
+enum AnnouncementStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+
+  @@map("announcement_status")
+}

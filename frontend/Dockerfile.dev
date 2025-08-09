@@ -1,0 +1,17 @@
+# frontend/Dockerfile.dev
+FROM node:20-alpine
+
+WORKDIR /app
+
+# package.jsonをコピー
+COPY package*.json ./
+
+# 依存関係をインストール
+RUN npm ci || npm install
+
+# ソースコードをコピー
+COPY . .
+
+# 開発サーバー起動
+EXPOSE 3000
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
