@@ -15,9 +15,16 @@ const PORT = process.env.PORT || 8000;
 
 // ミドルウェアの設定
 app.use(helmet());
+
+// CORS設定（環境変数を優先）
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
+console.log('CORS Origin:', corsOrigin);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-  credentials: true
+  origin: corsOrigin,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(compression());
 app.use(morgan('dev'));
@@ -32,11 +39,26 @@ app.get('/health', (req, res) => {
 // APIルートのプレースホルダー
 app.get('/api/v1', (req, res) => {
   res.json({ 
-    message: 'CompactSkillSheetsApp API',
+    message: 'SkillSheetsMgmtAPp API',
     version: '1.0.0',
     endpoints: {
       health: '/health',
-      api: '/api/v1'
+      api: '/api/v1',
+      test: '/api/v1/test'
+    }
+  });
+});
+
+// テスト用エンドポイント
+app.post('/api/v1/test', (req, res) => {
+  const { message } = req.body;
+  res.json({
+    success: true,
+    echo: message || 'No message provided',
+    timestamp: new Date().toISOString(),
+    headers: {
+      origin: req.headers.origin,
+      contentType: req.headers['content-type']
     }
   });
 });

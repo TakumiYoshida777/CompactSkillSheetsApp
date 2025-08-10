@@ -1,4 +1,4 @@
-# CompactSkillSheetsApp - エンジニアスキルシート管理システム
+# SkillSheetsMgmtAPp - エンジニアスキルシート管理システム
 
 ## 概要
 SES企業向けの企業間エンジニア情報共有プラットフォーム
@@ -109,7 +109,7 @@ docker-compose logs -f [service-name]
 
 ### データベース接続
 ```bash
-docker exec -it compactskillsheetsapp-postgres-1 psql -U skillsheet -d skillsheet_dev
+docker exec -it SkillSheetsMgmtAPp-postgres-1 psql -U skillsheet -d skillsheet_dev
 ```
 
 ## Git運用ルール
