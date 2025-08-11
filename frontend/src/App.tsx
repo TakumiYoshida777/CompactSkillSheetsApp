@@ -8,9 +8,15 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import EngineerList from './pages/Engineers/EngineerList';
 import EngineerDetail from './pages/Engineers/EngineerDetail';
 import EngineerRegister from './pages/Engineers/EngineerRegister';
+import WaitingEngineers from './pages/Engineers/WaitingEngineers';
 import SkillSheetEdit from './pages/Engineer/SkillSheet';
 import SkillSheetPreview from './pages/Engineer/SkillSheetPreview';
 import EngineerDashboard from './pages/Engineer/Dashboard';
+import EngineerSearch from './pages/Search/EngineerSearch';
+import BusinessPartnerRegister from './pages/BusinessPartners/BusinessPartnerRegister';
+import BusinessPartnerList from './pages/BusinessPartners/BusinessPartnerList';
+import BusinessPartnerDetail from './pages/BusinessPartners/BusinessPartnerDetail';
+import ApproachHistory from './pages/Approaches/ApproachHistory';
 import UserProfile from './pages/Profile/UserProfile';
 // import ProjectList from './pages/Projects/ProjectList'; // 一時的にコメントアウト
 import './App.css';
@@ -36,7 +42,7 @@ function App() {
               <Route path="new" element={<EngineerRegister />} />
               <Route path="edit/:id" element={<div>エンジニア編集（開発中）</div>} />
               {/* 待機エンジニア管理（ダッシュボードの一部機能） */}
-              <Route path="waiting" element={<div>待機中エンジニア（開発中）</div>} />
+              <Route path="waiting" element={<WaitingEngineers />} />
             </Route>
             
             {/* スキルシート管理 */}
@@ -59,19 +65,21 @@ function App() {
             {/* アプローチ管理 */}
             <Route path="approaches">
               {/* APP001 - アプローチ履歴 */}
-              <Route path="history" element={<div>アプローチ履歴（開発中）</div>} />
+              <Route path="history" element={<ApproachHistory />} />
               {/* APP002 - アプローチ作成 */}
               <Route path="create" element={<div>アプローチ作成（開発中）</div>} />
             </Route>
             
-            {/* 取引先管理（一時的にコメントアウト） */}
-            {/* <Route path="business-partners">
-              <Route path="list" element={<div>取引先管理（開発中）</div>} />
-              <Route path=":id" element={<div>取引先詳細（開発中）</div>} />
-            </Route> */}
+            {/* 取引先管理 */}
+            <Route path="business-partners">
+              <Route path="list" element={<BusinessPartnerList />} />
+              <Route path=":id" element={<BusinessPartnerDetail />} />
+              <Route path="new" element={<BusinessPartnerRegister />} />
+              <Route path="edit/:id" element={<BusinessPartnerRegister />} />
+            </Route>
             
             {/* SRC001 - エンジニア検索 */}
-            <Route path="search" element={<div>エンジニア検索（開発中）</div>} />
+            <Route path="search" element={<EngineerSearch />} />
             
             {/* SET001 - 設定画面 */}
             <Route path="settings" element={<div>設定画面（開発中）</div>} />

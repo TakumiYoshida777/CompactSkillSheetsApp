@@ -94,18 +94,21 @@ const MainLayout: React.FC = () => {
         },
       ],
     },
-    // 取引先管理（一時的にコメントアウト）
-    // {
-    //   key: '/business-partners',
-    //   icon: <BankOutlined />,
-    //   label: '取引先管理',
-    //   children: [
-    //     {
-    //       key: '/business-partners/list',
-    //       label: '取引先一覧', // BIZ001
-    //     },
-    //   ],
-    // },
+    {
+      key: '/business-partners',
+      icon: <BankOutlined />,
+      label: '取引先管理',
+      children: [
+        {
+          key: '/business-partners/list',
+          label: '取引先一覧', // BIZ001
+        },
+        {
+          key: '/business-partners/new',
+          label: '取引先登録', // BIZ002
+        },
+      ],
+    },
     {
       key: '/search',
       icon: <SearchOutlined />,
