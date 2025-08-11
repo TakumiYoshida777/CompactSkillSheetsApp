@@ -7,7 +7,7 @@
 
 ---
 # **重要な制約**
-- **必須**必ず/Users/takumi/workspace/Project/CompactSkillSheetsApp/_Documentsディレクトリの中のファイル群を理解してから思考すること
+- **必須**必ずCompactSkillSheetsApp/_Documentsディレクトリの中のファイル群を理解してから思考すること
 - **必須**推測は禁止です。推測が必要な場合、_Documentsディレクトリを改めて全て理解した後、指示者に質問してください
 - **必須**決してuuidを使用しないこと
 - **必須**絶対にuuidは使用しないこと
@@ -208,16 +208,16 @@ PYTEST_DISABLE_PLUGIN_AUTOLOAD="" uv run --frozen pytest
 ## 8. エラー対応指針
 - **必須**本番で使えるコードを使って修正すること（一時対応などは絶対にしないでください）
 ### 8.1 調査手順
-1. `/Users/takumi/workspace/Project/CompactSkillSheetsApp/_Knowledge`ディレクトリの内容で解決可能か判断
+1. `CompactSkillSheetsApp/_Knowledge`ディレクトリの内容で解決可能か判断
 2. `backend/logs`の最新ファイルでエラーログ確認
 3. 根本的な解決方法を思考
    →クリティカルシンキングを用いる
 4. 実装方針を固める（影響範囲洗い出し）
 
 ### 8.2 ドキュメント管理(ナレッジ登録)
-- 問題記録: `/Users/takumi/workspace/Project/CompactSkillSheetsApp/_Features/Bug`ディレクトリ
+- 問題記録: `CompactSkillSheetsApp/_Features/Bug`ディレクトリ
 - 命名規則: `日付+適切なファイル名.md`
-- 解決後: `/Users/takumi/workspace/Project/CompactSkillSheetsApp/_Knowledge`ディレクトリに命名規則に沿ったファイル名で事象と根本的解決方法を記載
+- 解決後: `CompactSkillSheetsApp/_Knowledge`ディレクトリに命名規則に沿ったファイル名で事象と根本的解決方法を記載
 
 ---
 
