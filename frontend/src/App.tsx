@@ -9,6 +9,7 @@ import EngineerList from './pages/Engineers/EngineerList';
 import EngineerDetail from './pages/Engineers/EngineerDetail';
 import EngineerRegister from './pages/Engineers/EngineerRegister';
 import EngineerDashboard from './pages/Engineer/Dashboard';
+import UserProfile from './pages/Profile/UserProfile';
 // import ProjectList from './pages/Projects/ProjectList'; // 一時的にコメントアウト
 import './App.css';
 
@@ -72,6 +73,9 @@ function App() {
             
             {/* SET001 - 設定画面 */}
             <Route path="settings" element={<div>設定画面（開発中）</div>} />
+            
+            {/* プロフィール画面 */}
+            <Route path="profile" element={<UserProfile />} />
           </Route>
 
           {/* エンジニア個人用画面（専用レイアウト付き） */}

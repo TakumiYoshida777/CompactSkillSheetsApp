@@ -149,6 +149,12 @@ const MainLayout: React.FC = () => {
     if (e.key === 'logout') {
       // ログアウト処理
       console.log('Logout');
+    } else if (e.key === 'profile') {
+      // プロフィール画面へ遷移
+      navigate('/profile');
+    } else if (e.key === 'settings') {
+      // 個人設定画面へ遷移
+      navigate('/settings');
     }
   };
 
