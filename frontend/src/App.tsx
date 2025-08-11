@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ConfigProvider } from 'antd';
 import jaJP from 'antd/locale/ja_JP';
 import MainLayout from './layouts/MainLayout';
+import EngineerLayout from './layouts/EngineerLayout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import EngineerList from './pages/Engineers/EngineerList';
 import EngineerDetail from './pages/Engineers/EngineerDetail';
@@ -73,13 +74,17 @@ function App() {
             <Route path="settings" element={<div>設定画面（開発中）</div>} />
           </Route>
 
-          {/* エンジニア個人用画面 */}
-          <Route path="/engineer">
+          {/* エンジニア個人用画面（専用レイアウト付き） */}
+          <Route path="/engineer" element={<EngineerLayout />}>
+            <Route index element={<Navigate to="/engineer/dashboard" replace />} />
             <Route path="dashboard" element={<EngineerDashboard />} />
             <Route path="skill-sheet" element={<div>スキルシート編集（開発中）</div>} />
             <Route path="projects" element={<div>プロジェクト管理（開発中）</div>} />
             <Route path="profile" element={<div>プロフィール編集（開発中）</div>} />
             <Route path="availability" element={<div>稼働可能時期設定（開発中）</div>} />
+            <Route path="approaches" element={<div>アプローチ管理（開発中）</div>} />
+            <Route path="notifications" element={<div>通知一覧（開発中）</div>} />
+            <Route path="settings" element={<div>設定（開発中）</div>} />
           </Route>
         </Routes>
       </Router>
