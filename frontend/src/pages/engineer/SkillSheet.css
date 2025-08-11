@@ -1,0 +1,106 @@
+.skill-sheet-edit {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: calc(100vh - 112px);
+}
+
+.skill-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.skill-sheet-header h2 {
+  margin: 0;
+}
+
+.skill-sheet-card {
+  margin-bottom: 16px;
+  border-radius: 8px;
+}
+
+.skill-sheet-card .ant-card-head {
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.skill-row {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.skill-row:hover {
+  background: #f0f0f0;
+}
+
+.progress-card {
+  text-align: center;
+  position: sticky;
+  top: 24px;
+}
+
+.progress-card .ant-progress {
+  margin: 0 auto;
+}
+
+.skill-sheet-preview {
+  padding: 24px;
+  background: white;
+  border-radius: 8px;
+}
+
+.ant-tabs-tab {
+  font-size: 16px;
+}
+
+.ant-form-item-label > label {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.ant-collapse > .ant-collapse-item > .ant-collapse-header {
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.ant-rate {
+  color: #faad14;
+}
+
+.ant-input-number-suffix {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 992px) {
+  .skill-sheet-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .progress-card {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .skill-sheet-edit {
+    padding: 16px;
+  }
+  
+  .skill-sheet-header {
+    padding: 12px 16px;
+  }
+  
+  .skill-row {
+    padding: 8px;
+  }
+}

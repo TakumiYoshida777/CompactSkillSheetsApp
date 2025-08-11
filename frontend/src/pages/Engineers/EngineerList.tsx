@@ -1,0 +1,464 @@
+import React, { useState } from 'react';
+import {
+  Table,
+  Card,
+  Button,
+  Input,
+  Space,
+  Tag,
+  Avatar,
+  Dropdown,
+  Select,
+  DatePicker,
+  Row,
+  Col,
+  Badge,
+  Tooltip,
+} from 'antd';
+import {
+  SearchOutlined,
+  UserAddOutlined,
+  FilterOutlined,
+  DownloadOutlined,
+  MailOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  EyeOutlined,
+  MoreOutlined,
+  FileTextOutlined,
+  UserOutlined,
+  CalendarOutlined,
+} from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import type { MenuProps } from 'antd';
+
+const { Search } = Input;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+
+interface Engineer {
+  key: string;
+  engineerId: string;
+  name: string;
+  age: number;
+  skills: string[];
+  experience: number;
+  status: 'available' | 'assigned' | 'waiting' | 'leave';
+  currentProject?: string;
+  availableDate?: string;
+  lastUpdated: string;
+  unitPrice?: number;
+  email: string;
+  phone: string;
+}
+
+const EngineerList: React.FC = () => {
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [searchText, setSearchText] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+
+  // ダミーデータ
+  const engineers: Engineer[] = [
+    {
+      key: '1',
+      engineerId: 'ENG001',
+      name: '田中太郎',
+      age: 32,
+      skills: ['JavaScript', 'React', 'Node.js', 'TypeScript'],
+      experience: 8,
+      status: 'available',
+      availableDate: '2024/02/01',
+      lastUpdated: '2024/01/10',
+      unitPrice: 650000,
+      email: 'tanaka@example.com',
+      phone: '090-1234-5678',
+    },
+    {
+      key: '2',
+      engineerId: 'ENG002',
+      name: '佐藤花子',
+      age: 28,
+      skills: ['Python', 'Django', 'PostgreSQL', 'AWS'],
+      experience: 5,
+      status: 'assigned',
+      currentProject: 'ECサイトリニューアル',
+      lastUpdated: '2024/01/08',
+      unitPrice: 580000,
+      email: 'sato@example.com',
+      phone: '090-2345-6789',
+    },
+    {
+      key: '3',
+      engineerId: 'ENG003',
+      name: '鈴木一郎',
+      age: 35,
+      skills: ['Java', 'Spring Boot', 'MySQL', 'Docker'],
+      experience: 10,
+      status: 'waiting',
+      availableDate: '2024/03/01',
+      lastUpdated: '2024/01/05',
+      unitPrice: 720000,
+      email: 'suzuki@example.com',
+      phone: '090-3456-7890',
+    },
+    {
+      key: '4',
+      engineerId: 'ENG004',
+      name: '山田次郎',
+      age: 30,
+      skills: ['C#', '.NET Core', 'Azure', 'SQL Server'],
+      experience: 7,
+      status: 'assigned',
+      currentProject: '在庫管理システム',
+      lastUpdated: '2024/01/12',
+      unitPrice: 680000,
+      email: 'yamada@example.com',
+      phone: '090-4567-8901',
+    },
+    {
+      key: '5',
+      engineerId: 'ENG005',
+      name: '伊藤美咲',
+      age: 26,
+      skills: ['Vue.js', 'Nuxt.js', 'Firebase', 'GraphQL'],
+      experience: 4,
+      status: 'available',
+      availableDate: '2024/01/20',
+      lastUpdated: '2024/01/09',
+      unitPrice: 520000,
+      email: 'ito@example.com',
+      phone: '090-5678-9012',
+    },
+  ];
+
+  const getStatusColor = (status: Engineer['status']) => {
+    switch (status) {
+      case 'available':
+        return 'green';
+      case 'assigned':
+        return 'blue';
+      case 'waiting':
+        return 'orange';
+      case 'leave':
+        return 'red';
+      default:
+        return 'default';
+    }
+  };
+
+  const getStatusText = (status: Engineer['status']) => {
+    switch (status) {
+      case 'available':
+        return '稼働可能';
+      case 'assigned':
+        return 'アサイン中';
+      case 'waiting':
+        return '待機中';
+      case 'leave':
+        return '休職中';
+      default:
+        return status;
+    }
+  };
+
+  const actionMenu: MenuProps['items'] = [
+    {
+      key: 'view',
+      icon: <EyeOutlined />,
+      label: '詳細表示',
+    },
+    {
+      key: 'edit',
+      icon: <EditOutlined />,
+      label: '編集',
+    },
+    {
+      key: 'skillsheet',
+      icon: <FileTextOutlined />,
+      label: 'スキルシート',
+    },
+    {
+      key: 'email',
+      icon: <MailOutlined />,
+      label: 'メール送信',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'delete',
+      icon: <DeleteOutlined />,
+      label: '削除',
+      danger: true,
+    },
+  ];
+
+  const columns: ColumnsType<Engineer> = [
+    {
+      title: 'ID',
+      dataIndex: 'engineerId',
+      key: 'engineerId',
+      width: 80,
+      fixed: 'left',
+    },
+    {
+      title: '氏名',
+      dataIndex: 'name',
+      key: 'name',
+      width: 150,
+      fixed: 'left',
+      render: (text) => (
+        <Space>
+          <Avatar icon={<UserOutlined />} size="small" />
+          <span className="font-medium">{text}</span>
+        </Space>
+      ),
+    },
+    {
+      title: '年齢',
+      dataIndex: 'age',
+      key: 'age',
+      width: 70,
+      sorter: (a, b) => a.age - b.age,
+    },
+    {
+      title: 'スキル',
+      dataIndex: 'skills',
+      key: 'skills',
+      width: 300,
+      render: (skills: string[]) => (
+        <>
+          {skills.slice(0, 3).map((skill) => (
+            <Tag key={skill} color="blue">
+              {skill}
+            </Tag>
+          ))}
+          {skills.length > 3 && (
+            <Tag>+{skills.length - 3}</Tag>
+          )}
+        </>
+      ),
+    },
+    {
+      title: '経験年数',
+      dataIndex: 'experience',
+      key: 'experience',
+      width: 100,
+      sorter: (a, b) => a.experience - b.experience,
+      render: (exp) => `${exp}年`,
+    },
+    {
+      title: 'ステータス',
+      dataIndex: 'status',
+      key: 'status',
+      width: 120,
+      filters: [
+        { text: '稼働可能', value: 'available' },
+        { text: 'アサイン中', value: 'assigned' },
+        { text: '待機中', value: 'waiting' },
+        { text: '休職中', value: 'leave' },
+      ],
+      onFilter: (value, record) => record.status === value,
+      render: (status: Engineer['status']) => (
+        <Tag color={getStatusColor(status)}>
+          {getStatusText(status)}
+        </Tag>
+      ),
+    },
+    {
+      title: '現在のプロジェクト',
+      dataIndex: 'currentProject',
+      key: 'currentProject',
+      width: 200,
+      render: (project) => project || '-',
+    },
+    {
+      title: '稼働可能日',
+      dataIndex: 'availableDate',
+      key: 'availableDate',
+      width: 120,
+      render: (date) => date ? (
+        <Space>
+          <CalendarOutlined />
+          {date}
+        </Space>
+      ) : '-',
+    },
+    {
+      title: '単価',
+      dataIndex: 'unitPrice',
+      key: 'unitPrice',
+      width: 120,
+      sorter: (a, b) => (a.unitPrice || 0) - (b.unitPrice || 0),
+      render: (price) => price ? `¥${price.toLocaleString()}` : '-',
+    },
+    {
+      title: '最終更新',
+      dataIndex: 'lastUpdated',
+      key: 'lastUpdated',
+      width: 120,
+      sorter: (a, b) => new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime(),
+    },
+    {
+      title: 'アクション',
+      key: 'action',
+      fixed: 'right',
+      width: 100,
+      render: () => (
+        <Dropdown menu={{ items: actionMenu }} trigger={['click']}>
+          <Button type="text" icon={<MoreOutlined />} />
+        </Dropdown>
+      ),
+    },
+  ];
+
+  const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
+    setSelectedRowKeys(newSelectedRowKeys);
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: onSelectChange,
+  };
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">エンジニア一覧</h1>
+        <p className="text-gray-600 mt-2">登録されているエンジニアの管理</p>
+      </div>
+
+      {/* 検索・フィルター */}
+      <Card className="mb-4">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={8}>
+            <Search
+              placeholder="名前、スキルで検索"
+              allowClear
+              enterButton={<SearchOutlined />}
+              size="large"
+              onSearch={setSearchText}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={4}>
+            <Select
+              placeholder="ステータス"
+              style={{ width: '100%' }}
+              size="large"
+              value={filterStatus}
+              onChange={setFilterStatus}
+            >
+              <Option value="all">すべて</Option>
+              <Option value="available">稼働可能</Option>
+              <Option value="assigned">アサイン中</Option>
+              <Option value="waiting">待機中</Option>
+              <Option value="leave">休職中</Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <RangePicker
+              placeholder={['稼働開始日', '稼働終了日']}
+              style={{ width: '100%' }}
+              size="large"
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <Space>
+              <Button
+                type="primary"
+                icon={<UserAddOutlined />}
+                size="large"
+              >
+                新規登録
+              </Button>
+              <Button
+                icon={<DownloadOutlined />}
+                size="large"
+              >
+                エクスポート
+              </Button>
+              <Tooltip title="詳細フィルター">
+                <Button
+                  icon={<FilterOutlined />}
+                  size="large"
+                />
+              </Tooltip>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* 統計情報 */}
+      <Row gutter={[16, 16]} className="mb-4">
+        <Col xs={12} sm={6}>
+          <Card size="small">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {engineers.length}
+              </div>
+              <div className="text-gray-600 text-sm">総エンジニア数</div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={12} sm={6}>
+          <Card size="small">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
+                {engineers.filter(e => e.status === 'available').length}
+              </div>
+              <div className="text-gray-600 text-sm">稼働可能</div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={12} sm={6}>
+          <Card size="small">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
+                {engineers.filter(e => e.status === 'assigned').length}
+              </div>
+              <div className="text-gray-600 text-sm">アサイン中</div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={12} sm={6}>
+          <Card size="small">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">
+                {engineers.filter(e => e.status === 'waiting').length}
+              </div>
+              <div className="text-gray-600 text-sm">待機中</div>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* テーブル */}
+      <Card>
+        <div className="mb-4">
+          {selectedRowKeys.length > 0 && (
+            <Space>
+              <span>{selectedRowKeys.length}件選択中</span>
+              <Button icon={<MailOutlined />}>一括メール送信</Button>
+              <Button icon={<DownloadOutlined />}>選択項目をエクスポート</Button>
+              <Button danger>選択項目を削除</Button>
+            </Space>
+          )}
+        </div>
+        <Table
+          rowSelection={rowSelection}
+          columns={columns}
+          dataSource={engineers}
+          scroll={{ x: 1500 }}
+          pagination={{
+            total: engineers.length,
+            pageSize: 10,
+            showSizeChanger: true,
+            showTotal: (total) => `全 ${total} 件`,
+          }}
+        />
+      </Card>
+    </div>
+  );
+};
+
+export default EngineerList;
