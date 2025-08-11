@@ -6,6 +6,7 @@ import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard/Dashboard';
 import EngineerList from './pages/Engineers/EngineerList';
 import EngineerDetail from './pages/Engineers/EngineerDetail';
+import EngineerRegister from './pages/Engineers/EngineerRegister';
 import EngineerDashboard from './pages/Engineer/Dashboard';
 // import ProjectList from './pages/Projects/ProjectList'; // 一時的にコメントアウト
 import './App.css';
@@ -28,7 +29,7 @@ function App() {
               {/* ENG002 - エンジニア詳細 */}
               <Route path=":id" element={<EngineerDetail />} />
               {/* ENG003 - エンジニア登録・編集 */}
-              <Route path="new" element={<div>エンジニア登録（開発中）</div>} />
+              <Route path="new" element={<EngineerRegister />} />
               <Route path="edit/:id" element={<div>エンジニア編集（開発中）</div>} />
               {/* 待機エンジニア管理（ダッシュボードの一部機能） */}
               <Route path="waiting" element={<div>待機中エンジニア（開発中）</div>} />
