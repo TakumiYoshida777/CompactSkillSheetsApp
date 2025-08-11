@@ -277,44 +277,53 @@ const EngineerDashboard: React.FC = () => {
           </Card>
         </Col>
 
-        {/* プロジェクト予定 */}
+        {/* スキルシート更新履歴 */}
         <Col xs={24} lg={8}>
           <Card
-            title="今後のプロジェクト予定"
-            extra={<Button type="link" onClick={() => navigate('/engineer/projects')}>管理</Button>}
+            title="スキルシート更新履歴"
             loading={loading}
           >
-            <div className="project-schedule">
-              {upcomingProjects?.length > 0 ? (
-                <List
-                  dataSource={upcomingProjects}
-                  renderItem={(project: any) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={<Avatar icon={<ProjectOutlined />} />}
-                        title={project.name}
-                        description={
-                          <Space direction="vertical" size={0}>
-                            <Text type="secondary">{project.client}</Text>
-                            <Tag color="blue">{project.startDate} 開始予定</Tag>
-                          </Space>
-                        }
-                      />
-                    </List.Item>
-                  )}
-                />
-              ) : (
-                <div className="empty-state">
-                  <CalendarOutlined style={{ fontSize: 48, color: '#d9d9d9' }} />
-                  <Paragraph type="secondary" style={{ marginTop: 16 }}>
-                    予定されているプロジェクトはありません
-                  </Paragraph>
-                  <Button type="primary" onClick={() => navigate('/engineer/projects')}>
-                    プロジェクトを確認
-                  </Button>
+            <Timeline>
+              <Timeline.Item color="green">
+                <div className="timeline-content">
+                  <div className="timeline-header">
+                    <Text strong>スキルシート更新</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      2024/01/15
+                    </Text>
+                  </div>
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    技術スキルを更新しました
+                  </Text>
                 </div>
-              )}
-            </div>
+              </Timeline.Item>
+              <Timeline.Item color="blue">
+                <div className="timeline-content">
+                  <div className="timeline-header">
+                    <Text strong>プロフィール更新</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      2024/01/10
+                    </Text>
+                  </div>
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    自己PRを更新しました
+                  </Text>
+                </div>
+              </Timeline.Item>
+              <Timeline.Item color="gray">
+                <div className="timeline-content">
+                  <div className="timeline-header">
+                    <Text strong>初回登録</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      2024/01/01
+                    </Text>
+                  </div>
+                  <Text type="secondary" style={{ fontSize: 13 }}>
+                    スキルシートを作成しました
+                  </Text>
+                </div>
+              </Timeline.Item>
+            </Timeline>
           </Card>
         </Col>
       </Row>
