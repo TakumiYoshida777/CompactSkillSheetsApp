@@ -25,8 +25,14 @@ const EngineerLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // エンジニア用メニュー項目（スキルシート編集のみ）
+  // エンジニア用メニュー項目
   const menuItems: MenuProps['items'] = [
+    {
+      key: '/engineer/dashboard',
+      icon: <DashboardOutlined />,
+      label: 'ダッシュボード',
+      onClick: () => navigate('/engineer/dashboard'),
+    },
     {
       key: '/engineer/skill-sheet',
       icon: <FileTextOutlined />,

@@ -8,6 +8,8 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import EngineerList from './pages/Engineers/EngineerList';
 import EngineerDetail from './pages/Engineers/EngineerDetail';
 import EngineerRegister from './pages/Engineers/EngineerRegister';
+import SkillSheetEdit from './pages/Engineer/SkillSheet';
+import SkillSheetPreview from './pages/Engineer/SkillSheetPreview';
 import EngineerDashboard from './pages/Engineer/Dashboard';
 import UserProfile from './pages/Profile/UserProfile';
 // import ProjectList from './pages/Projects/ProjectList'; // 一時的にコメントアウト
@@ -82,13 +84,8 @@ function App() {
           <Route path="/engineer" element={<EngineerLayout />}>
             <Route index element={<Navigate to="/engineer/dashboard" replace />} />
             <Route path="dashboard" element={<EngineerDashboard />} />
-            <Route path="skill-sheet" element={<div>スキルシート編集（開発中）</div>} />
-            <Route path="projects" element={<div>プロジェクト管理（開発中）</div>} />
-            <Route path="profile" element={<div>プロフィール編集（開発中）</div>} />
-            <Route path="availability" element={<div>稼働可能時期設定（開発中）</div>} />
-            <Route path="approaches" element={<div>アプローチ管理（開発中）</div>} />
-            <Route path="notifications" element={<div>通知一覧（開発中）</div>} />
-            <Route path="settings" element={<div>設定（開発中）</div>} />
+            <Route path="skill-sheet" element={<SkillSheetEdit />} />
+            <Route path="skill-sheet/preview" element={<SkillSheetPreview />} />
           </Route>
         </Routes>
       </Router>
