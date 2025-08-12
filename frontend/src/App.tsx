@@ -17,6 +17,7 @@ import BusinessPartnerRegister from './pages/BusinessPartners/BusinessPartnerReg
 import BusinessPartnerList from './pages/BusinessPartners/BusinessPartnerList';
 import BusinessPartnerDetail from './pages/BusinessPartners/BusinessPartnerDetail';
 import ApproachHistory from './pages/Approaches/ApproachHistory';
+import ApproachCreate from './pages/Approaches/ApproachCreate';
 import UserProfile from './pages/Profile/UserProfile';
 // import ProjectList from './pages/Projects/ProjectList'; // 一時的にコメントアウト
 import './App.css';
@@ -67,7 +68,7 @@ function App() {
               {/* APP001 - アプローチ履歴 */}
               <Route path="history" element={<ApproachHistory />} />
               {/* APP002 - アプローチ作成 */}
-              <Route path="create" element={<div>アプローチ作成（開発中）</div>} />
+              <Route path="create" element={<ApproachCreate />} />
             </Route>
             
             {/* 取引先管理 */}
