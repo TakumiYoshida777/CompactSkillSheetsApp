@@ -683,19 +683,7 @@ Email: sales@example.com
                   </Checkbox>
                 </Form.Item>
 
-                <Form.Item
-                  name="matchingNotification"
-                  valuePropName="checked"
-                >
-                  <Checkbox>
-                    <Space>
-                      <Text>マッチするエンジニアが見つかったら自動通知</Text>
-                      <Tooltip title="求めるスキルに合致するエンジニアが登録された際に自動でお知らせ">
-                        <InfoCircleOutlined />
-                      </Tooltip>
-                    </Space>
-                  </Checkbox>
-                </Form.Item>
+
               </>
             )}
           </>

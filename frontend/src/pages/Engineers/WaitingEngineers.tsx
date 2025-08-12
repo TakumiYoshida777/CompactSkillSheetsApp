@@ -74,7 +74,7 @@ interface WaitingEngineer {
   phone: string;
   lastApproach?: string;
   approachCount: number;
-  matchingScore?: number;
+
 }
 
 interface ApproachHistory {
@@ -111,7 +111,7 @@ const WaitingEngineers: React.FC = () => {
       phone: '090-1234-5678',
       lastApproach: '2024/01/10',
       approachCount: 3,
-      matchingScore: 95,
+
     },
     {
       key: '2',
@@ -128,7 +128,7 @@ const WaitingEngineers: React.FC = () => {
       phone: '090-5678-9012',
       lastApproach: '2024/01/05',
       approachCount: 2,
-      matchingScore: 88,
+
     },
     {
       key: '3',
@@ -144,7 +144,7 @@ const WaitingEngineers: React.FC = () => {
       email: 'takahashi@example.com',
       phone: '090-3456-7890',
       approachCount: 1,
-      matchingScore: 82,
+
     },
   ];
 
@@ -167,7 +167,7 @@ const WaitingEngineers: React.FC = () => {
       phone: '090-3456-7890',
       lastApproach: '2024/01/12',
       approachCount: 4,
-      matchingScore: 91,
+
     },
     {
       key: '5',
@@ -185,7 +185,7 @@ const WaitingEngineers: React.FC = () => {
       email: 'yamada@example.com',
       phone: '090-4567-8901',
       approachCount: 2,
-      matchingScore: 85,
+
     },
     {
       key: '6',
@@ -203,7 +203,7 @@ const WaitingEngineers: React.FC = () => {
       email: 'nakamura@example.com',
       phone: '090-6789-0123',
       approachCount: 0,
-      matchingScore: 78,
+
     },
   ];
 
@@ -254,13 +254,7 @@ const WaitingEngineers: React.FC = () => {
     }
   };
 
-  const getMatchingScoreColor = (score?: number) => {
-    if (!score) return '#d9d9d9';
-    if (score >= 90) return '#52c41a';
-    if (score >= 70) return '#1890ff';
-    if (score >= 50) return '#faad14';
-    return '#f5222d';
-  };
+
 
   // アプローチモーダルを開く
   const showApproachModal = (engineers: WaitingEngineer[]) => {
@@ -376,21 +370,7 @@ const WaitingEngineers: React.FC = () => {
       sorter: (a, b) => a.unitPrice - b.unitPrice,
       render: (price) => `¥${price.toLocaleString()}`,
     },
-    {
-      title: 'マッチング',
-      dataIndex: 'matchingScore',
-      key: 'matchingScore',
-      width: 100,
-      sorter: (a, b) => (a.matchingScore || 0) - (b.matchingScore || 0),
-      render: (score) => score ? (
-        <Progress
-          percent={score}
-          size="small"
-          strokeColor={getMatchingScoreColor(score)}
-          format={(percent) => `${percent}%`}
-        />
-      ) : '-',
-    },
+
     {
       title: 'アプローチ',
       key: 'approach',

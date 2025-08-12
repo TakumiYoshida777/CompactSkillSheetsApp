@@ -279,19 +279,7 @@ const EngineerSearch: React.FC = () => {
   };
 
   const columns: ColumnsType<EngineerSearchResult> = [
-    {
-      title: 'マッチ度',
-      dataIndex: 'matchScore',
-      key: 'matchScore',
-      width: 100,
-      sorter: (a, b) => a.matchScore - b.matchScore,
-      render: (score: number) => (
-        <div style={{ textAlign: 'center' }}>
-          <Rate disabled value={score / 20} style={{ fontSize: 14 }} />
-          <div style={{ fontSize: 12, color: '#666' }}>{score}%</div>
-        </div>
-      ),
-    },
+
     {
       title: 'エンジニア',
       dataIndex: 'name',

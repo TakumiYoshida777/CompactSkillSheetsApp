@@ -237,16 +237,7 @@ ABC人材サービスの〇〇です。
         </Space>
       ),
     },
-    {
-      title: 'マッチ度',
-      dataIndex: 'skillMatch',
-      key: 'skillMatch',
-      render: (match) => (
-        <Tag color={match >= 90 ? 'green' : match >= 70 ? 'blue' : 'orange'}>
-          {match}%
-        </Tag>
-      ),
-    },
+
     {
       title: 'ステータス',
       dataIndex: 'status',
