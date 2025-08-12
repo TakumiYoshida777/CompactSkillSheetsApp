@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Avatar, Dropdown, Space, Badge, Button } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Space, Badge, Button, Drawer } from 'antd';
+import useResponsive from '../hooks/useResponsive';
 import {
   DashboardOutlined,
   FileTextOutlined,
@@ -22,8 +23,10 @@ const { Header, Sider, Content } = Layout;
 
 const EngineerLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isMobile, isTablet, isDesktop } = useResponsive();
 
   // エンジニア用メニュー項目
   const menuItems: MenuProps['items'] = [
@@ -31,19 +34,28 @@ const EngineerLayout: React.FC = () => {
       key: '/engineer/dashboard',
       icon: <DashboardOutlined />,
       label: 'ダッシュボード',
-      onClick: () => navigate('/engineer/dashboard'),
+      onClick: () => {
+        navigate('/engineer/dashboard');
+        if (isMobile) setMobileMenuOpen(false);
+      },
     },
     {
       key: '/engineer/skill-sheet',
       icon: <FileTextOutlined />,
       label: 'スキルシート編集',
-      onClick: () => navigate('/engineer/skill-sheet'),
+      onClick: () => {
+        navigate('/engineer/skill-sheet');
+        if (isMobile) setMobileMenuOpen(false);
+      },
     },
     {
       key: '/engineer/skill-sheet/preview',
       icon: <CheckCircleOutlined />,
       label: 'プレビュー',
-      onClick: () => navigate('/engineer/skill-sheet/preview'),
+      onClick: () => {
+        navigate('/engineer/skill-sheet/preview');
+        if (isMobile) setMobileMenuOpen(false);
+      },
     },
   ];
 
@@ -77,15 +89,54 @@ const EngineerLayout: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      {/* サイドバー */}
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        style={{
-          background: '#fff',
-          borderRight: '1px solid #f0f0f0',
-        }}
+      {/* デスクトップ用サイドバー */}
+      {!isMobile && (
+        <Sider
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          style={{
+            background: '#fff',
+            borderRight: '1px solid #f0f0f0',
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            zIndex: 100,
+          }}
+        >
+          <div
+            style={{
+              height: 64,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderBottom: '1px solid #f0f0f0',
+            }}
+          >
+            {!collapsed ? (
+              <h3 style={{ margin: 0, color: '#1890ff' }}>スキルシート</h3>
+            ) : (
+              <FileTextOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+            )}
+          </div>
+          <Menu
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={menuItems}
+            style={{ borderRight: 0 }}
+          />
+        </Sider>
+      )}
+
+      {/* モバイル用ドロワーメニュー */}
+      <Drawer
+        placement="left"
+        onClose={() => setMobileMenuOpen(false)}
+        open={mobileMenuOpen}
+        bodyStyle={{ padding: 0 }}
+        width={280}
+        className="md:hidden"
       >
         <div
           style={{
@@ -96,11 +147,7 @@ const EngineerLayout: React.FC = () => {
             borderBottom: '1px solid #f0f0f0',
           }}
         >
-          {!collapsed ? (
-            <h3 style={{ margin: 0, color: '#1890ff' }}>スキルシート</h3>
-          ) : (
-            <FileTextOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-          )}
+          <h3 style={{ margin: 0, color: '#1890ff' }}>スキルシート</h3>
         </div>
         <Menu
           mode="inline"
@@ -108,13 +155,16 @@ const EngineerLayout: React.FC = () => {
           items={menuItems}
           style={{ borderRight: 0 }}
         />
-      </Sider>
+      </Drawer>
 
-      <Layout>
+      <Layout style={{ 
+        marginLeft: isMobile ? 0 : (collapsed ? 80 : 200), 
+        transition: 'margin-left 0.2s' 
+      }}>
         {/* ヘッダー */}
         <Header
           style={{
-            padding: 0,
+            padding: '0 12px',
             background: '#fff',
             borderBottom: '1px solid #f0f0f0',
             display: 'flex',
@@ -124,16 +174,17 @@ const EngineerLayout: React.FC = () => {
         >
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+            icon={isMobile ? <MenuUnfoldOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
+            onClick={() => isMobile ? setMobileMenuOpen(true) : setCollapsed(!collapsed)}
             style={{
               fontSize: '16px',
-              width: 64,
-              height: 64,
+              minWidth: 44,
+              minHeight: 44,
+              height: 44,
             }}
           />
 
-          <Space style={{ marginRight: 24 }} size="large">
+          <Space style={{ marginRight: isMobile ? 8 : 24 }} size={isMobile ? 'middle' : 'large'}>
             {/* 通知 */}
             <Dropdown menu={{ items: notificationItems }} placement="bottomRight">
               <Badge count={1} size="small">
@@ -149,7 +200,7 @@ const EngineerLayout: React.FC = () => {
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <Space style={{ cursor: 'pointer' }}>
                 <Avatar icon={<UserOutlined />} />
-                <span>エンジニア</span>
+                {!isMobile && <span>エンジニア</span>}
               </Space>
             </Dropdown>
           </Space>

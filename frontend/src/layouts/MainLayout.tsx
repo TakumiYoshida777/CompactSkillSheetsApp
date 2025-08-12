@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Badge, Space, Button } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Badge, Space, Button, Drawer } from 'antd';
 import {
   DashboardOutlined,
   TeamOutlined,
@@ -17,14 +17,17 @@ import {
   SendOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import useResponsive from '../hooks/useResponsive';
 import type { MenuProps } from 'antd';
 
 const { Header, Sider, Content } = Layout;
 
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { isMobile, isTablet, isDesktop } = useResponsive();
 
   // サイドバーメニュー項目（設計書準拠）
   const menuItems: MenuProps['items'] = [
@@ -146,6 +149,9 @@ const MainLayout: React.FC = () => {
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
     navigate(e.key);
+    if (isMobile) {
+      setMobileMenuOpen(false);
+    }
   };
 
   const handleUserMenuClick: MenuProps['onClick'] = (e) => {
@@ -163,43 +169,71 @@ const MainLayout: React.FC = () => {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        style={{
-          overflow: 'auto',
-          height: '100vh',
-          position: 'fixed',
-          left: 0,
-          top: 0,
-          bottom: 0,
-        }}
+      {/* デスクトップ用サイドバー */}
+      {!isMobile && (
+        <Sider
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          style={{
+            overflow: 'auto',
+            height: '100vh',
+            position: 'fixed',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            zIndex: 100,
+          }}
+        >
+          <div className="flex items-center justify-center h-16 bg-blue-600">
+            <h1 className={`text-white font-bold ${collapsed ? 'text-lg' : 'text-xl'}`}>
+              {collapsed ? 'ESS' : 'SkillSheets'}
+            </h1>
+          </div>
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={menuItems}
+            onClick={handleMenuClick}
+          />
+        </Sider>
+      )}
+
+      {/* モバイル用ドロワーメニュー */}
+      <Drawer
+        placement="left"
+        onClose={() => setMobileMenuOpen(false)}
+        open={mobileMenuOpen}
+        bodyStyle={{ padding: 0 }}
+        width={280}
+        className="md:hidden"
       >
         <div className="flex items-center justify-center h-16 bg-blue-600">
-          <h1 className={`text-white font-bold ${collapsed ? 'text-lg' : 'text-xl'}`}>
-            {collapsed ? 'ESS' : 'SkillSheets'}
-          </h1>
+          <h1 className="text-white font-bold text-xl">SkillSheets</h1>
         </div>
         <Menu
-          theme="dark"
+          theme="light"
           mode="inline"
           selectedKeys={[location.pathname]}
           items={menuItems}
           onClick={handleMenuClick}
         />
-      </Sider>
+      </Drawer>
       
-      <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
-        <Header className="bg-white px-6 flex items-center justify-between shadow-sm sticky top-0 z-10">
+      <Layout style={{ 
+        marginLeft: isMobile ? 0 : (collapsed ? 80 : 200), 
+        transition: 'margin-left 0.2s' 
+      }}>
+        <Header className="bg-white px-3 md:px-6 flex items-center justify-between shadow-sm sticky top-0 z-10">
           <Button
             type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            className="text-lg"
+            icon={isMobile ? <MenuUnfoldOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
+            onClick={() => isMobile ? setMobileMenuOpen(true) : setCollapsed(!collapsed)}
+            className="text-lg min-w-[44px] min-h-[44px]"
           />
           
-          <Space size="large">
+          <Space size={isMobile ? 'middle' : 'large'}>
             <Badge count={5}>
               <Button
                 type="text"
@@ -214,14 +248,14 @@ const MainLayout: React.FC = () => {
             >
               <Space className="cursor-pointer">
                 <Avatar icon={<UserOutlined />} />
-                <span>田中太郎</span>
+                {!isMobile && <span>田中太郎</span>}
               </Space>
             </Dropdown>
           </Space>
         </Header>
         
-        <Content className="m-6">
-          <div className="p-6 bg-white rounded-lg shadow-sm min-h-full">
+        <Content className="m-3 md:m-6">
+          <div className="p-3 md:p-6 bg-white rounded-lg shadow-sm min-h-full">
             <Outlet />
           </div>
         </Content>

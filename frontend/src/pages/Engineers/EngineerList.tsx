@@ -31,6 +31,8 @@ import {
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
+import ResponsiveTable from '../../components/ResponsiveTable';
+import useResponsive from '../../hooks/useResponsive';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -56,6 +58,7 @@ const EngineerList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [searchText, setSearchText] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const { isMobile } = useResponsive();
 
   // ダミーデータ
   const engineers: Engineer[] = [
@@ -390,7 +393,7 @@ const EngineerList: React.FC = () => {
 
       {/* 統計情報 */}
       <Row gutter={[16, 16]} className="mb-4">
-        <Col xs={12} sm={6}>
+        <Col xs={12} md={6}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -400,7 +403,7 @@ const EngineerList: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
+        <Col xs={12} md={6}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
@@ -410,7 +413,7 @@ const EngineerList: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
+        <Col xs={12} md={6}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -420,7 +423,7 @@ const EngineerList: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={12} sm={6}>
+        <Col xs={12} md={6}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
@@ -433,10 +436,10 @@ const EngineerList: React.FC = () => {
       </Row>
 
       {/* テーブル */}
-      <Card>
+      <Card className="overflow-hidden">
         <div className="mb-4">
           {selectedRowKeys.length > 0 && (
-            <Space>
+            <Space wrap>
               <span>{selectedRowKeys.length}件選択中</span>
               <Button icon={<MailOutlined />}>一括メール送信</Button>
               <Button icon={<DownloadOutlined />}>選択項目をエクスポート</Button>
@@ -444,8 +447,8 @@ const EngineerList: React.FC = () => {
             </Space>
           )}
         </div>
-        <Table
-          rowSelection={rowSelection}
+        <ResponsiveTable
+          rowSelection={!isMobile ? rowSelection : undefined}
           columns={columns}
           dataSource={engineers}
           scroll={{ x: 1500 }}
@@ -455,6 +458,52 @@ const EngineerList: React.FC = () => {
             showSizeChanger: true,
             showTotal: (total) => `全 ${total} 件`,
           }}
+          mobileRenderItem={(engineer) => (
+            <div className="space-y-2">
+              <div className="flex justify-between items-start">
+                <Space>
+                  <Avatar icon={<UserOutlined />} />
+                  <div>
+                    <div className="font-semibold text-base">{engineer.name}</div>
+                    <div className="text-gray-500 text-sm">{engineer.engineerId}</div>
+                  </div>
+                </Space>
+                <Tag color={getStatusColor(engineer.status)}>
+                  {getStatusText(engineer.status)}
+                </Tag>
+              </div>
+              
+              <div className="flex flex-wrap gap-1">
+                {engineer.skills.slice(0, 3).map((skill) => (
+                  <Tag key={skill} color="blue" className="text-xs">
+                    {skill}
+                  </Tag>
+                ))}
+                {engineer.skills.length > 3 && (
+                  <Tag className="text-xs">+{engineer.skills.length - 3}</Tag>
+                )}
+              </div>
+              
+              <div className="text-sm text-gray-600 space-y-1">
+                <div>経験: {engineer.experience}年</div>
+                {engineer.availableDate && (
+                  <div>稼働可能日: {engineer.availableDate}</div>
+                )}
+                {engineer.unitPrice && (
+                  <div>単価: ¥{engineer.unitPrice.toLocaleString()}</div>
+                )}
+              </div>
+              
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button type="primary" size="small" icon={<EyeOutlined />}>
+                  詳細
+                </Button>
+                <Dropdown menu={{ items: actionMenu }} trigger={['click']}>
+                  <Button size="small" icon={<MoreOutlined />} />
+                </Dropdown>
+              </div>
+            </div>
+          )}
         />
       </Card>
     </div>
