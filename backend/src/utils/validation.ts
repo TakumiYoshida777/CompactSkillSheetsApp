@@ -38,7 +38,8 @@ export const updateProfileSchema = yup.object({
   name: yup.string()
     .min(2, '名前は2文字以上である必要があります')
     .max(50, '名前は50文字以下である必要があります'),
-  email: emailSchema,
+  email: yup.string()
+    .email('有効なメールアドレスを入力してください'),
   companyName: yup.string()
     .max(100, '会社名は100文字以下である必要があります'),
   phoneNumber: yup.string()
