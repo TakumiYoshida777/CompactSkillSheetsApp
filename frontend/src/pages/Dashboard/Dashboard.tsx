@@ -1,13 +1,10 @@
 import React from 'react';
-import { Row, Col, Card, Statistic, Progress, Table, Tag, Space, Button, List, Avatar } from 'antd';
+import { Row, Col, Card, Statistic, Progress, Table, Tag, Space, Button, Avatar } from 'antd';
 import {
   UserOutlined,
   TeamOutlined,
-  ProjectOutlined,
-  RiseOutlined,
   ClockCircleOutlined,
   ArrowUpOutlined,
-  ArrowDownOutlined,
   EyeOutlined,
   SendOutlined,
   CalendarOutlined,
@@ -22,13 +19,6 @@ interface WaitingEngineer {
   status: string;
 }
 
-interface RecentActivity {
-  id: string;
-  type: string;
-  description: string;
-  time: string;
-  icon: React.ReactNode;
-}
 
 const Dashboard: React.FC = () => {
   // ダミーデータ
@@ -70,36 +60,6 @@ const Dashboard: React.FC = () => {
     },
   ];
 
-  const recentActivities: RecentActivity[] = [
-    {
-      id: '1',
-      type: 'project',
-      description: '新規プロジェクト「ECサイト構築」が開始されました',
-      time: '2時間前',
-      icon: <ProjectOutlined className="text-blue-500" />,
-    },
-    {
-      id: '2',
-      type: 'engineer',
-      description: '山田太郎さんのステータスが「待機中」に変更されました',
-      time: '3時間前',
-      icon: <UserOutlined className="text-green-500" />,
-    },
-    {
-      id: '3',
-      type: 'approach',
-      description: 'ABC株式会社へのアプローチメールが送信されました',
-      time: '5時間前',
-      icon: <SendOutlined className="text-purple-500" />,
-    },
-    {
-      id: '4',
-      type: 'skillsheet',
-      description: '5名のスキルシートが更新されました',
-      time: '1日前',
-      icon: <TeamOutlined className="text-orange-500" />,
-    },
-  ];
 
   const columns: ColumnsType<WaitingEngineer> = [
     {
@@ -128,7 +88,7 @@ const Dashboard: React.FC = () => {
       ),
     },
     {
-      title: '稼働可能日',
+      title: '稼働開始可能日',
       dataIndex: 'availableDate',
       key: 'availableDate',
       render: (date) => (
@@ -216,23 +176,11 @@ const Dashboard: React.FC = () => {
             <Progress percent={83} strokeColor="#1890ff" showInfo={false} />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="成約率"
-              value={20}
-              prefix={<RiseOutlined />}
-              suffix="%"
-              valueStyle={{ color: '#52c41a' }}
-            />
-            <Progress percent={20} strokeColor="#52c41a" showInfo={false} />
-          </Card>
-        </Col>
       </Row>
 
       <Row gutter={[16, 16]}>
         {/* 待機中エンジニア一覧 */}
-        <Col xs={24} lg={16}>
+        <Col xs={24}>
           <Card
             title="待機中・待機予定エンジニア"
             extra={
@@ -249,25 +197,6 @@ const Dashboard: React.FC = () => {
             />
           </Card>
         </Col>
-
-        {/* 最新アクティビティ */}
-        <Col xs={24} lg={8}>
-          <Card title="最新アクティビティ">
-            <List
-              itemLayout="horizontal"
-              dataSource={recentActivities}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={item.icon}
-                    title={<span className="text-sm">{item.description}</span>}
-                    description={<span className="text-xs text-gray-500">{item.time}</span>}
-                  />
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
       </Row>
 
       {/* クイックアクション */}
@@ -277,9 +206,6 @@ const Dashboard: React.FC = () => {
             <Space size="large" wrap>
               <Button type="primary" icon={<UserOutlined />} size="large">
                 エンジニア登録
-              </Button>
-              <Button icon={<ProjectOutlined />} size="large">
-                プロジェクト作成
               </Button>
               <Button icon={<SendOutlined />} size="large">
                 アプローチ作成
