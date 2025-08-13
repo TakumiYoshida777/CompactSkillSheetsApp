@@ -93,8 +93,10 @@ function App() {
           <Route path="/engineer" element={<EngineerLayout />}>
             <Route index element={<Navigate to="/engineer/dashboard" replace />} />
             <Route path="dashboard" element={<EngineerDashboard />} />
-            <Route path="skill-sheet" element={<SkillSheetEdit />} />
-            <Route path="skill-sheet/preview" element={<SkillSheetPreview />} />
+            <Route path="skill-sheet" element={<SkillSheetEdit />} />            <Route path="skill-sheet/preview" element={<SkillSheetPreview />} />
+            <Route path="profile" element={<div>エンジニアプロフィール編集（開発中）</div>} />
+            <Route path="approach-history" element={<div>アプローチ履歴（開発中）</div>} />
+            <Route path="settings" element={<div>エンジニア設定（開発中）</div>} />
           </Route>
         </Routes>
       </Router>

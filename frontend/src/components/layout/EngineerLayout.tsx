@@ -3,7 +3,7 @@ import { Layout, Menu, Avatar, Dropdown, Badge, Space, Button } from 'antd';
 import {
   DashboardOutlined,
   FileTextOutlined,
-  ProjectOutlined,
+  HistoryOutlined,
   UserOutlined,
   BellOutlined,
   LogoutOutlined,
@@ -30,19 +30,19 @@ const EngineerLayout: React.FC = () => {
       label: 'ダッシュボード',
     },
     {
-      key: '/engineer/skill-sheet',
-      icon: <FileTextOutlined />,
-      label: 'スキルシート',
-    },
-    {
-      key: '/engineer/projects',
-      icon: <ProjectOutlined />,
-      label: 'プロジェクト履歴',
-    },
-    {
       key: '/engineer/profile',
       icon: <UserOutlined />,
-      label: 'プロフィール設定',
+      label: 'プロフィール編集',
+    },
+    {
+      key: '/engineer/skill-sheet',
+      icon: <FileTextOutlined />,
+      label: 'スキルシート編集',
+    },
+    {
+      key: '/engineer/approach-history',
+      icon: <HistoryOutlined />,
+      label: 'アプローチ履歴',
     },
   ];
 
