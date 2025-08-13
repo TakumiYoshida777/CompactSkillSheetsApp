@@ -23,7 +23,6 @@ import {
   MailOutlined,
   EditOutlined,
   DeleteOutlined,
-  EyeOutlined,
   MoreOutlined,
   FileTextOutlined,
   UserOutlined,
@@ -49,7 +48,6 @@ interface Engineer {
   currentProject?: string;
   availableDate?: string;
   lastUpdated: string;
-  unitPrice?: number;
   email: string;
   phone: string;
 }
@@ -72,7 +70,6 @@ const EngineerList: React.FC = () => {
       status: 'available',
       availableDate: '2024/02/01',
       lastUpdated: '2024/01/10',
-      unitPrice: 650000,
       email: 'tanaka@example.com',
       phone: '090-1234-5678',
     },
@@ -86,7 +83,6 @@ const EngineerList: React.FC = () => {
       status: 'assigned',
       currentProject: 'ECサイトリニューアル',
       lastUpdated: '2024/01/08',
-      unitPrice: 580000,
       email: 'sato@example.com',
       phone: '090-2345-6789',
     },
@@ -100,7 +96,6 @@ const EngineerList: React.FC = () => {
       status: 'waiting',
       availableDate: '2024/03/01',
       lastUpdated: '2024/01/05',
-      unitPrice: 720000,
       email: 'suzuki@example.com',
       phone: '090-3456-7890',
     },
@@ -114,7 +109,6 @@ const EngineerList: React.FC = () => {
       status: 'assigned',
       currentProject: '在庫管理システム',
       lastUpdated: '2024/01/12',
-      unitPrice: 680000,
       email: 'yamada@example.com',
       phone: '090-4567-8901',
     },
@@ -128,7 +122,6 @@ const EngineerList: React.FC = () => {
       status: 'available',
       availableDate: '2024/01/20',
       lastUpdated: '2024/01/09',
-      unitPrice: 520000,
       email: 'ito@example.com',
       phone: '090-5678-9012',
     },
@@ -165,11 +158,6 @@ const EngineerList: React.FC = () => {
   };
 
   const actionMenu: MenuProps['items'] = [
-    {
-      key: 'view',
-      icon: <EyeOutlined />,
-      label: '詳細表示',
-    },
     {
       key: 'edit',
       icon: <EditOutlined />,
@@ -276,7 +264,7 @@ const EngineerList: React.FC = () => {
       render: (project) => project || '-',
     },
     {
-      title: '稼働可能日',
+      title: '稼働開始可能日',
       dataIndex: 'availableDate',
       key: 'availableDate',
       width: 120,
@@ -286,14 +274,6 @@ const EngineerList: React.FC = () => {
           {date}
         </Space>
       ) : '-',
-    },
-    {
-      title: '単価',
-      dataIndex: 'unitPrice',
-      key: 'unitPrice',
-      width: 120,
-      sorter: (a, b) => (a.unitPrice || 0) - (b.unitPrice || 0),
-      render: (price) => price ? `¥${price.toLocaleString()}` : '-',
     },
     {
       title: '最終更新',
@@ -360,7 +340,7 @@ const EngineerList: React.FC = () => {
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <RangePicker
-              placeholder={['稼働開始日', '稼働終了日']}
+              placeholder={['稼働開始可能日から', '稼働開始可能日まで']}
               style={{ width: '100%' }}
               size="large"
             />
@@ -487,17 +467,11 @@ const EngineerList: React.FC = () => {
               <div className="text-sm text-gray-600 space-y-1">
                 <div>経験: {engineer.experience}年</div>
                 {engineer.availableDate && (
-                  <div>稼働可能日: {engineer.availableDate}</div>
-                )}
-                {engineer.unitPrice && (
-                  <div>単価: ¥{engineer.unitPrice.toLocaleString()}</div>
+                  <div>稼働開始可能日: {engineer.availableDate}</div>
                 )}
               </div>
               
               <div className="flex justify-end space-x-2 pt-2">
-                <Button type="primary" size="small" icon={<EyeOutlined />}>
-                  詳細
-                </Button>
                 <Dropdown menu={{ items: actionMenu }} trigger={['click']}>
                   <Button size="small" icon={<MoreOutlined />} />
                 </Dropdown>
