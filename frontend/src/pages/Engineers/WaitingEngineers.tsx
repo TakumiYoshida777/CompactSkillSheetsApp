@@ -35,7 +35,6 @@ import {
   PhoneOutlined,
   TeamOutlined,
   SendOutlined,
-  EyeOutlined,
   EditOutlined,
   MoreOutlined,
   CheckCircleOutlined,
@@ -46,7 +45,6 @@ import {
   SyncOutlined,
   InfoCircleOutlined,
   ArrowUpOutlined,
-  DollarOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { TabsProps } from 'antd';
@@ -68,13 +66,11 @@ interface WaitingEngineer {
   projectEndDate?: string;
   availableDate: string;
   status: 'waiting' | 'waiting_soon';
-  unitPrice: number;
   contractType: string;
   email: string;
   phone: string;
   lastApproach?: string;
   approachCount: number;
-
 }
 
 interface ApproachHistory {
@@ -105,7 +101,6 @@ const WaitingEngineers: React.FC = () => {
       experience: 8,
       availableDate: '2024/02/01',
       status: 'waiting',
-      unitPrice: 650000,
       contractType: 'SES契約',
       email: 'tanaka@example.com',
       phone: '090-1234-5678',
@@ -122,7 +117,6 @@ const WaitingEngineers: React.FC = () => {
       experience: 4,
       availableDate: '2024/01/20',
       status: 'waiting',
-      unitPrice: 520000,
       contractType: 'SES契約',
       email: 'ito@example.com',
       phone: '090-5678-9012',
@@ -139,7 +133,6 @@ const WaitingEngineers: React.FC = () => {
       experience: 6,
       availableDate: '2024/01/25',
       status: 'waiting',
-      unitPrice: 600000,
       contractType: 'SES契約',
       email: 'takahashi@example.com',
       phone: '090-3456-7890',
@@ -161,7 +154,6 @@ const WaitingEngineers: React.FC = () => {
       projectEndDate: '2024/02/28',
       availableDate: '2024/03/01',
       status: 'waiting_soon',
-      unitPrice: 720000,
       contractType: 'SES契約',
       email: 'suzuki@example.com',
       phone: '090-3456-7890',
@@ -180,7 +172,6 @@ const WaitingEngineers: React.FC = () => {
       projectEndDate: '2024/03/31',
       availableDate: '2024/04/01',
       status: 'waiting_soon',
-      unitPrice: 680000,
       contractType: 'SES契約',
       email: 'yamada@example.com',
       phone: '090-4567-8901',
@@ -198,7 +189,6 @@ const WaitingEngineers: React.FC = () => {
       projectEndDate: '2024/04/30',
       availableDate: '2024/05/01',
       status: 'waiting_soon',
-      unitPrice: 580000,
       contractType: 'SES契約',
       email: 'nakamura@example.com',
       phone: '090-6789-0123',
@@ -350,7 +340,7 @@ const WaitingEngineers: React.FC = () => {
       ) : '-',
     },
     {
-      title: '稼働可能日',
+      title: '稼働開始可能日',
       dataIndex: 'availableDate',
       key: 'availableDate',
       width: 120,
@@ -361,14 +351,6 @@ const WaitingEngineers: React.FC = () => {
           {date}
         </Space>
       ),
-    },
-    {
-      title: '単価',
-      dataIndex: 'unitPrice',
-      key: 'unitPrice',
-      width: 120,
-      sorter: (a, b) => a.unitPrice - b.unitPrice,
-      render: (price) => `¥${price.toLocaleString()}`,
     },
 
     {
@@ -403,11 +385,6 @@ const WaitingEngineers: React.FC = () => {
         <Dropdown
           menu={{
             items: [
-              {
-                key: 'view',
-                icon: <EyeOutlined />,
-                label: '詳細表示',
-              },
               {
                 key: 'edit',
                 icon: <EditOutlined />,
@@ -657,7 +634,7 @@ const WaitingEngineers: React.FC = () => {
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <RangePicker
-              placeholder={['稼働開始日', '稼働終了日']}
+              placeholder={['稼働開始可能日から', '稼働開始可能日まで']}
               style={{ width: '100%' }}
               size="large"
             />
