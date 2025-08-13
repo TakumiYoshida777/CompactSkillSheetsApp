@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Badge, Space, Button, Drawer } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Space, Button, Drawer } from 'antd';
 import {
   DashboardOutlined,
   TeamOutlined,
@@ -7,7 +7,6 @@ import {
   BankOutlined,
   MailOutlined,
   SettingOutlined,
-  BellOutlined,
   UserOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
@@ -228,14 +227,6 @@ const MainLayout: React.FC = () => {
           />
           
           <Space size={isMobile ? 'middle' : 'large'}>
-            <Badge count={5}>
-              <Button
-                type="text"
-                icon={<BellOutlined />}
-                className="text-lg"
-              />
-            </Badge>
-            
             <Dropdown
               menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
               placement="bottomRight"
