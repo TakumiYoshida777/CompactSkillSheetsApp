@@ -34,7 +34,6 @@ import {
   ReloadOutlined,
   UserOutlined,
   ProjectOutlined,
-  DollarOutlined,
   CalendarOutlined,
   FileTextOutlined,
   StarOutlined,
@@ -68,10 +67,8 @@ interface EngineerSearchResult {
   industries: string[];
   phases: string[];
   roles: string[];
-  unitPrice: number;
   availableDate: string;
   status: 'available' | 'working' | 'upcoming';
-  matchScore: number;
   lastProject?: string;
   location?: string;
   education?: string;
@@ -88,8 +85,6 @@ const EngineerSearch: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
   const [savedSearches, setSavedSearches] = useState<any[]>([]);
-  const [selectedEngineer, setSelectedEngineer] = useState<EngineerSearchResult | null>(null);
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
 
   // スキルタグリスト
   const programmingLanguages = [
@@ -139,10 +134,8 @@ const EngineerSearch: React.FC = () => {
         industries: ['金融', 'IT'],
         phases: ['要件定義', '基本設計', '詳細設計', '実装'],
         roles: ['SE', 'PL'],
-        unitPrice: 650000,
         availableDate: '2024-02-01',
         status: 'available',
-        matchScore: 95,
         lastProject: 'ECサイトリニューアル',
         location: '東京',
         education: '情報工学部卒',
@@ -162,10 +155,8 @@ const EngineerSearch: React.FC = () => {
         industries: ['医療', '教育'],
         phases: ['実装', 'テスト'],
         roles: ['PG', 'SE'],
-        unitPrice: 550000,
         availableDate: '2024-03-01',
         status: 'upcoming',
-        matchScore: 88,
         lastProject: '医療系Webアプリ開発',
         location: '大阪',
         education: 'コンピュータサイエンス専攻',
@@ -184,10 +175,8 @@ const EngineerSearch: React.FC = () => {
         industries: ['金融', '製造'],
         phases: ['要件定義', '基本設計', '詳細設計', '実装', 'テスト'],
         roles: ['PL', 'PM'],
-        unitPrice: 750000,
         availableDate: '2024-04-01',
         status: 'working',
-        matchScore: 92,
         lastProject: '銀行システム基盤構築',
         location: '東京',
         education: '工学修士',
@@ -312,16 +301,6 @@ const EngineerSearch: React.FC = () => {
       ),
     },
     {
-      title: '単価',
-      dataIndex: 'unitPrice',
-      key: 'unitPrice',
-      width: 120,
-      sorter: (a, b) => a.unitPrice - b.unitPrice,
-      render: (price: number) => (
-        <Text strong>¥{price.toLocaleString()}</Text>
-      ),
-    },
-    {
       title: 'ステータス',
       dataIndex: 'status',
       key: 'status',
@@ -352,16 +331,6 @@ const EngineerSearch: React.FC = () => {
       width: 150,
       render: (_, record) => (
         <Space>
-          <Button 
-            size="small" 
-            type="primary"
-            onClick={() => {
-              setSelectedEngineer(record);
-              setDetailModalVisible(true);
-            }}
-          >
-            詳細
-          </Button>
           <Button 
             size="small"
             icon={<MailOutlined />}
@@ -455,7 +424,7 @@ const EngineerSearch: React.FC = () => {
               </div>
 
               <Row gutter={16}>
-                <Col xs={24} md={6}>
+                <Col xs={24} md={8}>
                   <Form.Item name="experienceRange" label="経験年数">
                     <Slider
                       range
@@ -470,29 +439,12 @@ const EngineerSearch: React.FC = () => {
                     />
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={6}>
-                  <Form.Item name="priceRange" label="単価範囲">
-                    <Slider
-                      range
-                      marks={{
-                        30: '30万',
-                        50: '50万',
-                        70: '70万',
-                        100: '100万',
-                      }}
-                      min={30}
-                      max={100}
-                      defaultValue={[50, 80]}
-                      tipFormatter={value => `${value}万円`}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={6}>
-                  <Form.Item name="availableDate" label="稼働可能日">
+                <Col xs={24} md={8}>
+                  <Form.Item name="availableDate" label="稼働開始可能日">
                     <RangePicker style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
-                <Col xs={24} md={6}>
+                <Col xs={24} md={8}>
                   <Form.Item name="location" label="勤務地">
                     <Select placeholder="選択してください" allowClear>
                       <Option value="tokyo">東京</Option>
@@ -740,168 +692,6 @@ const EngineerSearch: React.FC = () => {
         </Space>
       </Modal>
 
-      {/* エンジニア詳細モーダル */}
-      <Modal
-        title="エンジニア詳細"
-        open={detailModalVisible}
-        onCancel={() => setDetailModalVisible(false)}
-        width={800}
-        footer={[
-          <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            閉じる
-          </Button>,
-          <Button 
-            key="approach" 
-            type="primary" 
-            icon={<MailOutlined />}
-            onClick={() => {
-              if (selectedEngineer) {
-                handleApproach([selectedEngineer]);
-                setDetailModalVisible(false);
-              }
-            }}
-          >
-            取引先へ提案
-          </Button>,
-        ]}
-      >
-        {selectedEngineer && (
-          <div>
-            <Row gutter={[16, 16]}>
-              <Col span={8}>
-                <Card size="small">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Avatar size={64} icon={<UserOutlined />} />
-                    <Title level={4}>{selectedEngineer.name}</Title>
-                    <Text type="secondary">
-                      {selectedEngineer.age}歳 / 経験{selectedEngineer.experience}年
-                    </Text>
-                    <Badge 
-                      status={
-                        selectedEngineer.status === 'available' ? 'success' :
-                        selectedEngineer.status === 'working' ? 'processing' : 'warning'
-                      }
-                      text={
-                        selectedEngineer.status === 'available' ? '即日可能' :
-                        selectedEngineer.status === 'working' ? '稼働中' : 
-                        `${selectedEngineer.availableDate}〜`
-                      }
-                    />
-                  </Space>
-                </Card>
-              </Col>
-              
-              <Col span={16}>
-                <Tabs
-                  items={[
-                    {
-                      key: 'skills',
-                      label: 'スキル',
-                      children: (
-                        <Space direction="vertical" style={{ width: '100%' }}>
-                          <div>
-                            <Text strong>プログラミング言語:</Text>
-                            <div style={{ marginTop: 8 }}>
-                              {selectedEngineer.skills.map(skill => (
-                                <Tag key={skill} color="blue">{skill}</Tag>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <Text strong>フレームワーク:</Text>
-                            <div style={{ marginTop: 8 }}>
-                              {selectedEngineer.frameworks.map(fw => (
-                                <Tag key={fw} color="green">{fw}</Tag>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <Text strong>データベース:</Text>
-                            <div style={{ marginTop: 8 }}>
-                              {selectedEngineer.databases.map(db => (
-                                <Tag key={db} color="orange">{db}</Tag>
-                              ))}
-                            </div>
-                          </div>
-                        </Space>
-                      ),
-                    },
-                    {
-                      key: 'experience',
-                      label: '経験',
-                      children: (
-                        <Space direction="vertical" style={{ width: '100%' }}>
-                          <div>
-                            <Text strong>業界経験:</Text>
-                            <div style={{ marginTop: 8 }}>
-                              {selectedEngineer.industries.map(ind => (
-                                <Tag key={ind}>{ind}</Tag>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <Text strong>対応可能フェーズ:</Text>
-                            <div style={{ marginTop: 8 }}>
-                              {selectedEngineer.phases.map(phase => (
-                                <Tag key={phase}>{phase}</Tag>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <Text strong>対応可能ロール:</Text>
-                            <div style={{ marginTop: 8 }}>
-                              {selectedEngineer.roles.map(role => (
-                                <Tag key={role} color="purple">{role}</Tag>
-                              ))}
-                            </div>
-                          </div>
-                          <div>
-                            <Text strong>直近のプロジェクト:</Text>
-                            <Paragraph>{selectedEngineer.lastProject}</Paragraph>
-                          </div>
-                        </Space>
-                      ),
-                    },
-                    {
-                      key: 'other',
-                      label: 'その他',
-                      children: (
-                        <Space direction="vertical" style={{ width: '100%' }}>
-                          <div>
-                            <EnvironmentOutlined /> 勤務地: {selectedEngineer.location}
-                          </div>
-                          <div>
-                            <DollarOutlined /> 単価: ¥{selectedEngineer.unitPrice.toLocaleString()}/月
-                          </div>
-                          <div>
-                            <GlobalOutlined /> 英語力: {selectedEngineer.englishLevel}
-                          </div>
-                          <div>
-                            <FileTextOutlined /> 契約形態: {selectedEngineer.preferredContract}
-                          </div>
-                          <div>
-                            <TeamOutlined /> リモート勤務: {selectedEngineer.remoteWork ? '可能' : '不可'}
-                          </div>
-                          {selectedEngineer.certifications && (
-                            <div>
-                              <CheckCircleOutlined /> 資格:
-                              <div style={{ marginTop: 8 }}>
-                                {selectedEngineer.certifications.map(cert => (
-                                  <Tag key={cert} color="gold">{cert}</Tag>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </Space>
-                      ),
-                    },
-                  ]}
-                />
-              </Col>
-            </Row>
-          </div>
-        )}
-      </Modal>
     </div>
   );
 };
