@@ -13,7 +13,6 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   FileTextOutlined,
-  SearchOutlined,
   SendOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -111,11 +110,6 @@ const MainLayout: React.FC = () => {
           label: '取引先登録', // BIZ002
         },
       ],
-    },
-    {
-      key: '/search',
-      icon: <SearchOutlined />,
-      label: 'エンジニア検索', // SRC001
     },
     {
       key: '/settings',

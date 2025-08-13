@@ -12,7 +12,6 @@ import WaitingEngineers from './pages/Engineers/WaitingEngineers';
 import SkillSheetEdit from './pages/Engineer/SkillSheet';
 import SkillSheetPreview from './pages/Engineer/SkillSheetPreview';
 import EngineerDashboard from './pages/Engineer/Dashboard';
-import EngineerSearch from './pages/Search/EngineerSearch';
 import BusinessPartnerRegister from './pages/BusinessPartners/BusinessPartnerRegister';
 import BusinessPartnerList from './pages/BusinessPartners/BusinessPartnerList';
 import BusinessPartnerDetail from './pages/BusinessPartners/BusinessPartnerDetail';
@@ -79,8 +78,6 @@ function App() {
               <Route path="edit/:id" element={<BusinessPartnerRegister />} />
             </Route>
             
-            {/* SRC001 - エンジニア検索 */}
-            <Route path="search" element={<EngineerSearch />} />
             
             {/* SET001 - 設定画面 */}
             <Route path="settings" element={<div>設定画面（開発中）</div>} />
