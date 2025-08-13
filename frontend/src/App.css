@@ -1,42 +1,85 @@
+/* アプリケーション全体のベーススタイル */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  min-height: 100vh;
+  width: 100%;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Ant Designのカスタマイズ */
+.ant-layout {
+  min-height: 100vh;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* サイドバーのカスタマイズ */
+.ant-layout-sider {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* コンテンツエリアのカスタマイズ */
+.ant-layout-content {
+  background-color: #f5f5f5;
 }
 
-.card {
-  padding: 2em;
+/* カードのホバーエフェクト */
+.ant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
 }
 
-.read-the-docs {
-  color: #888;
+/* テーブルのカスタマイズ */
+.ant-table-wrapper {
+  background: white;
+  border-radius: 8px;
+}
+
+/* ボタンのカスタマイズ */
+.ant-btn {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* タグのカスタマイズ */
+.ant-tag {
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+/* 統計カードのカスタマイズ */
+.ant-statistic-title {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.ant-statistic-content {
+  color: #1a1a1a;
+}
+
+/* プログレスバーのカスタマイズ */
+.ant-progress-text {
+  font-size: 12px;
+}
+
+/* ドロップダウンのカスタマイズ */
+.ant-dropdown-menu {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* スクロールバーのカスタマイズ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }

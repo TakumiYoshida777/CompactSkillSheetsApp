@@ -1,0 +1,119 @@
+.engineer-dashboard {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: calc(100vh - 112px);
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.dashboard-header h2 {
+  margin: 0;
+}
+
+.status-cards .ant-card {
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.status-cards .ant-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.status-card-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-icon {
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+}
+
+.status-info {
+  flex: 1;
+}
+
+.status-value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.status-value .value {
+  font-size: 24px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.status-value .suffix {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.project-schedule .empty-state {
+  text-align: center;
+  padding: 32px 0;
+}
+
+.ant-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.ant-list-item {
+  padding: 12px 0;
+}
+
+.ant-progress-line {
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .engineer-dashboard {
+    padding: 16px;
+  }
+  
+  .dashboard-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .status-icon {
+    font-size: 24px;
+    width: 36px;
+    height: 36px;
+  }
+  
+  .status-value .value {
+    font-size: 20px;
+  }
+}
