@@ -1,5 +1,4 @@
-import React from 'react';
-import { Row, Col, Card, Statistic, Progress, Button, Space } from 'antd';
+import { Row, Col, Card, Statistic, Progress, Button, Space, Spin, Alert } from 'antd';
 import {
   UserOutlined,
   TeamOutlined,
@@ -8,9 +7,41 @@ import {
   SendOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useDashboardStats } from '../../hooks/useDashboardStats';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const {
+    stats,
+    loading,
+    error,
+    engineerActivePercent,
+    engineerWaitingPercent,
+    engineerWaitingScheduledPercent,
+  } = useDashboardStats();
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" tip="データを読み込み中..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert
+        message="エラー"
+        description="データの取得に失敗しました。ページを更新してください。"
+        type="error"
+        showIcon
+      />
+    );
+  }
+
+  if (!stats) {
+    return null;
+  }
 
   return (
     <div>
@@ -25,48 +56,66 @@ const Dashboard: React.FC = () => {
           <Card>
             <Statistic
               title="エンジニア総数"
-              value={120}
+              value={stats.engineers.total}
               prefix={<TeamOutlined />}
               suffix={
-                <span className="text-green-500 text-sm">
-                  <ArrowUpOutlined /> 5
-                </span>
+                stats.engineers.totalChange > 0 && (
+                  <span className="text-green-500 text-sm">
+                    <ArrowUpOutlined /> {stats.engineers.totalChange}
+                  </span>
+                )
               }
             />
-            <Progress percent={75} strokeColor="#52c41a" showInfo={false} />
+            <Progress 
+              percent={75} 
+              strokeColor="#52c41a" 
+              showInfo={false} 
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
               title="稼働中"
-              value={105}
+              value={stats.engineers.active}
               prefix={<UserOutlined />}
               valueStyle={{ color: '#52c41a' }}
             />
-            <Progress percent={87.5} strokeColor="#52c41a" showInfo={false} />
+            <Progress 
+              percent={engineerActivePercent} 
+              strokeColor="#52c41a" 
+              showInfo={false} 
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
               title="待機中"
-              value={10}
+              value={stats.engineers.waiting}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: '#faad14' }}
             />
-            <Progress percent={8.3} strokeColor="#faad14" showInfo={false} />
+            <Progress 
+              percent={engineerWaitingPercent} 
+              strokeColor="#faad14" 
+              showInfo={false} 
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
               title="待機予定"
-              value={5}
+              value={stats.engineers.waitingScheduled}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: '#1890ff' }}
             />
-            <Progress percent={4.2} strokeColor="#1890ff" showInfo={false} />
+            <Progress 
+              percent={engineerWaitingScheduledPercent} 
+              strokeColor="#1890ff" 
+              showInfo={false} 
+            />
           </Card>
         </Col>
       </Row>
@@ -79,19 +128,21 @@ const Dashboard: React.FC = () => {
               <Col span={12}>
                 <Statistic
                   title="アプローチ数"
-                  value={25}
+                  value={stats.approaches.monthlyCount}
                   prefix={<SendOutlined />}
                   suffix={
-                    <span className="text-green-500 text-sm">
-                      <ArrowUpOutlined /> 8
-                    </span>
+                    stats.approaches.monthlyChange > 0 && (
+                      <span className="text-green-500 text-sm">
+                        <ArrowUpOutlined /> {stats.approaches.monthlyChange}
+                      </span>
+                    )
                   }
                 />
               </Col>
               <Col span={12}>
                 <Statistic
                   title="成約率"
-                  value={32}
+                  value={stats.approaches.successRate}
                   suffix="%"
                   valueStyle={{ color: '#52c41a' }}
                 />
@@ -107,14 +158,14 @@ const Dashboard: React.FC = () => {
               <Col span={12}>
                 <Statistic
                   title="今月更新"
-                  value={45}
+                  value={stats.skillSheets.monthlyUpdated}
                   suffix="件"
                 />
               </Col>
               <Col span={12}>
                 <Statistic
                   title="要更新"
-                  value={12}
+                  value={stats.skillSheets.needsUpdate}
                   suffix="件"
                   valueStyle={{ color: '#faad14' }}
                 />
