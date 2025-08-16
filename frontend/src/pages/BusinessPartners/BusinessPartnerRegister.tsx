@@ -514,8 +514,8 @@ Email: sales@example.com
                     size="large"
                     min={0}
                     step={10}
-                    formatter={value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value!.replace(/\¥\s?|(,*)/g, '')}
+                    formatter={(value) => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value!.replace(/\¥\s?|(,*)/g, '') as any}
                     placeholder="300,000"
                     addonAfter="円"
                   />
@@ -531,8 +531,8 @@ Email: sales@example.com
                     size="large"
                     min={0}
                     step={10}
-                    formatter={value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={value => value!.replace(/\¥\s?|(,*)/g, '')}
+                    formatter={(value) => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value!.replace(/\¥\s?|(,*)/g, '') as any}
                     placeholder="1,000,000"
                     addonAfter="円"
                   />
