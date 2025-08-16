@@ -6,7 +6,6 @@ import {
   Space,
   Tag,
   Avatar,
-  Dropdown,
   Select,
   DatePicker,
   Row,
@@ -18,16 +17,10 @@ import {
   UserAddOutlined,
   FilterOutlined,
   DownloadOutlined,
-  MailOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  MoreOutlined,
-  FileTextOutlined,
   UserOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import type { MenuProps } from 'antd';
 import ResponsiveTable from '../../components/ResponsiveTable';
 import useResponsive from '../../hooks/useResponsive';
 
@@ -178,33 +171,6 @@ const EngineerList: React.FC = () => {
     }
   };
 
-  const actionMenu: MenuProps['items'] = [
-    {
-      key: 'edit',
-      icon: <EditOutlined />,
-      label: '編集',
-    },
-    {
-      key: 'skillsheet',
-      icon: <FileTextOutlined />,
-      label: 'スキルシート',
-    },
-    {
-      key: 'email',
-      icon: <MailOutlined />,
-      label: 'メール送信',
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'delete',
-      icon: <DeleteOutlined />,
-      label: '削除',
-      danger: true,
-    },
-  ];
-
   const columns: ColumnsType<Engineer> = [
     {
       title: 'ID',
@@ -327,17 +293,6 @@ const EngineerList: React.FC = () => {
       key: 'lastUpdated',
       width: 120,
       sorter: (a, b) => new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime(),
-    },
-    {
-      title: 'アクション',
-      key: 'action',
-      fixed: 'right',
-      width: 100,
-      render: () => (
-        <Dropdown menu={{ items: actionMenu }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
     },
   ];
 
@@ -488,7 +443,6 @@ const EngineerList: React.FC = () => {
           {selectedRowKeys.length > 0 && (
             <Space wrap>
               <span>{selectedRowKeys.length}件選択中</span>
-              <Button icon={<MailOutlined />}>一括メール送信</Button>
               <Button icon={<DownloadOutlined />}>選択項目をエクスポート</Button>
               <Button danger>選択項目を削除</Button>
             </Space>
@@ -536,12 +490,6 @@ const EngineerList: React.FC = () => {
                 {engineer.availableDate && (
                   <div>稼働開始可能日: {engineer.availableDate}</div>
                 )}
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-2">
-                <Dropdown menu={{ items: actionMenu }} trigger={['click']}>
-                  <Button size="small" icon={<MoreOutlined />} />
-                </Dropdown>
               </div>
             </div>
           )}
