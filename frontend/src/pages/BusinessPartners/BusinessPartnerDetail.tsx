@@ -19,13 +19,10 @@ import {
   Modal,
   message,
   Tooltip,
-  Progress,
   List,
-  Divider,
   Form,
   Input,
   Select,
-  DatePicker,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -37,12 +34,8 @@ import {
   UserOutlined,
   TeamOutlined,
   DollarOutlined,
-  CalendarOutlined,
   FileTextOutlined,
   SendOutlined,
-  HistoryOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
   EnvironmentOutlined,
   StarOutlined,
   StarFilled,
@@ -50,7 +43,6 @@ import {
   ProjectOutlined,
   TrophyOutlined,
   RiseOutlined,
-  FallOutlined,
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';

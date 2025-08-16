@@ -8,8 +8,6 @@ import {
   Divider,
   Space,
   Button,
-  Progress,
-  Timeline,
   Rate,
 } from 'antd';
 import {

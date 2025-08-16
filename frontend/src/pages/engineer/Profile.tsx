@@ -20,8 +20,6 @@ import {
   Tabs,
   Modal,
   List,
-  Tag,
-  Tooltip,
 } from 'antd';
 import {
   UserOutlined,
@@ -31,9 +29,6 @@ import {
   CameraOutlined,
   SaveOutlined,
   LockOutlined,
-  BellOutlined,
-  GlobalOutlined,
-  SafetyOutlined,
   GithubOutlined,
   LinkedinOutlined,
   TwitterOutlined,

@@ -11,7 +11,6 @@ import {
   Col,
   Typography,
   Dropdown,
-  Menu,
   Modal,
   message,
   Badge,
@@ -29,7 +28,6 @@ import {
 import {
   PlusOutlined,
   SearchOutlined,
-  FilterOutlined,
   MailOutlined,
   PhoneOutlined,
   EditOutlined,
@@ -37,15 +35,10 @@ import {
   MoreOutlined,
   BankOutlined,
   UserOutlined,
-  CalendarOutlined,
   DollarOutlined,
-  FileTextOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined,
   SendOutlined,
   TeamOutlined,
-  GlobalOutlined,
-  HistoryOutlined,
   ExportOutlined,
   ReloadOutlined,
   StarOutlined,
@@ -56,10 +49,9 @@ import type { ColumnsType } from 'antd/es/table';
 import type { MenuProps } from 'antd';
 import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { Search } = Input;
-const { RangePicker } = DatePicker;
 const { TabPane } = Tabs;
 
 interface ContactPerson {

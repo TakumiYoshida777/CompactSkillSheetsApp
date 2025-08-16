@@ -9,7 +9,6 @@ import {
   Select,
   Rate,
   InputNumber,
-  DatePicker,
   Checkbox,
   Space,
   Typography,
@@ -18,12 +17,10 @@ import {
   Progress,
   Tabs,
   Tag,
-  Upload,
   message,
   Modal,
   AutoComplete,
   Collapse,
-  Tooltip,
 } from 'antd';
 import {
   SaveOutlined,
@@ -32,8 +29,6 @@ import {
   PlusOutlined,
   DeleteOutlined,
   InfoCircleOutlined,
-  CloudUploadOutlined,
-  CheckCircleOutlined,
   SyncOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';

@@ -16,7 +16,6 @@ import {
   Checkbox,
   InputNumber,
   DatePicker,
-  Upload,
   Modal,
   Tag,
   Tooltip,
@@ -26,7 +25,6 @@ import {
 } from 'antd';
 import {
   SaveOutlined,
-  SendOutlined,
   UserOutlined,
   BankOutlined,
   MailOutlined,
@@ -34,20 +32,14 @@ import {
   GlobalOutlined,
   EnvironmentOutlined,
   FileTextOutlined,
-  TeamOutlined,
   InfoCircleOutlined,
-  CheckCircleOutlined,
-  UploadOutlined,
   PlusOutlined,
-  DeleteOutlined,
   EyeOutlined,
   RobotOutlined,
-  CalendarOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import type { UploadProps } from 'antd';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { Step } = Steps;
 const { TextArea } = Input;
