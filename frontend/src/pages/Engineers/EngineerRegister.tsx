@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Form,
   Input,
@@ -18,33 +18,26 @@ import {
   Tag,
   Steps,
   message,
-  Tabs,
+  Descriptions,
 } from 'antd';
 import {
   UserOutlined,
   MailOutlined,
   PhoneOutlined,
   HomeOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  FileTextOutlined,
   PlusOutlined,
   DeleteOutlined,
   SaveOutlined,
-  SendOutlined,
   ArrowLeftOutlined,
-  InfoCircleOutlined,
-  CheckCircleOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { UploadProps } from 'antd';
 import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 interface SkillItem {
   name: string;
@@ -739,8 +732,6 @@ const EngineerRegister: React.FC = () => {
     }
   };
 
-  // Descriptionsコンポーネントのインポート追加
-  const { Descriptions } = Typography;
 
   return (
     <div>

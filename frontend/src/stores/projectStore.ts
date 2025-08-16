@@ -155,7 +155,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
   setCurrentProject: async (projectId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.patch(`/api/engineers/me/projects/${projectId}/current`);
+      await axios.patch(`/api/engineers/me/projects/${projectId}/current`);
       
       const project = get().projects.find(p => p.id === projectId);
       

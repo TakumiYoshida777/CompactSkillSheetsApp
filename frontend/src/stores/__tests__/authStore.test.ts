@@ -20,14 +20,14 @@ describe('authStore', () => {
     
     // axios のモックをリセット
     vi.clearAllMocks();
-    mockedAxios.defaults = { headers: { common: {} } };
+    mockedAxios.defaults = { headers: { common: {} } } as any;
   });
 
   describe('login', () => {
     it('ログインに成功する場合', async () => {
       const mockResponse = {
         data: {
-          user: { id: 1, email: 'test@example.com', name: 'Test User' },
+          user: { id: '1', email: 'test@example.com', name: 'Test User', companyId: '1', roles: ['user'], permissions: [] },
           accessToken: 'test-access-token',
           refreshToken: 'test-refresh-token',
         },
@@ -70,7 +70,7 @@ describe('authStore', () => {
     it('ログアウトが正常に動作する', () => {
       // 初期状態を設定
       useAuthStore.setState({
-        user: { id: 1, email: 'test@example.com', name: 'Test User' },
+        user: { id: '1', email: 'test@example.com', name: 'Test User', companyId: '1', roles: ['user'], permissions: [] },
         token: 'test-token',
         refreshToken: 'test-refresh-token',
         isAuthenticated: true,
@@ -174,7 +174,7 @@ describe('authStore', () => {
 
     it('トークンのリフレッシュに失敗した場合はログアウトする', async () => {
       useAuthStore.setState({
-        user: { id: 1, email: 'test@example.com', name: 'Test User' },
+        user: { id: '1', email: 'test@example.com', name: 'Test User', companyId: '1', roles: ['user'], permissions: [] },
         token: 'old-token',
         refreshToken: 'invalid-refresh-token',
         isAuthenticated: true,

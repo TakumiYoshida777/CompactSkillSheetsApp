@@ -78,7 +78,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
   updateStatus: async (status: string, availableDate?: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.patch('/api/engineers/me/status', {
+      await axios.patch('/api/engineers/me/status', {
         currentStatus: status,
         availableDate,
       });
@@ -106,7 +106,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
 
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.patch('/api/engineers/me/public', {
+      await axios.patch('/api/engineers/me/public', {
         isPublic: !currentEngineer.isPublic,
       });
       

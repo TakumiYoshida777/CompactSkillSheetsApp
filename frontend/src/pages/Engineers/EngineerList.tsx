@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-  Table,
   Card,
   Button,
   Input,
@@ -12,7 +11,6 @@ import {
   DatePicker,
   Row,
   Col,
-  Badge,
   Tooltip,
 } from 'antd';
 import {
@@ -55,20 +53,10 @@ interface Engineer {
 
 const EngineerList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [searchText, setSearchText] = useState('');
+  const [, setSearchText] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { isMobile } = useResponsive();
 
-  // 待機予定判定ヘルパー関数
-  const isWaitingScheduled = (projectEndDate?: string): boolean => {
-    if (!projectEndDate) return false;
-    const endDate = new Date(projectEndDate);
-    const today = new Date();
-    const threeMonthsLater = new Date(today);
-    threeMonthsLater.setMonth(today.getMonth() + 3);
-    
-    return endDate > today && endDate <= threeMonthsLater;
-  };
 
   // ダミーデータ
   const engineers: Engineer[] = [
