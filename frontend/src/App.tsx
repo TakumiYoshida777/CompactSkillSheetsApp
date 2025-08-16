@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import jaJP from 'antd/locale/ja_JP';
@@ -8,10 +7,9 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import EngineerList from './pages/Engineers/EngineerList';
 import EngineerDetail from './pages/Engineers/EngineerDetail';
 import EngineerRegister from './pages/Engineers/EngineerRegister';
-import WaitingEngineers from './pages/Engineers/WaitingEngineers';
-import SkillSheetEdit from './pages/Engineer/SkillSheet';
-import SkillSheetPreview from './pages/Engineer/SkillSheetPreview';
-import EngineerDashboard from './pages/Engineer/Dashboard';
+import SkillSheetEdit from './pages/engineer/SkillSheet';
+import SkillSheetPreview from './pages/engineer/SkillSheetPreview';
+import EngineerDashboard from './pages/engineer/Dashboard';
 import BusinessPartnerRegister from './pages/BusinessPartners/BusinessPartnerRegister';
 import BusinessPartnerList from './pages/BusinessPartners/BusinessPartnerList';
 import BusinessPartnerDetail from './pages/BusinessPartners/BusinessPartnerDetail';
@@ -41,8 +39,6 @@ function App() {
               {/* ENG003 - エンジニア登録・編集 */}
               <Route path="new" element={<EngineerRegister />} />
               <Route path="edit/:id" element={<div>エンジニア編集（開発中）</div>} />
-              {/* 待機エンジニア管理（ダッシュボードの一部機能） */}
-              <Route path="waiting" element={<WaitingEngineers />} />
             </Route>
             
             {/* スキルシート管理 */}

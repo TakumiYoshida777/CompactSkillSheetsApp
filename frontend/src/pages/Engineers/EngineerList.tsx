@@ -44,9 +44,10 @@ interface Engineer {
   age: number;
   skills: string[];
   experience: number;
-  status: 'available' | 'assigned' | 'waiting' | 'leave';
+  status: 'available' | 'assigned' | 'waiting' | 'waiting_scheduled' | 'leave';
   currentProject?: string;
   availableDate?: string;
+  projectEndDate?: string; // 案件終了日
   lastUpdated: string;
   email: string;
   phone: string;
@@ -57,6 +58,17 @@ const EngineerList: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { isMobile } = useResponsive();
+
+  // 待機予定判定ヘルパー関数
+  const isWaitingScheduled = (projectEndDate?: string): boolean => {
+    if (!projectEndDate) return false;
+    const endDate = new Date(projectEndDate);
+    const today = new Date();
+    const threeMonthsLater = new Date(today);
+    threeMonthsLater.setMonth(today.getMonth() + 3);
+    
+    return endDate > today && endDate <= threeMonthsLater;
+  };
 
   // ダミーデータ
   const engineers: Engineer[] = [
@@ -82,6 +94,7 @@ const EngineerList: React.FC = () => {
       experience: 5,
       status: 'assigned',
       currentProject: 'ECサイトリニューアル',
+      projectEndDate: '2024/04/30', // 3ヶ月以内に終了予定
       lastUpdated: '2024/01/08',
       email: 'sato@example.com',
       phone: '090-2345-6789',
@@ -108,6 +121,7 @@ const EngineerList: React.FC = () => {
       experience: 7,
       status: 'assigned',
       currentProject: '在庫管理システム',
+      projectEndDate: '2024/06/30', // 3ヶ月以内に終了予定
       lastUpdated: '2024/01/12',
       email: 'yamada@example.com',
       phone: '090-4567-8901',
@@ -125,6 +139,21 @@ const EngineerList: React.FC = () => {
       email: 'ito@example.com',
       phone: '090-5678-9012',
     },
+    {
+      key: '6',
+      engineerId: 'ENG006',
+      name: '高橋健一',
+      age: 33,
+      skills: ['Go', 'Kubernetes', 'gRPC', 'Redis'],
+      experience: 9,
+      status: 'waiting_scheduled',
+      currentProject: 'マイクロサービス基盤',
+      projectEndDate: '2024/03/15', // 待機予定
+      availableDate: '2024/03/16',
+      lastUpdated: '2024/01/11',
+      email: 'takahashi@example.com',
+      phone: '090-6789-0123',
+    },
   ];
 
   const getStatusColor = (status: Engineer['status']) => {
@@ -135,6 +164,8 @@ const EngineerList: React.FC = () => {
         return 'blue';
       case 'waiting':
         return 'orange';
+      case 'waiting_scheduled':
+        return 'gold';
       case 'leave':
         return 'red';
       default:
@@ -150,6 +181,8 @@ const EngineerList: React.FC = () => {
         return 'アサイン中';
       case 'waiting':
         return '待機中';
+      case 'waiting_scheduled':
+        return '待機予定';
       case 'leave':
         return '休職中';
       default:
@@ -247,6 +280,7 @@ const EngineerList: React.FC = () => {
         { text: '稼働可能', value: 'available' },
         { text: 'アサイン中', value: 'assigned' },
         { text: '待機中', value: 'waiting' },
+        { text: '待機予定', value: 'waiting_scheduled' },
         { text: '休職中', value: 'leave' },
       ],
       onFilter: (value, record) => record.status === value,
@@ -261,19 +295,43 @@ const EngineerList: React.FC = () => {
       dataIndex: 'currentProject',
       key: 'currentProject',
       width: 200,
-      render: (project) => project || '-',
+      render: (project, record) => {
+        if (!project) return '-';
+        return (
+          <div>
+            <div>{project}</div>
+            {record.projectEndDate && (
+              <div className="text-xs text-gray-500">
+                終了予定: {record.projectEndDate}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       title: '稼働開始可能日',
       dataIndex: 'availableDate',
       key: 'availableDate',
       width: 120,
-      render: (date) => date ? (
-        <Space>
-          <CalendarOutlined />
-          {date}
-        </Space>
-      ) : '-',
+      render: (date, record) => {
+        if (record.status === 'waiting_scheduled' && record.projectEndDate) {
+          return (
+            <Tooltip title={`プロジェクト終了後: ${record.projectEndDate}`}>
+              <Space>
+                <CalendarOutlined />
+                {date || '未定'}
+              </Space>
+            </Tooltip>
+          );
+        }
+        return date ? (
+          <Space>
+            <CalendarOutlined />
+            {date}
+          </Space>
+        ) : '-';
+      },
     },
     {
       title: '最終更新',
@@ -335,6 +393,7 @@ const EngineerList: React.FC = () => {
               <Option value="available">稼働可能</Option>
               <Option value="assigned">アサイン中</Option>
               <Option value="waiting">待機中</Option>
+              <Option value="waiting_scheduled">待機予定</Option>
               <Option value="leave">休職中</Option>
             </Select>
           </Col>
@@ -373,7 +432,7 @@ const EngineerList: React.FC = () => {
 
       {/* 統計情報 */}
       <Row gutter={[16, 16]} className="mb-4">
-        <Col xs={12} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -383,7 +442,7 @@ const EngineerList: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
@@ -393,7 +452,7 @@ const EngineerList: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -403,13 +462,33 @@ const EngineerList: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
                 {engineers.filter(e => e.status === 'waiting').length}
               </div>
               <div className="text-gray-600 text-sm">待機中</div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={12} md={6} lg={4}>
+          <Card size="small">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">
+                {engineers.filter(e => e.status === 'waiting_scheduled').length}
+              </div>
+              <div className="text-gray-600 text-sm">待機予定</div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={12} md={6} lg={4}>
+          <Card size="small">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">
+                {engineers.filter(e => e.status === 'leave').length}
+              </div>
+              <div className="text-gray-600 text-sm">休職中</div>
             </div>
           </Card>
         </Col>

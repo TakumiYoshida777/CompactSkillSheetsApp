@@ -3,9 +3,7 @@ import { Layout, Menu, Avatar, Dropdown, Space, Button, Drawer } from 'antd';
 import {
   DashboardOutlined,
   TeamOutlined,
-  ProjectOutlined,
   BankOutlined,
-  MailOutlined,
   SettingOutlined,
   UserOutlined,
   LogoutOutlined,
@@ -25,7 +23,7 @@ const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isMobile, isTablet, isDesktop } = useResponsive();
+  const { isMobile } = useResponsive();
 
   // サイドバーメニュー項目（設計書準拠）
   const menuItems: MenuProps['items'] = [
@@ -42,10 +40,6 @@ const MainLayout: React.FC = () => {
         {
           key: '/engineers/list',
           label: 'エンジニア一覧', // ENG001
-        },
-        {
-          key: '/engineers/waiting',
-          label: '待機中エンジニア', // 待機状況管理
         },
         {
           key: '/engineers/new',

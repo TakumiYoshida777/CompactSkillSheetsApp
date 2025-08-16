@@ -30,7 +30,6 @@ import {
   CameraOutlined,
   SaveOutlined,
   EditOutlined,
-  BellOutlined,
   SafetyOutlined,
   GlobalOutlined,
   SettingOutlined,
@@ -439,121 +438,6 @@ const UserProfile: React.FC = () => {
     },
     {
       key: '3',
-      label: (
-        <span>
-          <BellOutlined />
-          通知設定
-        </span>
-      ),
-      children: (
-        <div>
-          <Alert
-            message="通知設定"
-            description="各種通知の受信設定を管理します"
-            type="info"
-            showIcon
-            className="mb-4"
-          />
-
-          <Card>
-            <Space direction="vertical" style={{ width: '100%' }} size="large">
-              <Row justify="space-between" align="middle">
-                <Col span={18}>
-                  <Space direction="vertical" size={0}>
-                    <Text strong>メール通知</Text>
-                    <Text type="secondary">
-                      重要な更新やお知らせをメールで受信します
-                    </Text>
-                  </Space>
-                </Col>
-                <Col>
-                  <Switch defaultChecked />
-                </Col>
-              </Row>
-
-              <Divider />
-
-              <Row justify="space-between" align="middle">
-                <Col span={18}>
-                  <Space direction="vertical" size={0}>
-                    <Text strong>エンジニア待機通知</Text>
-                    <Text type="secondary">
-                      エンジニアが待機状態になった時に通知を受信します
-                    </Text>
-                  </Space>
-                </Col>
-                <Col>
-                  <Switch defaultChecked />
-                </Col>
-              </Row>
-
-              <Divider />
-
-              <Row justify="space-between" align="middle">
-                <Col span={18}>
-                  <Space direction="vertical" size={0}>
-                    <Text strong>アプローチ結果通知</Text>
-                    <Text type="secondary">
-                      アプローチの結果が更新された時に通知を受信します
-                    </Text>
-                  </Space>
-                </Col>
-                <Col>
-                  <Switch defaultChecked />
-                </Col>
-              </Row>
-
-              <Divider />
-
-              <Row justify="space-between" align="middle">
-                <Col span={18}>
-                  <Space direction="vertical" size={0}>
-                    <Text strong>システムメンテナンス通知</Text>
-                    <Text type="secondary">
-                      システムメンテナンスの予定を事前に通知します
-                    </Text>
-                  </Space>
-                </Col>
-                <Col>
-                  <Switch />
-                </Col>
-              </Row>
-
-              <Divider />
-
-              <Row justify="space-between" align="middle">
-                <Col span={18}>
-                  <Space direction="vertical" size={0}>
-                    <Text strong>週次レポート</Text>
-                    <Text type="secondary">
-                      週次の活動サマリーを受信します
-                    </Text>
-                  </Space>
-                </Col>
-                <Col>
-                  <Select defaultValue="weekly" style={{ width: 120 }}>
-                    <Option value="none">受信しない</Option>
-                    <Option value="daily">毎日</Option>
-                    <Option value="weekly">週次</Option>
-                    <Option value="monthly">月次</Option>
-                  </Select>
-                </Col>
-              </Row>
-            </Space>
-
-            <Divider />
-
-            <Row justify="end">
-              <Button type="primary" icon={<SaveOutlined />}>
-                設定を保存
-              </Button>
-            </Row>
-          </Card>
-        </div>
-      ),
-    },
-    {
-      key: '4',
       label: (
         <span>
           <SettingOutlined />
