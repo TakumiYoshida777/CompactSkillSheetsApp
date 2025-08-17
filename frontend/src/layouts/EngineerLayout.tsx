@@ -1,20 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Space, Badge, Button, Drawer } from 'antd';
 import useResponsive from '../hooks/useResponsive';
 import {
   DashboardOutlined,
   FileTextOutlined,
-  ProjectOutlined,
   UserOutlined,
-  CalendarOutlined,
-  SettingOutlined,
   LogoutOutlined,
   BellOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   EditOutlined,
-  MailOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
@@ -26,7 +22,7 @@ const EngineerLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isMobile, isTablet, isDesktop } = useResponsive();
+  const { isMobile } = useResponsive();
 
   // エンジニア用メニュー項目
   const menuItems: MenuProps['items'] = [

@@ -3,7 +3,6 @@ import {
   Row,
   Col,
   Card,
-  Statistic,
   Progress,
   Timeline,
   Tag,
@@ -12,12 +11,8 @@ import {
   Typography,
   Alert,
   List,
-  Avatar,
-  Badge,
-  Tooltip,
 } from 'antd';
 import {
-  CheckCircleOutlined,
   ClockCircleOutlined,
   SyncOutlined,
   FileTextOutlined,

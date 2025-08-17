@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Card,
   Table,
@@ -35,6 +35,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   UserAddOutlined,
+  UserOutlined,
   FileTextOutlined,
   MailOutlined,
 } from '@ant-design/icons';
@@ -71,7 +72,7 @@ interface AssignedEngineer {
 
 const ProjectList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [searchText, setSearchText] = useState('');
+  const [, setSearchText] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   // ダミーデータ

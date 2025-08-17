@@ -1,11 +1,9 @@
-import React from 'react';
-import { Table, Card, Space, Tag, Avatar, Button } from 'antd';
-import { UserOutlined, MoreOutlined, EyeOutlined } from '@ant-design/icons';
+import { Table, Card } from 'antd';
 import useResponsive from '../hooks/useResponsive';
 import type { TableProps } from 'antd';
 
 interface ResponsiveTableProps<T> extends TableProps<T> {
-  mobileRenderItem?: (record: T) => React.ReactNode;
+  mobileRenderItem?: (record: T) => React.ReactElement;
 }
 
 function ResponsiveTable<T extends Record<string, any>>({

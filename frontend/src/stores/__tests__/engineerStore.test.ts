@@ -27,7 +27,7 @@ describe('engineerStore', () => {
       const mockResponse = {
         data: {
           engineer: {
-            id: 1,
+            id: '1',
             name: 'エンジニア太郎',
             email: 'engineer@example.com',
             currentStatus: 'available',
@@ -36,7 +36,7 @@ describe('engineerStore', () => {
           },
           skillSheetCompletion: 85,
           currentProject: {
-            id: 1,
+            id: '1',
             name: 'プロジェクトA',
             startDate: '2024-01-01',
             endDate: '2024-06-30',
@@ -86,7 +86,7 @@ describe('engineerStore', () => {
       
       const mockResponse = {
         data: {
-          id: 1,
+          id: '1',
           name: '更新エンジニア',
           email: 'engineer@example.com',
           skills: ['React', 'TypeScript', 'Node.js'],
@@ -125,8 +125,9 @@ describe('engineerStore', () => {
       // 初期状態を設定
       useEngineerStore.setState({
         engineerData: {
-          id: 1,
+          id: '1',
           name: 'エンジニア',
+          email: 'engineer@example.com',
           currentStatus: 'available' as any,
           isPublic: true,
         },
@@ -164,8 +165,9 @@ describe('engineerStore', () => {
       // 初期状態を設定
       useEngineerStore.setState({
         engineerData: {
-          id: 1,
+          id: '1',
           name: 'エンジニア',
+          email: 'engineer@example.com',
           currentStatus: 'available' as any,
           isPublic: false,
         },
@@ -192,8 +194,9 @@ describe('engineerStore', () => {
       // 初期状態を設定
       useEngineerStore.setState({
         engineerData: {
-          id: 1,
+          id: '1',
           name: 'エンジニア',
+          email: 'engineer@example.com',
           currentStatus: 'available' as any,
           isPublic: false,
         },

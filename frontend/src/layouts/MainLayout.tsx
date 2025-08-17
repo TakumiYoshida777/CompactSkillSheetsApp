@@ -1,19 +1,15 @@
-import React, { useState } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Badge, Space, Button, Drawer } from 'antd';
+import { useState } from 'react';
+import { Layout, Menu, Avatar, Dropdown, Space, Button, Drawer } from 'antd';
 import {
   DashboardOutlined,
   TeamOutlined,
-  ProjectOutlined,
   BankOutlined,
-  MailOutlined,
   SettingOutlined,
-  BellOutlined,
   UserOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   FileTextOutlined,
-  SearchOutlined,
   SendOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -27,7 +23,7 @@ const MainLayout: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { isMobile, isTablet, isDesktop } = useResponsive();
+  const { isMobile } = useResponsive();
 
   // サイドバーメニュー項目（設計書準拠）
   const menuItems: MenuProps['items'] = [
@@ -44,10 +40,6 @@ const MainLayout: React.FC = () => {
         {
           key: '/engineers/list',
           label: 'エンジニア一覧', // ENG001
-        },
-        {
-          key: '/engineers/waiting',
-          label: '待機中エンジニア', // 待機状況管理
         },
         {
           key: '/engineers/new',
@@ -111,11 +103,6 @@ const MainLayout: React.FC = () => {
           label: '取引先登録', // BIZ002
         },
       ],
-    },
-    {
-      key: '/search',
-      icon: <SearchOutlined />,
-      label: 'エンジニア検索', // SRC001
     },
     {
       key: '/settings',
@@ -234,14 +221,6 @@ const MainLayout: React.FC = () => {
           />
           
           <Space size={isMobile ? 'middle' : 'large'}>
-            <Badge count={5}>
-              <Button
-                type="text"
-                icon={<BellOutlined />}
-                className="text-lg"
-              />
-            </Badge>
-            
             <Dropdown
               menu={{ items: userMenuItems, onClick: handleUserMenuClick }}
               placement="bottomRight"

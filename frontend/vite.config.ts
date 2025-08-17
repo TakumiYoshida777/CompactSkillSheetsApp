@@ -10,5 +10,20 @@ export default defineConfig({
     watch: {
       usePolling: true
     }
+  },
+  build: {
+    // コード分割の最適化
+    rollupOptions: {
+      output: {
+        // ベンダーライブラリを分離
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'antd-vendor': ['antd', '@ant-design/icons'],
+          'utils': ['axios', 'dayjs', 'zustand'],
+        }
+      }
+    },
+    // チャンクサイズ警告の閾値を調整
+    chunkSizeWarningLimit: 1000
   }
 })

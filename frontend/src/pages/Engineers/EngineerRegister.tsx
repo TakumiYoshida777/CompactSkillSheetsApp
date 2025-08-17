@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Form,
   Input,
@@ -18,33 +18,26 @@ import {
   Tag,
   Steps,
   message,
-  Tabs,
+  Descriptions,
 } from 'antd';
 import {
   UserOutlined,
   MailOutlined,
   PhoneOutlined,
   HomeOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  FileTextOutlined,
   PlusOutlined,
   DeleteOutlined,
   SaveOutlined,
-  SendOutlined,
   ArrowLeftOutlined,
-  InfoCircleOutlined,
-  CheckCircleOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { UploadProps } from 'antd';
 import dayjs from 'dayjs';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
-const { TabPane } = Tabs;
 
 interface SkillItem {
   name: string;
@@ -97,7 +90,7 @@ const EngineerRegister: React.FC = () => {
     },
     {
       title: '契約情報',
-      description: '単価・稼働条件',
+      description: '稼働条件',
     },
     {
       title: '確認',
@@ -472,23 +465,6 @@ const EngineerRegister: React.FC = () => {
               </Col>
               <Col xs={24} md={12}>
                 <Form.Item
-                  name="unitPrice"
-                  label="希望単価"
-                  rules={[{ required: true, message: '希望単価を入力してください' }]}
-                >
-                  <InputNumber
-                    style={{ width: '100%' }}
-                    min={0}
-                    max={2000000}
-                    step={10000}
-                    formatter={(value) => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                    parser={(value) => value!.replace(/\¥\s?|(,*)/g, '')}
-                    placeholder="650000"
-                  />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
                   name="workLocation"
                   label="勤務地"
                   rules={[{ required: true, message: '勤務地を選択してください' }]}
@@ -514,12 +490,12 @@ const EngineerRegister: React.FC = () => {
               <Col xs={24} md={12}>
                 <Form.Item
                   name="availableDate"
-                  label="稼働可能日"
-                  rules={[{ required: true, message: '稼働可能日を選択してください' }]}
+                  label="稼働開始可能日"
+                  rules={[{ required: true, message: '稼働開始可能日を選択してください' }]}
                 >
                   <DatePicker
                     style={{ width: '100%' }}
-                    placeholder="稼働可能日を選択"
+                    placeholder="稼働開始可能日を選択"
                     format="YYYY/MM/DD"
                   />
                 </Form.Item>
@@ -530,12 +506,76 @@ const EngineerRegister: React.FC = () => {
                   label="現在の状態"
                   rules={[{ required: true, message: '状態を選択してください' }]}
                 >
-                  <Select placeholder="状態を選択">
+                  <Select placeholder="状態を選択" onChange={(value) => {
+                    // アサイン中または待機予定を選択した場合、プロジェクト情報入力を有効化
+                    const showProjectFields = value === 'assigned' || value === 'waiting_scheduled';
+                    form.setFieldsValue({ showProjectFields });
+                  }}>
                     <Option value="available">稼働可能</Option>
                     <Option value="assigned">アサイン中</Option>
                     <Option value="waiting">待機中</Option>
+                    <Option value="waiting_scheduled">待機予定</Option>
                     <Option value="leave">休職中</Option>
                   </Select>
+                </Form.Item>
+              </Col>
+              
+              {/* プロジェクト情報（アサイン中・待機予定の場合のみ表示） */}
+              <Col xs={24} md={12}>
+                <Form.Item
+                  noStyle
+                  shouldUpdate={(prevValues, currentValues) => 
+                    prevValues.status !== currentValues.status
+                  }
+                >
+                  {({ getFieldValue }) => {
+                    const status = getFieldValue('status');
+                    return (status === 'assigned' || status === 'waiting_scheduled') ? (
+                      <Form.Item
+                        name="currentProject"
+                        label="現在のプロジェクト"
+                        rules={[{ required: true, message: 'プロジェクト名を入力してください' }]}
+                      >
+                        <Input placeholder="プロジェクト名を入力" />
+                      </Form.Item>
+                    ) : null;
+                  }}
+                </Form.Item>
+              </Col>
+              
+              <Col xs={24} md={12}>
+                <Form.Item
+                  noStyle
+                  shouldUpdate={(prevValues, currentValues) => 
+                    prevValues.status !== currentValues.status
+                  }
+                >
+                  {({ getFieldValue }) => {
+                    const status = getFieldValue('status');
+                    return (status === 'assigned' || status === 'waiting_scheduled') ? (
+                      <Form.Item
+                        name="projectEndDate"
+                        label="案件終了日"
+                        rules={[{ required: true, message: '案件終了日を選択してください' }]}
+                        extra={status === 'waiting_scheduled' ? '3ヶ月以内の日付を選択してください' : null}
+                      >
+                        <DatePicker
+                          style={{ width: '100%' }}
+                          placeholder="案件終了日を選択"
+                          format="YYYY/MM/DD"
+                          disabledDate={(current) => {
+                            // 待機予定の場合、3ヶ月後までの日付のみ選択可能
+                            if (status === 'waiting_scheduled') {
+                              const threeMonthsLater = dayjs().add(3, 'month');
+                              return current && (current < dayjs().startOf('day') || current > threeMonthsLater);
+                            }
+                            // アサイン中の場合、過去日は選択不可
+                            return current && current < dayjs().startOf('day');
+                          }}
+                        />
+                      </Form.Item>
+                    ) : null;
+                  }}
                 </Form.Item>
               </Col>
             </Row>
@@ -660,18 +700,25 @@ const EngineerRegister: React.FC = () => {
                 <Descriptions.Item label="契約形態">
                   {form.getFieldValue('contractType')}
                 </Descriptions.Item>
-                <Descriptions.Item label="希望単価">
-                  ¥{form.getFieldValue('unitPrice')?.toLocaleString()}/月
-                </Descriptions.Item>
                 <Descriptions.Item label="勤務地">
                   {form.getFieldValue('workLocation')}
                 </Descriptions.Item>
                 <Descriptions.Item label="稼働時間">
                   {form.getFieldValue('workTime')}
                 </Descriptions.Item>
-                <Descriptions.Item label="稼働可能日">
+                <Descriptions.Item label="稼働開始可能日">
                   {form.getFieldValue('availableDate')?.format('YYYY/MM/DD')}
                 </Descriptions.Item>
+                {form.getFieldValue('currentProject') && (
+                  <Descriptions.Item label="現在のプロジェクト">
+                    {form.getFieldValue('currentProject')}
+                  </Descriptions.Item>
+                )}
+                {form.getFieldValue('projectEndDate') && (
+                  <Descriptions.Item label="案件終了日">
+                    {form.getFieldValue('projectEndDate')?.format('YYYY/MM/DD')}
+                  </Descriptions.Item>
+                )}
                 <Descriptions.Item label="現在の状態">
                   {form.getFieldValue('status')}
                 </Descriptions.Item>
@@ -685,8 +732,6 @@ const EngineerRegister: React.FC = () => {
     }
   };
 
-  // Descriptionsコンポーネントのインポート追加
-  const { Descriptions } = Typography;
 
   return (
     <div>

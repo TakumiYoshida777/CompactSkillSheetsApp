@@ -60,7 +60,7 @@ const EngineerLayout: React.FC = () => {
       onClick: () => navigate('/engineer/settings'),
     },
     {
-      type: 'divider',
+      type: 'divider' as const,
     },
     {
       key: 'logout',

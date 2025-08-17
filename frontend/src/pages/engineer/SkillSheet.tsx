@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Form,
   Input,
@@ -9,7 +9,6 @@ import {
   Select,
   Rate,
   InputNumber,
-  DatePicker,
   Checkbox,
   Space,
   Typography,
@@ -18,12 +17,10 @@ import {
   Progress,
   Tabs,
   Tag,
-  Upload,
   message,
   Modal,
   AutoComplete,
   Collapse,
-  Tooltip,
 } from 'antd';
 import {
   SaveOutlined,
@@ -32,8 +29,7 @@ import {
   PlusOutlined,
   DeleteOutlined,
   InfoCircleOutlined,
-  CloudUploadOutlined,
-  CheckCircleOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useSkillSheetStore } from '../../stores/skillSheetStore';
@@ -69,12 +65,12 @@ interface Project {
 const SkillSheetEdit: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
-  const { skillSheet, updateSkillSheet, saveSkillSheet } = useSkillSheetStore();
+  const { skillSheet, saveSkillSheet } = useSkillSheetStore();
   const [loading, setLoading] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [completionRate, setCompletionRate] = useState(0);
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const [skills] = useState<Skill[]>([]);
   const [activeTab, setActiveTab] = useState('basic');
 
   // 自動保存
@@ -605,7 +601,7 @@ const SkillSheetEdit: React.FC = () => {
           <Form
             form={form}
             layout="vertical"
-            initialValues={skillSheet}
+            initialValues={skillSheet || {}}
             onValuesChange={() => calculateCompletion()}
           >
             <Tabs activeKey={activeTab} onChange={setActiveTab}>

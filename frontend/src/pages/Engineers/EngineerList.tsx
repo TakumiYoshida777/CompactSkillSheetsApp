@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-  Table,
   Card,
   Button,
   Input,
   Space,
   Tag,
   Avatar,
-  Dropdown,
   Select,
   DatePicker,
   Row,
   Col,
-  Badge,
   Tooltip,
 } from 'antd';
 import {
@@ -20,17 +17,10 @@ import {
   UserAddOutlined,
   FilterOutlined,
   DownloadOutlined,
-  MailOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  FileTextOutlined,
   UserOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import type { MenuProps } from 'antd';
 import ResponsiveTable from '../../components/ResponsiveTable';
 import useResponsive from '../../hooks/useResponsive';
 
@@ -45,20 +35,21 @@ interface Engineer {
   age: number;
   skills: string[];
   experience: number;
-  status: 'available' | 'assigned' | 'waiting' | 'leave';
+  status: 'available' | 'assigned' | 'waiting' | 'waiting_scheduled' | 'leave';
   currentProject?: string;
   availableDate?: string;
+  projectEndDate?: string; // 案件終了日
   lastUpdated: string;
-  unitPrice?: number;
   email: string;
   phone: string;
 }
 
 const EngineerList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
-  const [searchText, setSearchText] = useState('');
+  const [, setSearchText] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const { isMobile } = useResponsive();
+
 
   // ダミーデータ
   const engineers: Engineer[] = [
@@ -72,7 +63,6 @@ const EngineerList: React.FC = () => {
       status: 'available',
       availableDate: '2024/02/01',
       lastUpdated: '2024/01/10',
-      unitPrice: 650000,
       email: 'tanaka@example.com',
       phone: '090-1234-5678',
     },
@@ -85,8 +75,8 @@ const EngineerList: React.FC = () => {
       experience: 5,
       status: 'assigned',
       currentProject: 'ECサイトリニューアル',
+      projectEndDate: '2024/04/30', // 3ヶ月以内に終了予定
       lastUpdated: '2024/01/08',
-      unitPrice: 580000,
       email: 'sato@example.com',
       phone: '090-2345-6789',
     },
@@ -100,7 +90,6 @@ const EngineerList: React.FC = () => {
       status: 'waiting',
       availableDate: '2024/03/01',
       lastUpdated: '2024/01/05',
-      unitPrice: 720000,
       email: 'suzuki@example.com',
       phone: '090-3456-7890',
     },
@@ -113,8 +102,8 @@ const EngineerList: React.FC = () => {
       experience: 7,
       status: 'assigned',
       currentProject: '在庫管理システム',
+      projectEndDate: '2024/06/30', // 3ヶ月以内に終了予定
       lastUpdated: '2024/01/12',
-      unitPrice: 680000,
       email: 'yamada@example.com',
       phone: '090-4567-8901',
     },
@@ -128,9 +117,23 @@ const EngineerList: React.FC = () => {
       status: 'available',
       availableDate: '2024/01/20',
       lastUpdated: '2024/01/09',
-      unitPrice: 520000,
       email: 'ito@example.com',
       phone: '090-5678-9012',
+    },
+    {
+      key: '6',
+      engineerId: 'ENG006',
+      name: '高橋健一',
+      age: 33,
+      skills: ['Go', 'Kubernetes', 'gRPC', 'Redis'],
+      experience: 9,
+      status: 'waiting_scheduled',
+      currentProject: 'マイクロサービス基盤',
+      projectEndDate: '2024/03/15', // 待機予定
+      availableDate: '2024/03/16',
+      lastUpdated: '2024/01/11',
+      email: 'takahashi@example.com',
+      phone: '090-6789-0123',
     },
   ];
 
@@ -142,6 +145,8 @@ const EngineerList: React.FC = () => {
         return 'blue';
       case 'waiting':
         return 'orange';
+      case 'waiting_scheduled':
+        return 'gold';
       case 'leave':
         return 'red';
       default:
@@ -157,44 +162,14 @@ const EngineerList: React.FC = () => {
         return 'アサイン中';
       case 'waiting':
         return '待機中';
+      case 'waiting_scheduled':
+        return '待機予定';
       case 'leave':
         return '休職中';
       default:
         return status;
     }
   };
-
-  const actionMenu: MenuProps['items'] = [
-    {
-      key: 'view',
-      icon: <EyeOutlined />,
-      label: '詳細表示',
-    },
-    {
-      key: 'edit',
-      icon: <EditOutlined />,
-      label: '編集',
-    },
-    {
-      key: 'skillsheet',
-      icon: <FileTextOutlined />,
-      label: 'スキルシート',
-    },
-    {
-      key: 'email',
-      icon: <MailOutlined />,
-      label: 'メール送信',
-    },
-    {
-      type: 'divider',
-    },
-    {
-      key: 'delete',
-      icon: <DeleteOutlined />,
-      label: '削除',
-      danger: true,
-    },
-  ];
 
   const columns: ColumnsType<Engineer> = [
     {
@@ -259,6 +234,7 @@ const EngineerList: React.FC = () => {
         { text: '稼働可能', value: 'available' },
         { text: 'アサイン中', value: 'assigned' },
         { text: '待機中', value: 'waiting' },
+        { text: '待機予定', value: 'waiting_scheduled' },
         { text: '休職中', value: 'leave' },
       ],
       onFilter: (value, record) => record.status === value,
@@ -273,27 +249,43 @@ const EngineerList: React.FC = () => {
       dataIndex: 'currentProject',
       key: 'currentProject',
       width: 200,
-      render: (project) => project || '-',
+      render: (project, record) => {
+        if (!project) return '-';
+        return (
+          <div>
+            <div>{project}</div>
+            {record.projectEndDate && (
+              <div className="text-xs text-gray-500">
+                終了予定: {record.projectEndDate}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
-      title: '稼働可能日',
+      title: '稼働開始可能日',
       dataIndex: 'availableDate',
       key: 'availableDate',
       width: 120,
-      render: (date) => date ? (
-        <Space>
-          <CalendarOutlined />
-          {date}
-        </Space>
-      ) : '-',
-    },
-    {
-      title: '単価',
-      dataIndex: 'unitPrice',
-      key: 'unitPrice',
-      width: 120,
-      sorter: (a, b) => (a.unitPrice || 0) - (b.unitPrice || 0),
-      render: (price) => price ? `¥${price.toLocaleString()}` : '-',
+      render: (date, record) => {
+        if (record.status === 'waiting_scheduled' && record.projectEndDate) {
+          return (
+            <Tooltip title={`プロジェクト終了後: ${record.projectEndDate}`}>
+              <Space>
+                <CalendarOutlined />
+                {date || '未定'}
+              </Space>
+            </Tooltip>
+          );
+        }
+        return date ? (
+          <Space>
+            <CalendarOutlined />
+            {date}
+          </Space>
+        ) : '-';
+      },
     },
     {
       title: '最終更新',
@@ -301,17 +293,6 @@ const EngineerList: React.FC = () => {
       key: 'lastUpdated',
       width: 120,
       sorter: (a, b) => new Date(a.lastUpdated).getTime() - new Date(b.lastUpdated).getTime(),
-    },
-    {
-      title: 'アクション',
-      key: 'action',
-      fixed: 'right',
-      width: 100,
-      render: () => (
-        <Dropdown menu={{ items: actionMenu }} trigger={['click']}>
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
     },
   ];
 
@@ -355,12 +336,13 @@ const EngineerList: React.FC = () => {
               <Option value="available">稼働可能</Option>
               <Option value="assigned">アサイン中</Option>
               <Option value="waiting">待機中</Option>
+              <Option value="waiting_scheduled">待機予定</Option>
               <Option value="leave">休職中</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} lg={6}>
             <RangePicker
-              placeholder={['稼働開始日', '稼働終了日']}
+              placeholder={['稼働開始可能日から', '稼働開始可能日まで']}
               style={{ width: '100%' }}
               size="large"
             />
@@ -393,7 +375,7 @@ const EngineerList: React.FC = () => {
 
       {/* 統計情報 */}
       <Row gutter={[16, 16]} className="mb-4">
-        <Col xs={12} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -403,7 +385,7 @@ const EngineerList: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
@@ -413,7 +395,7 @@ const EngineerList: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
@@ -423,13 +405,33 @@ const EngineerList: React.FC = () => {
             </div>
           </Card>
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} md={6} lg={4}>
           <Card size="small">
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
                 {engineers.filter(e => e.status === 'waiting').length}
               </div>
               <div className="text-gray-600 text-sm">待機中</div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={12} md={6} lg={4}>
+          <Card size="small">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-yellow-600">
+                {engineers.filter(e => e.status === 'waiting_scheduled').length}
+              </div>
+              <div className="text-gray-600 text-sm">待機予定</div>
+            </div>
+          </Card>
+        </Col>
+        <Col xs={12} md={6} lg={4}>
+          <Card size="small">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">
+                {engineers.filter(e => e.status === 'leave').length}
+              </div>
+              <div className="text-gray-600 text-sm">休職中</div>
             </div>
           </Card>
         </Col>
@@ -441,7 +443,6 @@ const EngineerList: React.FC = () => {
           {selectedRowKeys.length > 0 && (
             <Space wrap>
               <span>{selectedRowKeys.length}件選択中</span>
-              <Button icon={<MailOutlined />}>一括メール送信</Button>
               <Button icon={<DownloadOutlined />}>選択項目をエクスポート</Button>
               <Button danger>選択項目を削除</Button>
             </Space>
@@ -487,20 +488,8 @@ const EngineerList: React.FC = () => {
               <div className="text-sm text-gray-600 space-y-1">
                 <div>経験: {engineer.experience}年</div>
                 {engineer.availableDate && (
-                  <div>稼働可能日: {engineer.availableDate}</div>
+                  <div>稼働開始可能日: {engineer.availableDate}</div>
                 )}
-                {engineer.unitPrice && (
-                  <div>単価: ¥{engineer.unitPrice.toLocaleString()}</div>
-                )}
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-2">
-                <Button type="primary" size="small" icon={<EyeOutlined />}>
-                  詳細
-                </Button>
-                <Dropdown menu={{ items: actionMenu }} trigger={['click']}>
-                  <Button size="small" icon={<MoreOutlined />} />
-                </Dropdown>
               </div>
             </div>
           )}

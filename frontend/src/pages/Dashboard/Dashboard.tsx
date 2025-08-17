@@ -1,165 +1,47 @@
-import React from 'react';
-import { Row, Col, Card, Statistic, Progress, Table, Tag, Space, Button, List, Avatar } from 'antd';
+import { Row, Col, Card, Statistic, Progress, Button, Space, Spin, Alert } from 'antd';
 import {
   UserOutlined,
   TeamOutlined,
-  ProjectOutlined,
-  RiseOutlined,
   ClockCircleOutlined,
   ArrowUpOutlined,
-  ArrowDownOutlined,
-  EyeOutlined,
   SendOutlined,
-  CalendarOutlined,
 } from '@ant-design/icons';
-import type { ColumnsType } from 'antd/es/table';
-
-interface WaitingEngineer {
-  key: string;
-  name: string;
-  skills: string[];
-  availableDate: string;
-  status: string;
-}
-
-interface RecentActivity {
-  id: string;
-  type: string;
-  description: string;
-  time: string;
-  icon: React.ReactNode;
-}
+import { useNavigate } from 'react-router-dom';
+import { useDashboardStats } from '../../hooks/useDashboardStats';
 
 const Dashboard: React.FC = () => {
-  // ダミーデータ
-  const waitingEngineers: WaitingEngineer[] = [
-    {
-      key: '1',
-      name: '田中太郎',
-      skills: ['JavaScript', 'React', 'Node.js'],
-      availableDate: '2024/02/01',
-      status: '待機中',
-    },
-    {
-      key: '2',
-      name: '佐藤花子',
-      skills: ['Python', 'Django', 'PostgreSQL'],
-      availableDate: '2024/01/15',
-      status: '待機中',
-    },
-    {
-      key: '3',
-      name: '鈴木一郎',
-      skills: ['Java', 'Spring', 'MySQL'],
-      availableDate: '2024/02/10',
-      status: '待機予定',
-    },
-    {
-      key: '4',
-      name: '山田次郎',
-      skills: ['C#', '.NET', 'SQL Server'],
-      availableDate: '2024/03/31',
-      status: '待機予定',
-    },
-    {
-      key: '5',
-      name: '伊藤美咲',
-      skills: ['Vue.js', 'Node.js', 'MongoDB'],
-      availableDate: '2024/01/20',
-      status: '待機中',
-    },
-  ];
+  const navigate = useNavigate();
+  const {
+    stats,
+    loading,
+    error,
+    engineerActivePercent,
+    engineerWaitingPercent,
+    engineerWaitingScheduledPercent,
+  } = useDashboardStats();
 
-  const recentActivities: RecentActivity[] = [
-    {
-      id: '1',
-      type: 'project',
-      description: '新規プロジェクト「ECサイト構築」が開始されました',
-      time: '2時間前',
-      icon: <ProjectOutlined className="text-blue-500" />,
-    },
-    {
-      id: '2',
-      type: 'engineer',
-      description: '山田太郎さんのステータスが「待機中」に変更されました',
-      time: '3時間前',
-      icon: <UserOutlined className="text-green-500" />,
-    },
-    {
-      id: '3',
-      type: 'approach',
-      description: 'ABC株式会社へのアプローチメールが送信されました',
-      time: '5時間前',
-      icon: <SendOutlined className="text-purple-500" />,
-    },
-    {
-      id: '4',
-      type: 'skillsheet',
-      description: '5名のスキルシートが更新されました',
-      time: '1日前',
-      icon: <TeamOutlined className="text-orange-500" />,
-    },
-  ];
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" tip="データを読み込み中..." />
+      </div>
+    );
+  }
 
-  const columns: ColumnsType<WaitingEngineer> = [
-    {
-      title: '氏名',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text) => (
-        <Space>
-          <Avatar icon={<UserOutlined />} size="small" />
-          <span className="font-medium">{text}</span>
-        </Space>
-      ),
-    },
-    {
-      title: 'スキル',
-      dataIndex: 'skills',
-      key: 'skills',
-      render: (skills: string[]) => (
-        <>
-          {skills.map((skill) => (
-            <Tag key={skill} color="blue">
-              {skill}
-            </Tag>
-          ))}
-        </>
-      ),
-    },
-    {
-      title: '稼働可能日',
-      dataIndex: 'availableDate',
-      key: 'availableDate',
-      render: (date) => (
-        <Space>
-          <CalendarOutlined />
-          {date}
-        </Space>
-      ),
-    },
-    {
-      title: 'ステータス',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag color={status === '待機中' ? 'orange' : 'cyan'}>
-          {status}
-        </Tag>
-      ),
-    },
-    {
-      title: 'アクション',
-      key: 'action',
-      render: () => (
-        <Space size="middle">
-          <Button type="link" icon={<EyeOutlined />} size="small">
-            詳細
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+  if (error) {
+    return (
+      <Alert
+        message="エラー"
+        description="データの取得に失敗しました。ページを更新してください。"
+        type="error"
+        showIcon
+      />
+    );
+  }
+
+  if (!stats) {
+    return null;
+  }
 
   return (
     <div>
@@ -174,98 +56,121 @@ const Dashboard: React.FC = () => {
           <Card>
             <Statistic
               title="エンジニア総数"
-              value={120}
+              value={stats.engineers.total}
               prefix={<TeamOutlined />}
               suffix={
-                <span className="text-green-500 text-sm">
-                  <ArrowUpOutlined /> 5
-                </span>
+                stats.engineers.totalChange > 0 && (
+                  <span className="text-green-500 text-sm">
+                    <ArrowUpOutlined /> {stats.engineers.totalChange}
+                  </span>
+                )
               }
             />
-            <Progress percent={75} strokeColor="#52c41a" showInfo={false} />
+            <Progress 
+              percent={75} 
+              strokeColor="#52c41a" 
+              showInfo={false} 
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="稼働中"
+              value={stats.engineers.active}
+              prefix={<UserOutlined />}
+              valueStyle={{ color: '#52c41a' }}
+            />
+            <Progress 
+              percent={engineerActivePercent} 
+              strokeColor="#52c41a" 
+              showInfo={false} 
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
               title="待機中"
-              value={15}
+              value={stats.engineers.waiting}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: '#faad14' }}
-              suffix={
-                <span className="text-orange-500 text-sm">
-                  <ArrowUpOutlined /> 3
-                </span>
-              }
             />
-            <Progress percent={12.5} strokeColor="#faad14" showInfo={false} />
+            <Progress 
+              percent={engineerWaitingPercent} 
+              strokeColor="#faad14" 
+              showInfo={false} 
+            />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="今月のアプローチ"
-              value={25}
-              prefix={<SendOutlined />}
-              suffix={
-                <span className="text-green-500 text-sm">
-                  <ArrowUpOutlined /> 8
-                </span>
-              }
+              title="待機予定"
+              value={stats.engineers.waitingScheduled}
+              prefix={<ClockCircleOutlined />}
+              valueStyle={{ color: '#1890ff' }}
             />
-            <Progress percent={83} strokeColor="#1890ff" showInfo={false} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="成約率"
-              value={20}
-              prefix={<RiseOutlined />}
-              suffix="%"
-              valueStyle={{ color: '#52c41a' }}
+            <Progress 
+              percent={engineerWaitingScheduledPercent} 
+              strokeColor="#1890ff" 
+              showInfo={false} 
             />
-            <Progress percent={20} strokeColor="#52c41a" showInfo={false} />
           </Card>
         </Col>
       </Row>
 
       <Row gutter={[16, 16]}>
-        {/* 待機中エンジニア一覧 */}
-        <Col xs={24} lg={16}>
-          <Card
-            title="待機中・待機予定エンジニア"
-            extra={
-              <Button type="link" onClick={() => console.log('View all')}>
-                すべて見る
-              </Button>
-            }
-          >
-            <Table
-              columns={columns}
-              dataSource={waitingEngineers}
-              pagination={false}
-              size="small"
-            />
+        {/* アプローチ統計 */}
+        <Col xs={24} md={12}>
+          <Card title="今月のアプローチ活動">
+            <Row gutter={16}>
+              <Col span={12}>
+                <Statistic
+                  title="アプローチ数"
+                  value={stats.approaches.monthlyCount}
+                  prefix={<SendOutlined />}
+                  suffix={
+                    stats.approaches.monthlyChange > 0 && (
+                      <span className="text-green-500 text-sm">
+                        <ArrowUpOutlined /> {stats.approaches.monthlyChange}
+                      </span>
+                    )
+                  }
+                />
+              </Col>
+              <Col span={12}>
+                <Statistic
+                  title="成約率"
+                  value={stats.approaches.successRate}
+                  suffix="%"
+                  valueStyle={{ color: '#52c41a' }}
+                />
+              </Col>
+            </Row>
           </Card>
         </Col>
 
-        {/* 最新アクティビティ */}
-        <Col xs={24} lg={8}>
-          <Card title="最新アクティビティ">
-            <List
-              itemLayout="horizontal"
-              dataSource={recentActivities}
-              renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    avatar={item.icon}
-                    title={<span className="text-sm">{item.description}</span>}
-                    description={<span className="text-xs text-gray-500">{item.time}</span>}
-                  />
-                </List.Item>
-              )}
-            />
+        {/* スキルシート更新状況 */}
+        <Col xs={24} md={12}>
+          <Card title="スキルシート更新状況">
+            <Row gutter={16}>
+              <Col span={12}>
+                <Statistic
+                  title="今月更新"
+                  value={stats.skillSheets.monthlyUpdated}
+                  suffix="件"
+                />
+              </Col>
+              <Col span={12}>
+                <Statistic
+                  title="要更新"
+                  value={stats.skillSheets.needsUpdate}
+                  suffix="件"
+                  valueStyle={{ color: '#faad14' }}
+                />
+              </Col>
+            </Row>
           </Card>
         </Col>
       </Row>
@@ -275,17 +180,27 @@ const Dashboard: React.FC = () => {
         <Col xs={24}>
           <Card title="クイックアクション">
             <Space size="large" wrap>
-              <Button type="primary" icon={<UserOutlined />} size="large">
+              <Button 
+                type="primary" 
+                icon={<UserOutlined />} 
+                size="large"
+                onClick={() => navigate('/engineers/new')}
+              >
                 エンジニア登録
               </Button>
-              <Button icon={<ProjectOutlined />} size="large">
-                プロジェクト作成
-              </Button>
-              <Button icon={<SendOutlined />} size="large">
+              <Button 
+                icon={<SendOutlined />} 
+                size="large"
+                onClick={() => navigate('/approaches/create')}
+              >
                 アプローチ作成
               </Button>
-              <Button icon={<TeamOutlined />} size="large">
-                スキルシート更新
+              <Button 
+                icon={<TeamOutlined />} 
+                size="large"
+                onClick={() => navigate('/engineers/list')}
+              >
+                エンジニア一覧
               </Button>
             </Space>
           </Card>

@@ -16,16 +16,13 @@ import {
   message,
   Badge,
   Tooltip,
-  Timeline,
   Drawer,
   Descriptions,
   Alert,
   Avatar,
   List,
   Statistic,
-  Empty,
   Tabs,
-  Divider,
 } from 'antd';
 import {
   HistoryOutlined,
@@ -40,9 +37,7 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  CloseCircleOutlined,
   UserOutlined,
-  BankOutlined,
   PaperClipOutlined,
   EyeOutlined,
   MessageOutlined,
@@ -58,7 +53,6 @@ const { Option } = Select;
 const { Search } = Input;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
-const { TabPane } = Tabs;
 
 interface ApproachRecord {
   id: string;
