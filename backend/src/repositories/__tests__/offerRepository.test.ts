@@ -208,6 +208,7 @@ describe('OfferRepository', () => {
     });
 
     it('開封ステータスの場合openedAtを更新すること', async () => {
+      prisma.offer.findUnique.mockResolvedValue({ openedAt: null } as any);
       prisma.offer.update.mockResolvedValue({} as any);
 
       await repository.updateOfferStatus(BigInt(1), 'OPENED');

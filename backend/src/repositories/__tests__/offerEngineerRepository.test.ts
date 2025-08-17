@@ -36,8 +36,12 @@ describe('OfferEngineerRepository', () => {
         },
       ];
 
+      // 最初のfindManyは既存エンジニアのチェック用（空を返す）
+      prisma.offerEngineer.findMany.mockResolvedValueOnce([]);
+      // createManyの実行
       prisma.offerEngineer.createMany.mockResolvedValue({ count: 2 });
-      prisma.offerEngineer.findMany.mockResolvedValue(mockOfferEngineers as any);
+      // 2回目のfindManyは作成されたレコードの取得用
+      prisma.offerEngineer.findMany.mockResolvedValueOnce(mockOfferEngineers as any);
 
       const result = await repository.addEngineersToOffer(
         BigInt(1),

@@ -155,8 +155,14 @@ export class OfferRepository {
       updatedAt: new Date(),
     };
 
-    if (status === 'OPENED' && !await this.isOpened(id)) {
-      updateData.openedAt = new Date();
+    if (status === 'OPENED') {
+      const offer = await this.prisma.offer.findUnique({
+        where: { id },
+        select: { openedAt: true },
+      });
+      if (!offer?.openedAt) {
+        updateData.openedAt = new Date();
+      }
     }
 
     if (['ACCEPTED', 'DECLINED'].includes(status)) {
@@ -167,17 +173,6 @@ export class OfferRepository {
       where: { id },
       data: updateData,
     });
-  }
-
-  /**
-   * オファーが既に開封されているか確認
-   */
-  private async isOpened(id: bigint): Promise<boolean> {
-    const offer = await this.prisma.offer.findUnique({
-      where: { id },
-      select: { openedAt: true },
-    });
-    return offer?.openedAt !== null;
   }
 
   /**
@@ -304,3 +299,5 @@ export class OfferRepository {
     });
   }
 }
+
+export const offerRepository = new OfferRepository();
