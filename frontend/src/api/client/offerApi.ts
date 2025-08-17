@@ -1,169 +1,103 @@
-import axios from 'axios';
-import { OfferStatus, ProjectDetails } from '../../stores/offerStore';
+import axios from '@/lib/axios';
+import type {
+  OfferBoardData,
+  Offer,
+  CreateOfferDto,
+  UpdateOfferStatusDto,
+  OfferFilter,
+  OfferStatistics,
+  OfferStatus,
+} from '@/types/offer';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const BASE_URL = '/api/client';
 
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
+export const offerApi = {
+  // オファーボード関連
+  getOfferBoard: async (): Promise<OfferBoardData> => {
+    const response = await axios.get(`${BASE_URL}/offer-board`);
+    return response.data;
   },
-});
 
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+  // オファー管理
+  getOffers: async (filter?: OfferFilter): Promise<Offer[]> => {
+    const response = await axios.get(`${BASE_URL}/offers`, { params: filter });
+    return response.data;
+  },
 
-export interface Offer {
-  id: string;
-  offerNumber: string;
-  clientCompanyId: string;
-  status: OfferStatus;
-  projectName: string;
-  projectPeriodStart: string;
-  projectPeriodEnd: string;
-  requiredSkills: string[];
-  projectDescription: string;
-  location?: string;
-  rateMin?: number;
-  rateMax?: number;
-  remarks?: string;
-  sentAt: string;
-  openedAt?: string;
-  respondedAt?: string;
-  reminderSentAt?: string;
-  reminderCount: number;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-  engineers?: OfferEngineer[];
-}
+  getOffer: async (offerId: string): Promise<Offer> => {
+    const response = await axios.get(`${BASE_URL}/offers/${offerId}`);
+    return response.data;
+  },
 
-export interface OfferEngineer {
-  id: string;
-  offerId: string;
-  engineerId: string;
-  individualStatus: OfferStatus;
-  respondedAt?: string;
-  responseNote?: string;
-  engineer?: Engineer;
-}
+  createOffer: async (data: CreateOfferDto): Promise<Offer> => {
+    const response = await axios.post(`${BASE_URL}/offers`, data);
+    return response.data;
+  },
 
-export interface Engineer {
-  id: string;
-  name: string;
-  skills: string[];
-  experience: number;
-  status: 'AVAILABLE' | 'PENDING' | 'ASSIGNED';
-  availableFrom?: string;
-  offerStatus?: OfferStatus;
-  lastOfferDate?: string;
-}
+  updateOfferStatus: async (
+    offerId: string,
+    data: UpdateOfferStatusDto
+  ): Promise<Offer> => {
+    const response = await axios.put(`${BASE_URL}/offers/${offerId}/status`, data);
+    return response.data;
+  },
 
-export interface OfferBoardData {
-  summary: {
-    availableEngineers: number;
-    monthlyOffers: number;
-    todayOffers: number;
-    acceptedOffers: number;
-    pendingOffers: number;
-    declinedOffers: number;
-  };
-  engineers: Engineer[];
-  recentOffers?: Offer[];
-}
+  sendReminder: async (offerId: string): Promise<{ success: boolean }> => {
+    const response = await axios.post(`${BASE_URL}/offers/${offerId}/reminder`);
+    return response.data;
+  },
 
-export interface CreateOfferRequest {
-  engineerIds: string[];
-  projectDetails: ProjectDetails;
-  sendEmail: boolean;
-}
+  bulkAction: async (data: {
+    action: string;
+    offerIds: string[];
+  }): Promise<{ success: boolean; results: any[] }> => {
+    const response = await axios.post(`${BASE_URL}/offers/bulk-action`, data);
+    return response.data;
+  },
 
-export interface OfferFilters {
-  status?: OfferStatus;
-  from?: string;
-  to?: string;
-  engineerId?: string;
-  projectName?: string;
-}
+  // 統計情報
+  getStatistics: async (): Promise<OfferStatistics> => {
+    const response = await axios.get(`${BASE_URL}/offers/statistics`);
+    return response.data;
+  },
 
-export interface OfferStatistics {
-  totalOffers: number;
-  monthlyOffers: number;
-  weeklyOffers: number;
-  todayOffers: number;
-  acceptanceRate: number;
-  averageResponseTime: number;
-  declineRate: number;
-  statusBreakdown: Record<OfferStatus, number>;
-}
+  // オファー履歴
+  getOfferHistory: async (filter?: OfferFilter): Promise<Offer[]> => {
+    const response = await axios.get(`${BASE_URL}/offer-history`, { params: filter });
+    return response.data;
+  },
 
-export const getOffers = async (filters?: OfferFilters): Promise<Offer[]> => {
-  const { data } = await apiClient.get('/client/offers', { params: filters });
-  return data;
-};
+  exportOfferHistory: async (filter?: OfferFilter): Promise<Blob> => {
+    const response = await axios.get(`${BASE_URL}/offer-history/export`, {
+      params: filter,
+      responseType: 'blob',
+    });
+    return response.data;
+  },
 
-export const getOfferById = async (offerId: string): Promise<Offer> => {
-  const { data } = await apiClient.get(`/client/offers/${offerId}`);
-  return data;
-};
+  searchOffers: async (query: {
+    keyword?: string;
+    status?: OfferStatus[];
+    dateFrom?: string;
+    dateTo?: string;
+  }): Promise<Offer[]> => {
+    const response = await axios.post(`${BASE_URL}/offer-history/search`, query);
+    return response.data;
+  },
 
-export const createOffer = async (request: CreateOfferRequest): Promise<Offer> => {
-  const { data } = await apiClient.post('/client/offers', request);
-  return data;
-};
+  // エンジニア検索
+  searchAvailableEngineers: async (params: {
+    skills?: string[];
+    availability?: string;
+    experience?: number;
+    rate?: { min?: number; max?: number };
+  }) => {
+    const response = await axios.get(`${BASE_URL}/engineers/available`, { params });
+    return response.data;
+  },
 
-export const updateOfferStatus = async (offerId: string, status: OfferStatus): Promise<Offer> => {
-  const { data } = await apiClient.put(`/client/offers/${offerId}/status`, { status });
-  return data;
-};
-
-export const sendReminder = async (offerId: string): Promise<void> => {
-  await apiClient.post(`/client/offers/${offerId}/reminder`);
-};
-
-export const bulkAction = async (offerIds: string[], action: 'reminder' | 'withdraw'): Promise<void> => {
-  await apiClient.post('/client/offers/bulk-action', { offerIds, action });
-};
-
-export const getOfferBoard = async (): Promise<OfferBoardData> => {
-  const { data } = await apiClient.get('/client/offer-board');
-  return data;
-};
-
-export const getAvailableEngineers = async (): Promise<Engineer[]> => {
-  const { data } = await apiClient.get('/client/engineers/available');
-  return data;
-};
-
-export const getEngineerDetails = async (engineerId: string): Promise<Engineer & { offerHistory: Offer[] }> => {
-  const { data } = await apiClient.get(`/client/engineers/${engineerId}`);
-  return data;
-};
-
-export const searchEngineers = async (query: any): Promise<Engineer[]> => {
-  const { data } = await apiClient.post('/client/search/engineers', query);
-  return data;
-};
-
-export const getOfferHistory = async (filters?: OfferFilters): Promise<Offer[]> => {
-  const { data } = await apiClient.get('/client/offer-history', { params: filters });
-  return data;
-};
-
-export const exportOfferHistory = async (format: 'csv' | 'excel' = 'csv'): Promise<Blob> => {
-  const response = await apiClient.get('/client/offer-history/export', {
-    params: { format },
-    responseType: 'blob',
-  });
-  return response.data;
-};
-
-export const getOfferStatistics = async (): Promise<OfferStatistics> => {
-  const { data } = await apiClient.get('/client/offers/statistics');
-  return data;
+  getEngineerDetail: async (engineerId: string) => {
+    const response = await axios.get(`${BASE_URL}/engineers/${engineerId}`);
+    return response.data;
+  },
 };
