@@ -35,6 +35,7 @@ model Company {
   usageLogs       UsageLog[]
   accountLocks    AccountLock[]
   adminLogs       AdminLog[]
+  clientOffers    Offer[]
 
   @@map("companies")
 }
@@ -63,6 +64,7 @@ model User {
   excludedBy      Exclusion[]
   accountLocks    AccountLock[]
   targetAdminLogs AdminLog[]
+  createdOffers   Offer[]
 
   @@index([companyId])
   @@index([isActive])
@@ -157,6 +159,7 @@ model Engineer {
   freelancer       Freelancer?
   engineerProjects EngineerProject[]
   targetExclusions Exclusion[]
+  offerEngineers   OfferEngineer[]
 
   @@index([companyId])
   @@index([currentStatus])
@@ -686,6 +689,61 @@ model Announcement {
   @@map("announcements")
 }
 
+// オファー
+model Offer {
+  id                   BigInt           @id @default(autoincrement())
+  offerNumber          String           @unique @db.VarChar(100)
+  clientCompanyId      BigInt
+  status               OfferStatus      @default(SENT)
+  projectName          String           @db.VarChar(255)
+  projectPeriodStart   DateTime         @db.Date
+  projectPeriodEnd     DateTime         @db.Date
+  requiredSkills       Json?
+  projectDescription   String           @db.Text
+  location             String?          @db.VarChar(255)
+  rateMin              Int?
+  rateMax              Int?
+  remarks              String?          @db.Text
+  sentAt               DateTime         @default(now())
+  openedAt             DateTime?
+  respondedAt          DateTime?
+  reminderSentAt       DateTime?
+  reminderCount        Int              @default(0)
+  createdBy            BigInt
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  clientCompany        Company          @relation(fields: [clientCompanyId], references: [id])
+  creator              User             @relation(fields: [createdBy], references: [id])
+  offerEngineers       OfferEngineer[]
+
+  @@index([clientCompanyId])
+  @@index([status])
+  @@index([sentAt])
+  @@map("offers")
+}
+
+// オファー対象エンジニア
+model OfferEngineer {
+  id               BigInt              @id @default(autoincrement())
+  offerId          BigInt
+  engineerId       BigInt
+  individualStatus OfferEngineerStatus @default(SENT)
+  respondedAt      DateTime?
+  responseNote     String?             @db.Text
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  offer            Offer               @relation(fields: [offerId], references: [id])
+  engineer         Engineer            @relation(fields: [engineerId], references: [id])
+
+  @@unique([offerId, engineerId])
+  @@index([offerId])
+  @@index([engineerId])
+  @@index([individualStatus])
+  @@map("offer_engineers")
+}
+
 // Enums
 enum CompanyType {
   SES
@@ -914,4 +972,25 @@ enum AnnouncementStatus {
   ARCHIVED
 
   @@map("announcement_status")
+}
+
+enum OfferStatus {
+  SENT
+  OPENED
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+
+  @@map("offer_status")
+}
+
+enum OfferEngineerStatus {
+  SENT
+  OPENED
+  PENDING
+  ACCEPTED
+  DECLINED
+
+  @@map("offer_engineer_status")
 }

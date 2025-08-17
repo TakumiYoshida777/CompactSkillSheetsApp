@@ -1,0 +1,28 @@
+import { Router } from 'express';
+import { OfferController } from '../../controllers/client/offerController';
+import { authenticateToken } from '../../middleware/auth';
+import { requireRole } from '../../middleware/roleAuth';
+
+const router = Router();
+const offerController = new OfferController();
+
+// 全てのルートで認証と取引先権限が必要
+router.use(authenticateToken);
+router.use(requireRole('client'));
+
+// オファー管理
+router.post('/offers', (req, res) => offerController.createOffer(req, res));
+router.get('/offers', (req, res) => offerController.getOffers(req, res));
+router.get('/offers/statistics', (req, res) => offerController.getStatistics(req, res));
+router.get('/offers/:id', (req, res) => offerController.getOfferById(req, res));
+router.put('/offers/:id/status', (req, res) => offerController.updateOfferStatus(req, res));
+router.post('/offers/:id/reminder', (req, res) => offerController.sendReminder(req, res));
+router.post('/offers/bulk-action', (req, res) => offerController.bulkAction(req, res));
+
+// オファーボード
+router.get('/offer-board', (req, res) => offerController.getOfferBoard(req, res));
+
+// オファー履歴
+router.get('/offer-history', (req, res) => offerController.getOfferHistory(req, res));
+
+export default router;
