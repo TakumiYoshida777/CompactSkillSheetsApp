@@ -205,12 +205,16 @@ export const OfferBoard: React.FC = () => {
     },
     {
       title: '単価',
-      dataIndex: 'hourlyRate',
+      dataIndex: 'rate',
       key: 'hourlyRate',
-      width: 120,
+      width: 150,
       sorter: true,
       render: (rate) => (
-        <span data-testid="engineer-rate">¥{rate.toLocaleString()}</span>
+        <span data-testid="engineer-rate">
+          {rate && rate.min && rate.max 
+            ? `¥${rate.min}〜${rate.max}万/月`
+            : '-'}
+        </span>
       ),
     },
     {
@@ -221,13 +225,13 @@ export const OfferBoard: React.FC = () => {
     },
     {
       title: 'オファー状況',
-      dataIndex: 'offerStatus',
+      dataIndex: 'lastOfferStatus',
       key: 'offerStatus',
       width: 120,
       render: (status) => (
         <Badge
-          status={getStatusColor(status)}
-          text={getStatusText(status)}
+          status={getStatusColor(status || 'none')}
+          text={getStatusText(status || 'none')}
         />
       ),
     },

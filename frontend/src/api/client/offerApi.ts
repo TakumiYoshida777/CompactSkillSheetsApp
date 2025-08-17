@@ -20,6 +20,14 @@ const mockOfferBoardData: OfferBoardData = {
     acceptedOffers: 5,
     offerAcceptanceRate: 62.5,
   },
+  summary: {
+    totalOffers: 48,
+    monthlyOffers: 15,
+    weeklyOffers: 8,
+    todayOffers: 3,
+    pendingResponses: 12,
+    acceptanceRate: 65,
+  },
   engineers: [
     {
       id: '1',

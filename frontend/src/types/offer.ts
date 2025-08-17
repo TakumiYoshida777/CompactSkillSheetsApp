@@ -16,9 +16,21 @@ export interface Engineer {
   skills: string[];
   experience: number;
   availability: string;
-  hourlyRate: number;
-  lastOfferDate: string | null;
-  offerStatus: OfferStatus;
+  availabilityStatus?: 'available' | 'pending' | 'unavailable';
+  rate?: {
+    min: number;
+    max: number;
+  };
+  hourlyRate?: number; // 後方互換性のため残す
+  lastOfferDate?: string | null;
+  lastOfferStatus?: OfferStatus | null;
+  offerStatus?: OfferStatus;
+  offerHistory?: Array<{
+    offerId: string;
+    projectName: string;
+    status: OfferStatus;
+    sentAt: string;
+  }>;
   company?: string;
   projectHistory?: ProjectHistory[];
 }
@@ -80,7 +92,14 @@ export interface OfferSummary {
 }
 
 export interface OfferBoardData {
-  summary: OfferSummary;
+  statistics?: {
+    totalEngineers: number;
+    availableEngineers: number;
+    offeredEngineers: number;
+    acceptedOffers: number;
+    offerAcceptanceRate: number;
+  };
+  summary?: OfferSummary;
   engineers: Engineer[];
   recentOffers?: Offer[];
 }
