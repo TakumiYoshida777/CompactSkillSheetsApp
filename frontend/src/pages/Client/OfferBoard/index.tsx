@@ -412,3 +412,5 @@ export const OfferBoard: React.FC = () => {
     </div>
   );
 };
+
+export default OfferBoard;

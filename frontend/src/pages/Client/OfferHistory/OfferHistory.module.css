@@ -1,0 +1,46 @@
+.container {
+  padding: 24px;
+}
+
+.statistics {
+  margin-bottom: 24px;
+}
+
+.filterCard {
+  margin-bottom: 24px;
+}
+
+.timelineCard {
+  margin-top: 24px;
+}
+
+.timelineDate {
+  color: #8c8c8c;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .statistics {
+    margin-bottom: 16px;
+  }
+
+  .filterCard {
+    margin-bottom: 16px;
+  }
+
+  .timelineCard {
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 12px;
+  }
+}

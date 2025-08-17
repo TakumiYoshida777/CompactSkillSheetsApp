@@ -11,11 +11,92 @@ import type {
 
 const BASE_URL = '/api/client';
 
+// モックデータ（バックエンドAPI実装まで使用）
+const mockOfferBoardData: OfferBoardData = {
+  statistics: {
+    totalEngineers: 25,
+    availableEngineers: 12,
+    offeredEngineers: 8,
+    acceptedOffers: 5,
+    offerAcceptanceRate: 62.5,
+  },
+  engineers: [
+    {
+      id: '1',
+      name: '田中太郎',
+      skills: ['JavaScript', 'React', 'Node.js'],
+      experience: 5,
+      availability: '2024-02-01',
+      availabilityStatus: 'available',
+      rate: { min: 60, max: 80 },
+      lastOfferStatus: null,
+      offerHistory: [],
+    },
+    {
+      id: '2',
+      name: '佐藤花子',
+      skills: ['TypeScript', 'React', 'AWS'],
+      experience: 3,
+      availability: '2024-02-01',
+      availabilityStatus: 'available',
+      rate: { min: 50, max: 70 },
+      lastOfferStatus: 'pending',
+      offerHistory: [
+        {
+          offerId: 'OFF-2024-010',
+          projectName: 'ECサイト開発',
+          status: 'pending',
+          sentAt: '2024-01-10',
+        },
+      ],
+    },
+    {
+      id: '3',
+      name: '山田次郎',
+      skills: ['Java', 'Spring', 'MySQL'],
+      experience: 7,
+      availability: '2024-03-01',
+      availabilityStatus: 'pending',
+      rate: { min: 70, max: 90 },
+      lastOfferStatus: 'accepted',
+      offerHistory: [
+        {
+          offerId: 'OFF-2024-005',
+          projectName: '基幹システム改修',
+          status: 'accepted',
+          sentAt: '2024-01-05',
+        },
+      ],
+    },
+  ],
+  recentOffers: [
+    {
+      id: 'OFF-2024-045',
+      offerNumber: 'OFF-2024-045',
+      projectName: 'ECサイトリニューアル開発',
+      clientCompanyId: '1',
+      status: 'pending',
+      engineerIds: ['1', '2'],
+      sentAt: new Date('2024-01-15T10:30:00').toISOString(),
+      createdAt: new Date('2024-01-15T10:30:00').toISOString(),
+      updatedAt: new Date('2024-01-15T10:30:00').toISOString(),
+    },
+  ],
+};
+
 export const offerApi = {
   // オファーボード関連
   getOfferBoard: async (): Promise<OfferBoardData> => {
-    const response = await axios.get(`${BASE_URL}/offer-board`);
-    return response.data;
+    // TODO: バックエンドAPI実装後は以下のコメントを解除
+    // const response = await axios.get(`${BASE_URL}/offer-board`);
+    // return response.data;
+    
+    // モックデータを返す（開発用）
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(mockOfferBoardData);
+      }, 500);
+    });
   },
 
   // オファー管理

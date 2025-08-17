@@ -1,0 +1,24 @@
+.container {
+  padding: 24px;
+}
+
+.statistics {
+  margin-bottom: 24px;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .statistics {
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .container {
+    padding: 12px;
+  }
+}
