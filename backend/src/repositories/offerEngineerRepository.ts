@@ -1,87 +1,69 @@
-import { PrismaClient, Prisma, OfferEngineerStatus } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { OfferEngineerStatus } from '../types/offer';
 
-export interface OfferEngineerFilterOptions {
-  status?: OfferEngineerStatus[];
+const prisma = new PrismaClient();
+
+interface CreateOfferEngineerData {
+  offerId: bigint;
+  engineerId: bigint;
+  individualStatus: OfferEngineerStatus;
 }
 
-export interface OfferEngineerStatistics {
-  total: number;
-  sent: number;
-  opened: number;
-  pending: number;
-  accepted: number;
-  declined: number;
+interface UpdateStatusData {
+  individualStatus: OfferEngineerStatus;
+  respondedAt?: Date;
+  responseComment?: string;
 }
 
-export class OfferEngineerRepository {
-  constructor(private prisma: PrismaClient) {}
+class OfferEngineerRepository {
+  private prisma: PrismaClient;
+
+  constructor() {
+    this.prisma = prisma;
+  }
 
   /**
-   * オファーに複数のエンジニアを追加
+   * オファー対象エンジニアを作成
    */
-  async addEngineersToOffer(offerId: bigint, engineerIds: bigint[]) {
-    // 既存のエンジニアを確認
-    const existingEngineers = await this.prisma.offerEngineer.findMany({
-      where: {
-        offerId,
-        engineerId: { in: engineerIds },
-      },
-      select: { engineerId: true },
-    });
-
-    const existingEngineerIds = new Set(
-      existingEngineers.map(e => e.engineerId.toString())
-    );
-
-    // 新規追加するエンジニアのみフィルタリング
-    const newEngineerIds = engineerIds.filter(
-      id => !existingEngineerIds.has(id.toString())
-    );
-
-    if (newEngineerIds.length === 0) {
-      return [];
-    }
-
-    // 一括挿入
-    await this.prisma.offerEngineer.createMany({
-      data: newEngineerIds.map(engineerId => ({
-        offerId,
-        engineerId,
-        individualStatus: 'SENT' as OfferEngineerStatus,
-      })),
-    });
-
-    // 追加されたレコードを返す
-    return this.prisma.offerEngineer.findMany({
-      where: {
-        offerId,
-        engineerId: { in: newEngineerIds },
-      },
+  async create(data: CreateOfferEngineerData) {
+    return this.prisma.offerEngineer.create({
+      data,
     });
   }
 
   /**
-   * オファーIDでエンジニア一覧を取得
+   * 複数のオファー対象エンジニアを一括作成
    */
-  async findEngineersByOffer(
-    offerId: bigint,
-    options?: OfferEngineerFilterOptions
-  ) {
-    const where: Prisma.OfferEngineerWhereInput = {
-      offerId,
-    };
+  async createMany(offerEngineers: CreateOfferEngineerData[]) {
+    return this.prisma.offerEngineer.createMany({
+      data: offerEngineers,
+    });
+  }
 
-    if (options?.status && options.status.length > 0) {
-      where.individualStatus = { in: options.status };
-    }
+  /**
+   * オファー対象エンジニアのステータスを更新
+   */
+  async updateStatus(id: bigint, data: UpdateStatusData) {
+    return this.prisma.offerEngineer.update({
+      where: { id },
+      data,
+    });
+  }
 
+  /**
+   * オファーIDでオファー対象エンジニアを取得
+   */
+  async findByOfferId(offerId: bigint) {
     return this.prisma.offerEngineer.findMany({
-      where,
+      where: { offerId },
       include: {
         engineer: {
-          include: {
-            skillSheet: true,
-            company: true,
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            yearsOfExperience: true,
+            availableFrom: true,
           },
         },
       },
@@ -89,256 +71,273 @@ export class OfferEngineerRepository {
   }
 
   /**
-   * 個別のエンジニアステータスを更新
+   * エンジニアIDでオファー履歴を取得
    */
-  async updateEngineerStatus(
-    offerId: bigint,
-    engineerId: bigint,
-    status: OfferEngineerStatus,
-    responseNote?: string
-  ) {
-    const updateData: Prisma.OfferEngineerUpdateInput = {
-      individualStatus: status,
-      updatedAt: new Date(),
-    };
-
-    if (['ACCEPTED', 'DECLINED'].includes(status)) {
-      updateData.respondedAt = new Date();
-    }
-
-    if (responseNote) {
-      updateData.responseNote = responseNote;
-    }
-
-    return this.prisma.offerEngineer.update({
-      where: {
-        offerId_engineerId: {
-          offerId,
-          engineerId,
-        },
-      },
-      data: updateData,
-    });
-  }
-
-  /**
-   * 複数のエンジニアステータスを一括更新
-   */
-  async bulkUpdateStatuses(
-    offerId: bigint,
-    engineerIds: bigint[],
-    status: OfferEngineerStatus
-  ) {
-    const updateData: Prisma.OfferEngineerUpdateManyArgs['data'] = {
-      individualStatus: status,
-      updatedAt: new Date(),
-    };
-
-    if (['ACCEPTED', 'DECLINED'].includes(status)) {
-      updateData.respondedAt = new Date();
-    }
-
-    const result = await this.prisma.offerEngineer.updateMany({
-      where: {
-        offerId,
-        engineerId: { in: engineerIds },
-      },
-      data: updateData,
-    });
-
-    return result.count;
-  }
-
-  /**
-   * オファー対象エンジニアの統計を取得
-   */
-  async getOfferEngineerStatistics(
-    offerId: bigint
-  ): Promise<OfferEngineerStatistics> {
-    const [total, sent, opened, pending, accepted, declined] = 
-      await Promise.all([
-        this.prisma.offerEngineer.count({ where: { offerId } }),
-        this.prisma.offerEngineer.count({ 
-          where: { offerId, individualStatus: 'SENT' } 
-        }),
-        this.prisma.offerEngineer.count({ 
-          where: { offerId, individualStatus: 'OPENED' } 
-        }),
-        this.prisma.offerEngineer.count({ 
-          where: { offerId, individualStatus: 'PENDING' } 
-        }),
-        this.prisma.offerEngineer.count({ 
-          where: { offerId, individualStatus: 'ACCEPTED' } 
-        }),
-        this.prisma.offerEngineer.count({ 
-          where: { offerId, individualStatus: 'DECLINED' } 
-        }),
-      ]);
-
-    return {
-      total,
-      sent,
-      opened,
-      pending,
-      accepted,
-      declined,
-    };
-  }
-
-  /**
-   * エンジニアIDで関連するオファー一覧を取得
-   */
-  async findOffersByEngineer(
-    engineerId: bigint,
-    options?: { status?: OfferEngineerStatus[] }
-  ) {
-    const where: Prisma.OfferEngineerWhereInput = {
-      engineerId,
-    };
-
-    if (options?.status && options.status.length > 0) {
-      where.individualStatus = { in: options.status };
-    }
-
+  async findByEngineerId(engineerId: bigint) {
     return this.prisma.offerEngineer.findMany({
-      where,
+      where: { engineerId },
       include: {
         offer: {
           include: {
-            clientCompany: true,
+            clientCompany: {
+              select: {
+                id: true,
+                name: true,
+                contactEmail: true,
+              },
+            },
           },
         },
       },
       orderBy: {
-        offer: {
-          sentAt: 'desc',
-        },
+        createdAt: 'desc',
       },
     });
   }
 
   /**
-   * オファーからエンジニアを削除
+   * ステータスでオファー対象エンジニアを検索
    */
-  async removeEngineersFromOffer(offerId: bigint, engineerIds: bigint[]) {
-    const result = await this.prisma.offerEngineer.deleteMany({
+  async findByStatus(status: OfferEngineerStatus) {
+    return this.prisma.offerEngineer.findMany({
+      where: { individualStatus: status },
+      include: {
+        offer: true,
+        engineer: true,
+      },
+    });
+  }
+
+  /**
+   * オファーIDとエンジニアIDで検索
+   */
+  async findByOfferAndEngineer(offerId: bigint, engineerId: bigint) {
+    return this.prisma.offerEngineer.findFirst({
       where: {
         offerId,
-        engineerId: { in: engineerIds },
-      },
-    });
-
-    return result.count;
-  }
-
-  /**
-   * エンジニアが他のアクティブなオファーを持っているか確認
-   */
-  async checkEngineerAvailability(engineerId: bigint): Promise<boolean> {
-    const activeOffer = await this.prisma.offerEngineer.findFirst({
-      where: {
         engineerId,
-        individualStatus: {
-          in: ['SENT', 'OPENED', 'PENDING', 'ACCEPTED'],
-        },
       },
     });
-
-    return activeOffer === null;
   }
 
   /**
-   * 複数エンジニアの利用可能状況を一括確認
+   * 統計情報を取得
    */
-  async checkMultipleEngineersAvailability(
-    engineerIds: bigint[]
-  ): Promise<Map<string, boolean>> {
-    const activeOffers = await this.prisma.offerEngineer.findMany({
+  async getStatistics(clientCompanyId: bigint) {
+    const [total, accepted, declined, pending] = await Promise.all([
+      // 総数
+      this.prisma.offerEngineer.count({
+        where: {
+          offer: {
+            clientCompanyId,
+          },
+        },
+      }),
+      // 承諾数
+      this.prisma.offerEngineer.count({
+        where: {
+          offer: {
+            clientCompanyId,
+          },
+          individualStatus: 'ACCEPTED',
+        },
+      }),
+      // 辞退数
+      this.prisma.offerEngineer.count({
+        where: {
+          offer: {
+            clientCompanyId,
+          },
+          individualStatus: 'DECLINED',
+        },
+      }),
+      // 保留数
+      this.prisma.offerEngineer.count({
+        where: {
+          offer: {
+            clientCompanyId,
+          },
+          individualStatus: {
+            in: ['SENT', 'OPENED', 'PENDING'],
+          },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      accepted,
+      declined,
+      pending,
+      acceptanceRate: total > 0 ? (accepted / total) * 100 : 0,
+    };
+  }
+
+  /**
+   * 期間指定で統計を取得
+   */
+  async getStatisticsByPeriod(
+    clientCompanyId: bigint,
+    startDate: Date,
+    endDate: Date
+  ) {
+    return this.prisma.offerEngineer.groupBy({
+      by: ['individualStatus'],
       where: {
-        engineerId: { in: engineerIds },
-        individualStatus: {
-          in: ['SENT', 'OPENED', 'PENDING', 'ACCEPTED'],
+        offer: {
+          clientCompanyId,
+          sentAt: {
+            gte: startDate,
+            lte: endDate,
+          },
         },
       },
-      select: {
-        engineerId: true,
+      _count: {
+        id: true,
       },
     });
+  }
 
-    const busyEngineers = new Set(
-      activeOffers.map(o => o.engineerId.toString())
+  /**
+   * エンジニア別の応答率を取得
+   */
+  async getEngineerResponseRate(engineerId: bigint) {
+    const [total, responded] = await Promise.all([
+      this.prisma.offerEngineer.count({
+        where: {
+          engineerId,
+        },
+      }),
+      this.prisma.offerEngineer.count({
+        where: {
+          engineerId,
+          individualStatus: {
+            in: ['ACCEPTED', 'DECLINED'],
+          },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      responded,
+      responseRate: total > 0 ? (responded / total) * 100 : 0,
+    };
+  }
+
+  /**
+   * 最近のオファー応答を取得
+   */
+  async getRecentResponses(clientCompanyId: bigint, limit: number = 10) {
+    return this.prisma.offerEngineer.findMany({
+      where: {
+        offer: {
+          clientCompanyId,
+        },
+        respondedAt: {
+          not: null,
+        },
+      },
+      include: {
+        engineer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        offer: {
+          select: {
+            id: true,
+            offerNumber: true,
+            projectName: true,
+          },
+        },
+      },
+      orderBy: {
+        respondedAt: 'desc',
+      },
+      take: limit,
+    });
+  }
+
+  /**
+   * オファー対象エンジニアを削除（オファー取り下げ時）
+   */
+  async deleteByOfferId(offerId: bigint) {
+    return this.prisma.offerEngineer.deleteMany({
+      where: { offerId },
+    });
+  }
+
+  /**
+   * 特定のオファーとエンジニアの組み合わせを削除
+   */
+  async delete(offerId: bigint, engineerId: bigint) {
+    return this.prisma.offerEngineer.deleteMany({
+      where: {
+        offerId,
+        engineerId,
+      },
+    });
+  }
+
+  /**
+   * 複数ステータス条件でカウント
+   */
+  async countByStatuses(
+    clientCompanyId: bigint,
+    statuses: OfferEngineerStatus[]
+  ) {
+    return this.prisma.offerEngineer.count({
+      where: {
+        offer: {
+          clientCompanyId,
+        },
+        individualStatus: {
+          in: statuses,
+        },
+      },
+    });
+  }
+
+  /**
+   * スキルマッチング率を計算
+   */
+  async calculateSkillMatchRate(offerId: bigint, engineerId: bigint) {
+    const [offer, engineer] = await Promise.all([
+      this.prisma.offer.findUnique({
+        where: { id: offerId },
+        select: { requiredSkills: true },
+      }),
+      this.prisma.engineer.findUnique({
+        where: { id: engineerId },
+      }),
+    ]);
+
+    if (!offer || !engineer) {
+      return 0;
+    }
+
+    // Prismaでは配列フィールドはJsonValueとして型付けされる
+    const requiredSkills = Array.isArray(offer.requiredSkills) 
+      ? (offer.requiredSkills as string[]) 
+      : [];
+    
+    // engineerのskillsも同様に処理
+    const engineerSkills = engineer && 'skills' in engineer && Array.isArray(engineer.skills) 
+      ? (engineer.skills as string[])
+      : [];
+
+    if (requiredSkills.length === 0) {
+      return 100;
+    }
+
+    const matchedSkills = requiredSkills.filter((skill: string) =>
+      engineerSkills.includes(skill)
     );
 
-    const availabilityMap = new Map<string, boolean>();
-    engineerIds.forEach(id => {
-      availabilityMap.set(id.toString(), !busyEngineers.has(id.toString()));
-    });
-
-    return availabilityMap;
-  }
-
-  /**
-   * オファー可能なエンジニアを取得
-   */
-  async findAvailableEngineers(
-    companyId: bigint,
-    options?: {
-      limit?: number;
-      offset?: number;
-      includeWorking?: boolean;
-    }
-  ) {
-    const { limit = 50, offset = 0, includeWorking = false } = options || {};
-
-    // サブクエリでアクティブなオファーを持つエンジニアIDを取得
-    const activeOfferEngineerIds = await this.prisma.offerEngineer.findMany({
-      where: {
-        individualStatus: {
-          in: ['SENT', 'OPENED', 'PENDING', 'ACCEPTED'],
-        },
-      },
-      select: {
-        engineerId: true,
-      },
-      distinct: ['engineerId'],
-    });
-
-    const busyEngineerIds = activeOfferEngineerIds.map(e => e.engineerId);
-
-    const whereCondition: Prisma.EngineerWhereInput = {
-      companyId,
-      isPublic: true,
-      id: {
-        notIn: busyEngineerIds,
-      },
-    };
-
-    if (!includeWorking) {
-      whereCondition.currentStatus = {
-        in: ['WAITING', 'WAITING_SOON'],
-      };
-    }
-
-    return this.prisma.engineer.findMany({
-      where: whereCondition,
-      include: {
-        skillSheet: true,
-        engineerProjects: {
-          where: {
-            isCurrent: true,
-          },
-          include: {
-            project: true,
-          },
-        },
-      },
-      skip: offset,
-      take: limit,
-      orderBy: [
-        { currentStatus: 'asc' },
-        { availableDate: 'asc' },
-      ],
-    });
+    return (matchedSkills.length / requiredSkills.length) * 100;
   }
 
   /**
@@ -362,3 +361,5 @@ export class OfferEngineerRepository {
     });
   }
 }
+
+export const offerEngineerRepository = new OfferEngineerRepository();

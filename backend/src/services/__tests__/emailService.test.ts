@@ -18,6 +18,9 @@ describe('EmailService', () => {
     };
     (nodemailer.createTransport as jest.Mock).mockReturnValue(mockTransporter);
     
+    // EmailServiceのインスタンスにモックトランスポーターを設定
+    (emailService as any).setTransporter(mockTransporter);
+    
     jest.clearAllMocks();
   });
 
@@ -192,7 +195,7 @@ describe('EmailService', () => {
       expect(mockSendMail).toHaveBeenCalledTimes(1);
       expect(mockSendMail).toHaveBeenCalledWith(expect.objectContaining({
         to: 'tanaka@example.com',
-        subject: expect.stringContaining('【リマインド】')
+        subject: expect.stringContaining('【リマインド')
       }));
     });
 

@@ -1,0 +1,161 @@
+.layout {
+  min-height: 100vh;
+}
+
+.sider {
+  background: #001529 !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.logo {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logoText {
+  color: #fff !important;
+  margin: 0 !important;
+  font-weight: 600 !important;
+}
+
+.menu {
+  margin-top: 16px;
+}
+
+.header {
+  background: #fff;
+  padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.trigger {
+  font-size: 18px;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.trigger:hover {
+  color: #1890ff;
+}
+
+.companyName {
+  margin: 0 !important;
+  color: #001529;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+}
+
+.notification {
+  cursor: pointer;
+}
+
+.userInfo {
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background 0.3s;
+}
+
+.userInfo:hover {
+  background: #f0f0f0;
+}
+
+.userName {
+  font-weight: 500;
+  color: #262626;
+}
+
+.content {
+  margin: 24px;
+  background: transparent;
+  min-height: calc(100vh - 64px - 48px);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .sider {
+    position: fixed !important;
+    height: 100vh;
+    z-index: 999;
+    left: 0;
+  }
+
+  .sider.ant-layout-sider-collapsed {
+    transform: translateX(-80px);
+  }
+
+  .header {
+    padding: 0 16px;
+  }
+
+  .content {
+    margin: 16px;
+  }
+
+  .companyName {
+    font-size: 14px !important;
+  }
+
+  .userName {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .headerLeft {
+    flex: 1;
+  }
+
+  .companyName {
+    font-size: 12px !important;
+  }
+
+  .content {
+    margin: 12px;
+    min-height: calc(100vh - 64px - 24px);
+  }
+}
+
+/* ダークモード対応（将来実装用） */
+@media (prefers-color-scheme: dark) {
+  .header {
+    background: #141414;
+    border-bottom: 1px solid #303030;
+  }
+
+  .companyName {
+    color: #fff;
+  }
+
+  .userName {
+    color: #fff;
+  }
+
+  .userInfo:hover {
+    background: #303030;
+  }
+
+  .trigger:hover {
+    color: #40a9ff;
+  }
+}

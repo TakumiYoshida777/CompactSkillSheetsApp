@@ -7,6 +7,7 @@ import './App.css';
 // レイアウトコンポーネント（常に必要なので通常インポート）
 import MainLayout from './layouts/MainLayout';
 import EngineerLayout from './layouts/EngineerLayout';
+import ClientLayout from './layouts/ClientLayout';
 
 // ページコンポーネントを動的インポート
 const Dashboard = lazy(() => import('./pages/Dashboard/Dashboard'));
@@ -23,6 +24,11 @@ const ApproachHistory = lazy(() => import('./pages/Approaches/ApproachHistory'))
 const ApproachCreate = lazy(() => import('./pages/Approaches/ApproachCreate'));
 const UserProfile = lazy(() => import('./pages/Profile/UserProfile'));
 // const ProjectList = lazy(() => import('./pages/Projects/ProjectList')); // 一時的にコメントアウト
+
+// 取引先企業向けページコンポーネント
+const OfferBoard = lazy(() => import('./pages/Client/OfferBoard'));
+const OfferManagement = lazy(() => import('./pages/Client/OfferManagement'));
+const OfferHistory = lazy(() => import('./pages/Client/OfferHistory'));
 
 // ローディングコンポーネント
 const PageLoader = () => (
@@ -160,6 +166,33 @@ function App() {
               <Route path="profile" element={<div>エンジニアプロフィール編集（開発中）</div>} />
               <Route path="approach-history" element={<div>アプローチ履歴（開発中）</div>} />
               <Route path="settings" element={<div>エンジニア設定（開発中）</div>} />
+            </Route>
+
+            {/* 取引先企業向け画面（専用レイアウト付き） */}
+            <Route path="/client" element={<ClientLayout />}>
+              <Route index element={<Navigate to="/client/offer-board" replace />} />
+              {/* CLI001 - オファーボード */}
+              <Route path="offer-board" element={
+                <Suspense fallback={<PageLoader />}>
+                  <OfferBoard />
+                </Suspense>
+              } />
+              {/* CLI004 - オファー管理 */}
+              <Route path="offer-management" element={
+                <Suspense fallback={<PageLoader />}>
+                  <OfferManagement />
+                </Suspense>
+              } />
+              {/* CLI005 - オファー履歴 */}
+              <Route path="offer-history" element={
+                <Suspense fallback={<PageLoader />}>
+                  <OfferHistory />
+                </Suspense>
+              } />
+              {/* CLI002 - エンジニア検索（取引先用） */}
+              <Route path="engineers/search" element={<div>エンジニア検索（開発中）</div>} />
+              {/* CLI003 - エンジニア詳細（取引先用） */}
+              <Route path="engineers/:id" element={<div>エンジニア詳細（開発中）</div>} />
             </Route>
           </Routes>
         </Suspense>

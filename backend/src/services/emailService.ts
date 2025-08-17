@@ -10,18 +10,26 @@ interface EmailOptions {
 }
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter!: nodemailer.Transporter;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
+    // テスト環境では実際のトランスポーターを作成しない
+    if (process.env.NODE_ENV !== 'test') {
+      this.transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: false,
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS
+        }
+      });
+    }
+  }
+
+  // テスト用にトランスポーターを設定するメソッド
+  setTransporter(transporter: nodemailer.Transporter) {
+    this.transporter = transporter;
   }
 
   /**
@@ -153,18 +161,18 @@ class EmailService {
   generateEmailContent(template: string, variables: Record<string, any>): string {
     let content = template;
     
-    for (const [key, value] of Object.entries(variables)) {
-      const regex = new RegExp(`{{${key}}}`, 'g');
-      let replacement = '';
-      
-      if (Array.isArray(value)) {
-        replacement = value.join(', ');
-      } else if (value !== null && value !== undefined) {
-        replacement = String(value);
+    // すべての{{variable}}パターンを置換
+    content = content.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+      if (key in variables) {
+        const value = variables[key];
+        if (Array.isArray(value)) {
+          return value.join(', ');
+        } else if (value !== null && value !== undefined) {
+          return String(value);
+        }
       }
-      
-      content = content.replace(regex, replacement);
-    }
+      return ''; // 変数が存在しない場合は空文字列に置換
+    });
     
     return content;
   }
