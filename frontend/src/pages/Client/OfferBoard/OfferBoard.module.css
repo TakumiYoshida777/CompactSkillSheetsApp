@@ -1,0 +1,257 @@
+/* オファーボード全体 */
+.offerBoard {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+/* ローディング */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+/* サマリーセクション */
+.summarySection {
+  margin-bottom: 24px;
+}
+
+.summaryCard {
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+}
+
+.quickStats {
+  margin-top: 16px;
+}
+
+.statCard {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.acceptanceRate {
+  padding: 8px 0;
+}
+
+.rateLabel {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.85);
+  margin-bottom: 8px;
+}
+
+/* フィルターバー */
+.filterBar {
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+}
+
+/* カードヘッダー */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selectedCount {
+  background: #1890ff;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  margin-left: 16px;
+}
+
+/* エンジニアカード（モバイル用） */
+.engineerCard {
+  margin-bottom: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.engineerCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.engineerCard.selected {
+  border: 2px solid #1890ff;
+  background: #f0f8ff;
+}
+
+.engineerCard .cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.engineerName {
+  margin: 0 !important;
+  flex: 1;
+}
+
+.cardBody {
+  padding: 0;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.infoRow:last-child {
+  border-bottom: none;
+}
+
+.skillTags {
+  margin: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.statusSection {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lastOfferDate {
+  font-size: 12px;
+}
+
+/* オファーダイアログ */
+.offerDialog {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.selectedInfo {
+  margin-bottom: 16px;
+}
+
+.selectedEngineers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.emailOption {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.emailAlert {
+  margin-top: 12px;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .offerBoard {
+    padding: 16px;
+  }
+
+  .summaryCard {
+    padding: 12px;
+  }
+
+  .statCard {
+    margin-bottom: 12px;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .selectedCount {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .offerBoard {
+    padding: 12px;
+  }
+
+  .quickStats {
+    margin-top: 8px;
+  }
+
+  .filterBar {
+    padding: 12px;
+  }
+}
+
+/* テーブルのカスタマイズ */
+.ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: #f5f8ff;
+}
+
+.ant-table-tbody > tr.ant-table-row-selected > td {
+  background: #e6f7ff;
+}
+
+/* バッジのカスタマイズ */
+.ant-badge-status-default {
+  background: #d9d9d9;
+}
+
+.ant-badge-status-processing {
+  background: #1890ff;
+}
+
+.ant-badge-status-warning {
+  background: #faad14;
+}
+
+.ant-badge-status-success {
+  background: #52c41a;
+}
+
+.ant-badge-status-error {
+  background: #ff4d4f;
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.summaryCard,
+.statCard,
+.engineerCard {
+  animation: fadeIn 0.5s ease-out;
+}
