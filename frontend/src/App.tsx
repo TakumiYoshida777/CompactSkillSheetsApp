@@ -66,10 +66,12 @@ const PageLoader = () => (
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     // アプリケーション起動時に認証状態をチェック
     // Zustandのpersistがロード完了後、トークンがある場合のみチェック
+    // ユーザー情報もロードされていることを確認（userTypeの判定のため）
     if (token) {
       checkAuth();
     }

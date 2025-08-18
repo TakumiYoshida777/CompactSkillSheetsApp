@@ -185,13 +185,15 @@ const useAuthStore = create<AuthState>()(
       },
 
       refreshAccessToken: async () => {
-        const { refreshToken } = get();
+        const { refreshToken, user } = get();
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
 
         try {
-          const response = await axios.post('/api/auth/refresh', {
+          // ユーザータイプに応じて適切なエンドポイントを使用
+          const endpoint = user?.userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
+          const response = await axios.post(endpoint, {
             refreshToken,
           });
           
@@ -230,7 +232,7 @@ const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
-        const { token } = get();
+        const { token, user } = get();
         if (!token) {
           set({ isAuthenticated: false });
           return;
@@ -239,7 +241,10 @@ const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          const response = await axios.get('/api/auth/me');
+          
+          // ユーザータイプに応じて適切なエンドポイントを使用
+          const endpoint = user?.userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
+          const response = await axios.get(endpoint);
           
           set({
             user: response.data,
@@ -250,7 +255,8 @@ const useAuthStore = create<AuthState>()(
           // トークンが無効な場合はリフレッシュを試みる
           try {
             await get().refreshAccessToken();
-            const response = await axios.get('/api/auth/me');
+            const endpoint = user?.userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
+            const response = await axios.get(endpoint);
             set({
               user: response.data,
               isAuthenticated: true,
