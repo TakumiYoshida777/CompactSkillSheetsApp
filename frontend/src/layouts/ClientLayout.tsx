@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Layout,
@@ -9,6 +9,7 @@ import {
   Badge,
   Button,
   Typography,
+  Drawer,
 } from 'antd';
 import {
   AppstoreOutlined,
@@ -33,6 +34,29 @@ const ClientLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // レスポンシブ対応
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setMobileDrawerVisible(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleMenuClick = (path: string) => {
+    navigate(path);
+    if (isMobile) {
+      setMobileDrawerVisible(false);
+    }
+  };
 
   // メニューアイテム
   const menuItems: MenuProps['items'] = [
@@ -40,19 +64,19 @@ const ClientLayout: React.FC = () => {
       key: '/client/offer-board',
       icon: <AppstoreOutlined />,
       label: 'オファーボード',
-      onClick: () => navigate('/client/offer-board'),
+      onClick: () => handleMenuClick('/client/offer-board'),
     },
     {
       key: '/client/offer-management',
       icon: <FileSearchOutlined />,
       label: 'オファー管理',
-      onClick: () => navigate('/client/offer-management'),
+      onClick: () => handleMenuClick('/client/offer-management'),
     },
     {
       key: '/client/offer-history',
       icon: <HistoryOutlined />,
       label: 'オファー履歴',
-      onClick: () => navigate('/client/offer-history'),
+      onClick: () => handleMenuClick('/client/offer-history'),
     },
     {
       type: 'divider',
@@ -66,7 +90,7 @@ const ClientLayout: React.FC = () => {
           key: '/client/engineers/search',
           icon: <SearchOutlined />,
           label: 'エンジニア検索',
-          onClick: () => navigate('/client/engineers/search'),
+          onClick: () => handleMenuClick('/client/engineers/search'),
         },
       ],
     },
@@ -101,41 +125,68 @@ const ClientLayout: React.FC = () => {
     },
   ];
 
+  const sidebarContent = (
+    <>
+      <div className={styles.logo}>
+        {(collapsed && !isMobile) ? (
+          <Title level={4} className={styles.logoText}>
+            OB
+          </Title>
+        ) : (
+          <Title level={4} className={styles.logoText}>
+            Offer Board
+          </Title>
+        )}
+      </div>
+      <Menu
+        theme="dark"
+        mode="inline"
+        selectedKeys={[location.pathname]}
+        items={menuItems}
+        className={styles.menu}
+      />
+    </>
+  );
+
   return (
     <Layout className={styles.layout}>
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        className={styles.sider}
-        width={250}
-      >
-        <div className={styles.logo}>
-          {collapsed ? (
-            <Title level={4} className={styles.logoText}>
-              OB
-            </Title>
-          ) : (
-            <Title level={4} className={styles.logoText}>
-              Offer Board
-            </Title>
-          )}
-        </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          className={styles.menu}
-        />
-      </Sider>
+      {/* デスクトップ用サイドバー */}
+      {!isMobile && (
+        <Sider
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          className={styles.sider}
+          width={250}
+        >
+          {sidebarContent}
+        </Sider>
+      )}
+
+      {/* モバイル用ドロワー */}
+      {isMobile && (
+        <Drawer
+          placement="left"
+          closable={false}
+          onClose={() => setMobileDrawerVisible(false)}
+          open={mobileDrawerVisible}
+          className={styles.mobileDrawer}
+          width={250}
+          styles={{
+            body: { padding: 0, background: '#001529' },
+            wrapper: { background: '#001529' }
+          }}
+        >
+          {sidebarContent}
+        </Drawer>
+      )}
       <Layout>
         <Header className={styles.header}>
           <div className={styles.headerLeft}>
             <Button
               type="text"
-              icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-              onClick={() => setCollapsed(!collapsed)}
+              icon={isMobile ? <MenuUnfoldOutlined /> : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />)}
+              onClick={() => isMobile ? setMobileDrawerVisible(!mobileDrawerVisible) : setCollapsed(!collapsed)}
               className={styles.trigger}
             />
             <Title level={5} className={styles.companyName}>

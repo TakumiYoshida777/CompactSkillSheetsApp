@@ -91,21 +91,41 @@
   min-height: calc(100vh - 64px - 48px);
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-  .sider {
-    position: fixed !important;
-    height: 100vh;
-    z-index: 999;
-    left: 0;
-  }
+/* モバイルドロワー */
+.mobileDrawer {
+  z-index: 1000;
+}
 
-  .sider.ant-layout-sider-collapsed {
-    transform: translateX(-80px);
+.mobileDrawer .logo {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobileDrawer .menu {
+  margin-top: 16px;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 767px) {
+  .layout {
+    min-height: 100vh;
   }
 
   .header {
     padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .trigger {
+    font-size: 20px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .content {
@@ -118,6 +138,12 @@
 
   .userName {
     display: none;
+  }
+
+  /* タッチターゲット最適化 */
+  .ant-menu-item {
+    min-height: 44px;
+    line-height: 44px;
   }
 }
 
