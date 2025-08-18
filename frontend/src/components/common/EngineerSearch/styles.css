@@ -1,0 +1,24 @@
+.engineer-search {
+  margin-bottom: 24px;
+}
+
+.engineer-search .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.search-advanced-toggle {
+  text-align: center;
+  margin: 16px 0;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+}
+
+.search-actions {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.search-actions .ant-btn {
+  min-width: 100px;
+}
