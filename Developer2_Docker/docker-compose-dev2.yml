@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  # フロントエンド（React） - 環境2
+  frontend-dev2:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile.dev
+    container_name: skillsheet-frontend-dev2
+    ports:
+      - "3001:3000"  # ホスト3001番ポートを使用
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8001/api/v1
+      - VITE_WS_URL=ws://localhost:8001
+    depends_on:
+      - backend-dev2
+    networks:
+      - skillsheet-network-dev2
+
+  # バックエンド（Node.js） - 環境2
+  backend-dev2:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile.dev
+    container_name: skillsheet-backend-dev2
+    ports:
+      - "8001:8000"  # ホスト8001番ポートを使用
+      - "9230:9229"   # デバッガー用（別ポート）
+    volumes:
+      - ../backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://skillsheet:password@postgres-dev2:5432/skillsheet_dev2
+      - REDIS_URL=redis://redis-dev2:6379
+      - ELASTICSEARCH_URL=http://elasticsearch-dev2:9200
+      - JWT_SECRET=dev2-jwt-secret-change-in-production
+      - JWT_EXPIRES_IN=7d
+      - CORS_ORIGIN=http://localhost:3001
+      - LOG_LEVEL=debug
+      - PORT=8000
+    depends_on:
+      - postgres-dev2
+      - redis-dev2
+      - elasticsearch-dev2
+    networks:
+      - skillsheet-network-dev2
+
+  # PostgreSQL - 環境2
+  postgres-dev2:
+    image: postgres:15-alpine
+    container_name: skillsheet-postgres-dev2
+    ports:
+      - "5433:5432"  # ホスト5433番ポートを使用
+    environment:
+      - POSTGRES_USER=skillsheet
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=skillsheet_dev2
+    volumes:
+      - postgres_data_dev2:/var/lib/postgresql/data
+    networks:
+      - skillsheet-network-dev2
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skillsheet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - 環境2
+  redis-dev2:
+    image: redis:7-alpine
+    container_name: skillsheet-redis-dev2
+    ports:
+      - "6380:6379"  # ホスト6380番ポートを使用
+    volumes:
+      - redis_data_dev2:/data
+    networks:
+      - skillsheet-network-dev2
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Elasticsearch - 環境2
+  elasticsearch-dev2:
+    image: elasticsearch:8.11.0
+    container_name: skillsheet-elasticsearch-dev2
+    ports:
+      - "9201:9200"  # ホスト9201番ポートを使用
+      - "9301:9300"  # ホスト9301番ポートを使用
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es_data_dev2:/usr/share/elasticsearch/data
+    networks:
+      - skillsheet-network-dev2
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  skillsheet-network-dev2:
+    driver: bridge
+
+volumes:
+  postgres_data_dev2:
+  redis_data_dev2:
+  es_data_dev2:
