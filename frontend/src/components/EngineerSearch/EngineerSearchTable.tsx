@@ -31,6 +31,18 @@ const { Search } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
+// ロール経験の型定義
+export interface RoleExperience {
+  role: string; // PM、PL、SE、PGなど
+  years: number; // 経験年数
+}
+
+// 業務経験の型定義
+export interface WorkExperience {
+  task: string; // 要件定義、基本設計、詳細設計など
+  level: 'basic' | 'intermediate' | 'advanced' | 'expert'; // 習熟度
+}
+
 export interface Engineer {
   key: string;
   engineerId: string;
@@ -50,6 +62,8 @@ export interface Engineer {
     max: number;
   };
   companyName?: string; // SES企業名（クライアント企業用）
+  roleExperiences?: RoleExperience[]; // ロール経験
+  workExperiences?: WorkExperience[]; // 業務経験
 }
 
 interface EngineerSearchTableProps {
@@ -81,6 +95,8 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
   const [experienceRange, setExperienceRange] = React.useState<[number, number]>([0, 20]);
   const [ageRange, setAgeRange] = React.useState<[number, number]>([20, 60]);
   const [rateRange, setRateRange] = React.useState<[number, number]>([0, 200]);
+  const [filterRoles, setFilterRoles] = React.useState<{ role: string; minYears: number }[]>([]);
+  const [filterTasks, setFilterTasks] = React.useState<string[]>([]);
   const { isMobile } = useResponsive();
   const [form] = Form.useForm();
 
@@ -164,8 +180,33 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
       });
     }
 
+    // ロール経験フィルター
+    if (filterRoles.length > 0) {
+      filtered = filtered.filter(engineer => {
+        if (!engineer.roleExperiences) return false;
+        return filterRoles.every(filterRole => {
+          const roleExp = engineer.roleExperiences?.find(
+            exp => exp.role.toLowerCase() === filterRole.role.toLowerCase()
+          );
+          return roleExp && roleExp.years >= filterRole.minYears;
+        });
+      });
+    }
+
+    // 業務経験フィルター
+    if (filterTasks.length > 0) {
+      filtered = filtered.filter(engineer => {
+        if (!engineer.workExperiences) return false;
+        return filterTasks.every(task => 
+          engineer.workExperiences?.some(
+            exp => exp.task.toLowerCase().includes(task.toLowerCase())
+          )
+        );
+      });
+    }
+
     return filtered;
-  }, [engineers, searchText, filterStatus, filterSkills, experienceRange, ageRange, rateRange, showCompanyColumn]);
+  }, [engineers, searchText, filterStatus, filterSkills, experienceRange, ageRange, rateRange, showCompanyColumn, filterRoles, filterTasks]);
 
   const columns: ColumnsType<Engineer> = [
     {
@@ -351,7 +392,7 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
       {/* 検索・フィルター */}
       <Card className="mb-4">
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} lg={8}>
+          <Col xs={24} sm={12} lg={6}>
             <Search
               placeholder="名前、スキルで検索"
               allowClear
@@ -378,7 +419,7 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
               <Option value="leave">休職中</Option>
             </Select>
           </Col>
-          <Col xs={24} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={5}>
             <Select
               mode="multiple"
               placeholder="スキルで絞り込み"
@@ -392,9 +433,38 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
               ))}
             </Select>
           </Col>
-          <Col xs={24} sm={12} lg={6}>
+          <Col xs={24} sm={12} lg={5}>
+            <Select
+              placeholder="ロール経験で検索"
+              style={{ width: '100%' }}
+              size="large"
+              allowClear
+              onChange={(value) => {
+                if (value) {
+                  // 簡易的なロールフィルター（詳細は詳細フィルターで）
+                  setFilterRoles([{ role: value, minYears: 1 }]);
+                } else {
+                  setFilterRoles([]);
+                }
+              }}
+            >
+              <Option value="PM">PM（プロジェクトマネージャー）</Option>
+              <Option value="PL">PL（プロジェクトリーダー）</Option>
+              <Option value="SE">SE（システムエンジニア）</Option>
+              <Option value="PG">PG（プログラマー）</Option>
+              <Option value="アーキテクト">アーキテクト</Option>
+              <Option value="コンサルタント">コンサルタント</Option>
+              <Option value="テストエンジニア">テストエンジニア</Option>
+              <Option value="インフラエンジニア">インフラエンジニア</Option>
+              <Option value="データベースエンジニア">データベースエンジニア</Option>
+              <Option value="セキュリティエンジニア">セキュリティエンジニア</Option>
+              <Option value="データサイエンティスト">データサイエンティスト</Option>
+              <Option value="AIエンジニア">AIエンジニア</Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={12} lg={4}>
             <RangePicker
-              placeholder={['稼働開始可能日から', '稼働開始可能日まで']}
+              placeholder={['稼働開始日', '〜まで']}
               style={{ width: '100%' }}
               size="large"
             />
@@ -649,6 +719,271 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
               />
             </Form.Item>
           )}
+
+          <Form.Item label="ロール経験">
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Row gutter={[8, 8]}>
+                <Col span={8}>
+                  <Select
+                    placeholder="PM経験"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'PM');
+                      if (value) newRoles.push({ role: 'PM', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                    <Option value={10}>10年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="PL経験"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'PL');
+                      if (value) newRoles.push({ role: 'PL', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={2}>2年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="SE経験"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'SE');
+                      if (value) newRoles.push({ role: 'SE', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                    <Option value={10}>10年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="PG経験"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'PG');
+                      if (value) newRoles.push({ role: 'PG', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                    <Option value={10}>10年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="アーキテクト"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'アーキテクト');
+                      if (value) newRoles.push({ role: 'アーキテクト', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="コンサルタント"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'コンサルタント');
+                      if (value) newRoles.push({ role: 'コンサルタント', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="テストエンジニア"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'テストエンジニア');
+                      if (value) newRoles.push({ role: 'テストエンジニア', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="インフラエンジニア"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'インフラエンジニア');
+                      if (value) newRoles.push({ role: 'インフラエンジニア', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="データベースエンジニア"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'データベースエンジニア');
+                      if (value) newRoles.push({ role: 'データベースエンジニア', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="セキュリティエンジニア"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'セキュリティエンジニア');
+                      if (value) newRoles.push({ role: 'セキュリティエンジニア', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="データサイエンティスト"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'データサイエンティスト');
+                      if (value) newRoles.push({ role: 'データサイエンティスト', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                  </Select>
+                </Col>
+                <Col span={8}>
+                  <Select
+                    placeholder="AIエンジニア"
+                    style={{ width: '100%' }}
+                    allowClear
+                    onChange={(value) => {
+                      const newRoles = filterRoles.filter(r => r.role !== 'AIエンジニア');
+                      if (value) newRoles.push({ role: 'AIエンジニア', minYears: value });
+                      setFilterRoles(newRoles);
+                    }}
+                  >
+                    <Option value={1}>1年以上</Option>
+                    <Option value={3}>3年以上</Option>
+                    <Option value={5}>5年以上</Option>
+                  </Select>
+                </Col>
+              </Row>
+            </Space>
+          </Form.Item>
+
+          <Form.Item label="業務経験">
+            <Select
+              mode="multiple"
+              placeholder="要件定義、基本設計などを選択"
+              style={{ width: '100%' }}
+              value={filterTasks}
+              onChange={setFilterTasks}
+            >
+              <Option value="要件定義">要件定義書作成</Option>
+              <Option value="基本設計">基本設計書作成</Option>
+              <Option value="詳細設計">詳細設計書作成</Option>
+              <Option value="実装">実装・コーディング</Option>
+              <Option value="テスト設計">テスト設計</Option>
+              <Option value="テスト実施">テスト実施</Option>
+              <Option value="結合テスト">結合テスト</Option>
+              <Option value="総合テスト">総合テスト</Option>
+              <Option value="受入テスト">受入テスト</Option>
+              <Option value="性能テスト">性能テスト</Option>
+              <Option value="セキュリティテスト">セキュリティテスト</Option>
+              <Option value="運用保守">運用保守</Option>
+              <Option value="顧客折衝">顧客折衝</Option>
+              <Option value="チームマネジメント">チームマネジメント</Option>
+              <Option value="プロジェクト管理">プロジェクト管理</Option>
+              <Option value="予算管理">予算管理</Option>
+              <Option value="品質管理">品質管理</Option>
+              <Option value="リスク管理">リスク管理</Option>
+              <Option value="スケジュール管理">スケジュール管理</Option>
+              <Option value="要員管理">要員管理</Option>
+              <Option value="ベンダー管理">ベンダー管理</Option>
+              <Option value="インフラ構築">インフラ構築</Option>
+              <Option value="クラウド構築">クラウド構築</Option>
+              <Option value="データベース設計">データベース設計</Option>
+              <Option value="データベース構築">データベース構築</Option>
+              <Option value="ネットワーク設計">ネットワーク設計</Option>
+              <Option value="ネットワーク構築">ネットワーク構築</Option>
+              <Option value="セキュリティ設計">セキュリティ設計</Option>
+              <Option value="セキュリティ監査">セキュリティ監査</Option>
+              <Option value="性能チューニング">性能チューニング</Option>
+              <Option value="障害対応">障害対応</Option>
+              <Option value="ドキュメント作成">ドキュメント作成</Option>
+              <Option value="教育・研修">教育・研修</Option>
+              <Option value="技術調査">技術調査</Option>
+              <Option value="技術選定">技術選定</Option>
+              <Option value="アーキテクチャ設計">アーキテクチャ設計</Option>
+              <Option value="API設計">API設計</Option>
+              <Option value="UI/UX設計">UI/UX設計</Option>
+              <Option value="フロントエンド開発">フロントエンド開発</Option>
+              <Option value="バックエンド開発">バックエンド開発</Option>
+              <Option value="モバイルアプリ開発">モバイルアプリ開発</Option>
+              <Option value="AI/機械学習開発">AI/機械学習開発</Option>
+              <Option value="データ分析">データ分析</Option>
+              <Option value="BI開発">BI開発</Option>
+              <Option value="RPA開発">RPA開発</Option>
+              <Option value="IoT開発">IoT開発</Option>
+              <Option value="ブロックチェーン開発">ブロックチェーン開発</Option>
+              <Option value="DevOps">DevOps</Option>
+              <Option value="CI/CD構築">CI/CD構築</Option>
+              <Option value="コンテナ化">コンテナ化</Option>
+              <Option value="マイクロサービス設計">マイクロサービス設計</Option>
+            </Select>
+          </Form.Item>
 
           <Form.Item label="稼働可能時期">
             <RangePicker style={{ width: '100%' }} />

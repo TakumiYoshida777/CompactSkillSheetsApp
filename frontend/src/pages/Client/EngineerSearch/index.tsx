@@ -24,6 +24,15 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-1234-5678',
       rate: { min: 60, max: 80 },
       companyName: '株式会社テックソリューション',
+      roleExperiences: [
+        { role: 'PL', years: 3 },
+        { role: 'SE', years: 5 },
+      ],
+      workExperiences: [
+        { task: '要件定義', level: 'advanced' },
+        { task: '基本設計', level: 'expert' },
+        { task: '詳細設計', level: 'expert' },
+      ],
     },
     {
       key: '2',
@@ -39,6 +48,15 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-2345-6789',
       rate: { min: 55, max: 70 },
       companyName: '株式会社デジタルイノベーション',
+      roleExperiences: [
+        { role: 'SE', years: 3 },
+        { role: 'PG', years: 5 },
+      ],
+      workExperiences: [
+        { task: '詳細設計', level: 'advanced' },
+        { task: '実装', level: 'expert' },
+        { task: 'テスト設計', level: 'intermediate' },
+      ],
     },
     {
       key: '3',
@@ -54,6 +72,17 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-3456-7890',
       rate: { min: 70, max: 90 },
       companyName: '株式会社テックソリューション',
+      roleExperiences: [
+        { role: 'PM', years: 3 },
+        { role: 'PL', years: 5 },
+        { role: 'SE', years: 10 },
+      ],
+      workExperiences: [
+        { task: '要件定義', level: 'expert' },
+        { task: '基本設計', level: 'expert' },
+        { task: '顧客折衝', level: 'advanced' },
+        { task: 'チームマネジメント', level: 'advanced' },
+      ],
     },
     {
       key: '4',
@@ -71,6 +100,16 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-4567-8901',
       rate: { min: 65, max: 85 },
       companyName: 'SESパートナーズ株式会社',
+      roleExperiences: [
+        { role: 'SE', years: 5 },
+        { role: 'PG', years: 7 },
+      ],
+      workExperiences: [
+        { task: '基本設計', level: 'advanced' },
+        { task: '詳細設計', level: 'advanced' },
+        { task: '実装', level: 'expert' },
+        { task: 'テスト設計', level: 'intermediate' },
+      ],
     },
     {
       key: '5',
@@ -86,6 +125,15 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-5678-9012',
       rate: { min: 50, max: 65 },
       companyName: '株式会社デジタルイノベーション',
+      roleExperiences: [
+        { role: 'SE', years: 2 },
+        { role: 'PG', years: 4 },
+      ],
+      workExperiences: [
+        { task: '詳細設計', level: 'intermediate' },
+        { task: '実装', level: 'advanced' },
+        { task: 'テスト実施', level: 'intermediate' },
+      ],
     },
     {
       key: '6',
@@ -101,6 +149,15 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-6789-0123',
       rate: { min: 70, max: 95 },
       companyName: '株式会社クラウドテック',
+      roleExperiences: [
+        { role: 'アーキテクト', years: 2 },
+        { role: 'SE', years: 7 },
+      ],
+      workExperiences: [
+        { task: '基本設計', level: 'expert' },
+        { task: '詳細設計', level: 'expert' },
+        { task: '実装', level: 'expert' },
+      ],
     },
     {
       key: '7',
@@ -116,6 +173,16 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-7890-1234',
       rate: { min: 60, max: 75 },
       companyName: 'SESパートナーズ株式会社',
+      roleExperiences: [
+        { role: 'SE', years: 4 },
+        { role: 'PG', years: 6 },
+      ],
+      workExperiences: [
+        { task: '詳細設計', level: 'advanced' },
+        { task: '実装', level: 'expert' },
+        { task: 'テスト設計', level: 'intermediate' },
+        { task: 'モバイルアプリ開発', level: 'expert' },
+      ],
     },
     {
       key: '8',
@@ -131,6 +198,17 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-8901-2345',
       rate: { min: 55, max: 70 },
       companyName: '株式会社システムプロ',
+      roleExperiences: [
+        { role: 'PL', years: 2 },
+        { role: 'SE', years: 6 },
+        { role: 'PG', years: 8 },
+      ],
+      workExperiences: [
+        { task: '基本設計', level: 'advanced' },
+        { task: '詳細設計', level: 'expert' },
+        { task: '実装', level: 'expert' },
+        { task: 'テスト設計', level: 'advanced' },
+      ],
     },
     {
       key: '9',
@@ -146,6 +224,16 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-9012-3456',
       rate: { min: 65, max: 80 },
       companyName: '株式会社テックソリューション',
+      roleExperiences: [
+        { role: 'SE', years: 7 },
+        { role: 'PG', years: 7 },
+      ],
+      workExperiences: [
+        { task: '基本設計', level: 'intermediate' },
+        { task: '詳細設計', level: 'advanced' },
+        { task: '実装', level: 'expert' },
+        { task: 'フロントエンド開発', level: 'expert' },
+      ],
     },
     {
       key: '10',
@@ -161,6 +249,17 @@ const ClientEngineerSearch: React.FC = () => {
       phone: '090-0123-4567',
       rate: { min: 75, max: 100 },
       companyName: '株式会社クラウドテック',
+      roleExperiences: [
+        { role: 'PM', years: 5 },
+        { role: 'PL', years: 8 },
+        { role: 'コンサルタント', years: 2 },
+      ],
+      workExperiences: [
+        { task: '要件定義', level: 'expert' },
+        { task: '基本設計', level: 'expert' },
+        { task: '予算管理', level: 'advanced' },
+        { task: '品質管理', level: 'advanced' },
+      ],
     },
   ];
 
