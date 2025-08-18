@@ -1,38 +1,39 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-interface Project {
-  id: string;
-  name: string;
-  clientCompany: string;
-  role: string;
-  startDate: string;
-  endDate?: string;
-  status: 'ongoing' | 'completed' | 'upcoming';
-  teamSize: number;
-  technologies: string[];
-  phases: string[];
-  description: string;
-  achievements?: string;
-  industry?: string;
-  location?: string;
-  responsibilities?: string[];
-}
+import { projectAPI, Project, Assignment, TimelineData, ProjectFilters, UtilizationData } from '../api/projects/projectApi';
 
 interface ProjectState {
   projects: Project[];
-  currentProject: Project | null;
-  upcomingProjects: Project[];
+  selectedProject: Project | null;
+  assignments: Assignment[];
+  timeline: TimelineData[] | null;
+  utilization: UtilizationData[] | null;
+  viewMode: 'kanban' | 'list' | 'calendar';
   isLoading: boolean;
   error: string | null;
 
   // Actions
-  fetchProjects: () => Promise<void>;
+  fetchProjects: (filters?: ProjectFilters) => Promise<void>;
   fetchProjectById: (id: string) => Promise<void>;
-  addProject: (project: Omit<Project, 'id'>) => Promise<void>;
+  createProject: (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateProject: (id: string, data: Partial<Project>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
-  setCurrentProject: (projectId: string) => Promise<void>;
+  updateProjectStatus: (id: string, status: string) => Promise<void>;
+  
+  // Assignment management
+  fetchAssignments: (projectId: string) => Promise<void>;
+  assignEngineer: (projectId: string, engineerId: string, data: any) => Promise<void>;
+  updateAssignment: (projectId: string, assignmentId: string, data: Partial<Assignment>) => Promise<void>;
+  removeAssignment: (projectId: string, assignmentId: string) => Promise<void>;
+  
+  // Timeline and utilization
+  fetchTimeline: () => Promise<void>;
+  fetchUtilization: () => Promise<void>;
+  fetchProjectTimeline: (projectId: string) => Promise<void>;
+  extendProject: (projectId: string, newEndDate: string) => Promise<void>;
+  
+  // View management
+  setViewMode: (mode: 'kanban' | 'list' | 'calendar') => void;
+  setSelectedProject: (project: Project | null) => void;
   clearError: () => void;
 }
 
