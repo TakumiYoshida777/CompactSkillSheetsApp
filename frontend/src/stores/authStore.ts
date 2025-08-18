@@ -2,15 +2,30 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
 
+interface Company {
+  id: string;
+  name: string;
+  companyType: 'ses' | 'client';
+  emailDomain?: string;
+  maxEngineers: number;
+  isActive: boolean;
+}
+
 interface User {
   id: string;
   email: string;
   name: string;
-  companyId: string;
+  companyId?: string;
+  company?: Company;
   roles: string[];
   permissions: string[];
   engineerId?: string;
   avatarUrl?: string;
+  userType?: 'ses' | 'client' | 'engineer';
+  clientCompany?: Company;
+  sesCompany?: Company;
+  department?: string;
+  position?: string;
 }
 
 interface AuthState {
@@ -23,12 +38,17 @@ interface AuthState {
 
   // Actions
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  clientLogin: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   logout: () => void;
   register: (data: any) => Promise<void>;
   refreshAccessToken: () => Promise<void>;
   updateProfile: (data: any) => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
+  hasPermission: (resource: string, action: string) => boolean;
+  hasRole: (role: string) => boolean;
+  isAdmin: () => boolean;
+  isClientUser: () => boolean;
 }
 
 const useAuthStore = create<AuthState>()(
@@ -67,6 +87,39 @@ const useAuthStore = create<AuthState>()(
           set({
             isLoading: false,
             error: error.response?.data?.message || 'ログインに失敗しました',
+          });
+          throw error;
+        }
+      },
+
+      clientLogin: async (email: string, password: string, rememberMe?: boolean) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await axios.post('/api/client/auth/login', {
+            email,
+            password,
+            rememberMe,
+          });
+          
+          const { message, user, accessToken, refreshToken } = response.data;
+          
+          // Axiosのデフォルトヘッダーに認証トークンを設定
+          axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          
+          set({
+            user,
+            token: accessToken,
+            refreshToken,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+          
+          console.log(message); // ログインに成功しました
+        } catch (error: any) {
+          set({
+            isLoading: false,
+            error: error.response?.data?.error || 'ログインに失敗しました',
           });
           throw error;
         }
@@ -191,6 +244,36 @@ const useAuthStore = create<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
+
+      hasPermission: (resource: string, action: string) => {
+        const { user } = get();
+        if (!user) return false;
+        
+        // 管理者は全権限を持つ
+        if (user.roles.includes('admin')) return true;
+        
+        // 特定の権限をチェック
+        const permission = `${resource}:${action}`;
+        return user.permissions.includes(permission) || user.permissions.includes('*');
+      },
+
+      hasRole: (role: string) => {
+        const { user } = get();
+        if (!user) return false;
+        return user.roles.includes(role);
+      },
+
+      isAdmin: () => {
+        const { user } = get();
+        if (!user) return false;
+        return user.roles.includes('admin');
+      },
+
+      isClientUser: () => {
+        const { user } = get();
+        if (!user) return false;
+        return user.userType === 'client' || user.roles.includes('client_admin') || user.roles.includes('client_user');
+      },
     }),
     {
       name: 'auth-storage',

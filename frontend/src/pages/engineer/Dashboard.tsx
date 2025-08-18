@@ -11,6 +11,8 @@ import {
   Typography,
   Alert,
   List,
+  Spin,
+  message,
 } from 'antd';
 import {
   ClockCircleOutlined,
@@ -23,6 +25,7 @@ import {
   ExportOutlined,
   WarningOutlined,
   UserOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useEngineerStore } from '../../stores/engineerStore';
@@ -32,17 +35,18 @@ const { Title, Text, Paragraph } = Typography;
 
 const EngineerDashboard: React.FC = () => {
   const navigate = useNavigate();
-  // 認証を一時的に無効化するため、モックデータを使用
-  const engineerData = {
-    name: 'テストエンジニア',
-    currentStatus: 'working' as const,
-    availableDate: '2024-04-01',
-    isPublic: true
-  };
-  const skillSheetCompletion = 75;
-  const currentProject = 'サンプルプロジェクト';
-  const upcomingProjects: any[] = [];
-  const [loading, setLoading] = useState(false);
+  const {
+    engineerData,
+    skillSheetCompletion,
+    currentProject,
+    upcomingProjects,
+    isLoading,
+    error,
+    fetchEngineerData,
+    clearError,
+  } = useEngineerStore();
+  
+  const [localLoading, setLocalLoading] = useState(true);
 
   useEffect(() => {
     // データの取得
@@ -50,12 +54,15 @@ const EngineerDashboard: React.FC = () => {
   }, []);
 
   const fetchDashboardData = async () => {
-    setLoading(true);
     try {
-      // APIからデータ取得（仮実装）
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 実際のAPIを呼び出す
+      await fetchEngineerData();
+    } catch (err) {
+      console.error('Failed to fetch dashboard data:', err);
+      // エラーの場合はモックデータを使用
+      message.info('デモモードで表示しています');
     } finally {
-      setLoading(false);
+      setLocalLoading(false);
     }
   };
 
@@ -63,6 +70,17 @@ const EngineerDashboard: React.FC = () => {
   const calculateCompletionRate = () => {
     return skillSheetCompletion || 75;
   };
+
+  // デモ用のデフォルトデータ
+  const displayData = engineerData || {
+    name: 'テストエンジニア',
+    currentStatus: 'working' as const,
+    availableDate: '2024-04-01',
+    isPublic: true
+  };
+  
+  const displayProject = currentProject || 'サンプルプロジェクト';
+  const displayProjects = upcomingProjects || [];
 
   // ステータスに応じたタグの色を返す
   const getStatusColor = (status: string) => {
@@ -74,20 +92,39 @@ const EngineerDashboard: React.FC = () => {
     }
   };
 
+  // ステータスの表示名を取得
+  const getStatusDisplay = (status: string) => {
+    switch (status) {
+      case 'working': return '稼働中';
+      case 'waiting': return '待機中';
+      case 'waiting_soon': return '稼働予定';
+      default: return '不明';
+    }
+  };
+
+  // ローディング中の表示
+  if (localLoading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} tip="データを読み込み中..." />
+      </div>
+    );
+  }
+
   const statusCards = [
     {
       title: '現在のステータス',
-      value: '稼働中',
-      icon: <SyncOutlined spin />,
-      color: '#52c41a',
-      suffix: currentProject ? `${currentProject}` : 'プロジェクトA',
+      value: getStatusDisplay(displayData.currentStatus),
+      icon: displayData.currentStatus === 'working' ? <SyncOutlined spin /> : <ClockCircleOutlined />,
+      color: displayData.currentStatus === 'working' ? '#52c41a' : '#faad14',
+      suffix: displayProject,
     },
     {
       title: '稼働可能日',
-      value: '2024/04/01',
+      value: displayData.availableDate ? new Date(displayData.availableDate).toLocaleDateString('ja-JP') : '未設定',
       icon: <CalendarOutlined />,
       color: '#1890ff',
-      suffix: 'まで 45日',
+      suffix: displayData.availableDate ? `まで ${Math.ceil((new Date(displayData.availableDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}日` : '',
     },
     {
       title: 'スキルシート完成度',
@@ -178,7 +215,7 @@ const EngineerDashboard: React.FC = () => {
       <Row gutter={[16, 16]} className="status-cards">
         {statusCards.map((card, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
-            <Card hoverable loading={loading}>
+            <Card hoverable loading={isLoading}>
               <div className="status-card-content">
                 <div className="status-icon" style={{ color: card.color }}>
                   {card.icon}
@@ -211,7 +248,7 @@ const EngineerDashboard: React.FC = () => {
           <Card
             title="スキルサマリー"
             extra={<Button type="link" onClick={() => navigate('/engineer/skill-sheet')}>詳細</Button>}
-            loading={loading}
+            loading={isLoading}
           >
             <List
               dataSource={skillSummary}
@@ -244,7 +281,7 @@ const EngineerDashboard: React.FC = () => {
           <Card
             title="最近のアクティビティ"
             extra={<Button type="link">すべて見る</Button>}
-            loading={loading}
+            loading={isLoading}
           >
             <Timeline>
               {recentActivities.map((activity, index) => (
@@ -276,7 +313,7 @@ const EngineerDashboard: React.FC = () => {
         <Col xs={24} lg={8}>
           <Card
             title="スキルシート更新履歴"
-            loading={loading}
+            loading={isLoading}
           >
             <Timeline>
               <Timeline.Item color="green">

@@ -12,6 +12,7 @@ import {
   Checkbox,
   Row,
   Col,
+  Alert,
 } from 'antd';
 import {
   UserOutlined,
@@ -19,6 +20,7 @@ import {
   LoginOutlined,
   GoogleOutlined,
   GithubOutlined,
+  TeamOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -71,7 +73,9 @@ const Login: React.FC = () => {
           maxWidth: '420px',
           boxShadow: '0 10px 40px rgba(0, 0, 0, 0.16)',
         }}
-        bordered={false}
+        styles={{
+          body: { padding: '24px' }
+        }}
       >
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           {/* ロゴ・タイトル */}
@@ -133,7 +137,7 @@ const Login: React.FC = () => {
                 </Col>
                 <Col>
                   <Link to="/forgot-password">
-                    <AntLink>パスワードを忘れた方</AntLink>
+                    パスワードを忘れた方
                   </Link>
                 </Col>
               </Row>
@@ -190,28 +194,65 @@ const Login: React.FC = () => {
           <div style={{ textAlign: 'center', marginTop: '16px' }}>
             <Text type="secondary">
               アカウントをお持ちでない方は{' '}
-              <Link to="/register">
-                <AntLink strong>新規登録</AntLink>
-              </Link>
             </Text>
+            <Link to="/register">
+              <Button type="link" style={{ padding: 0 }}>
+                <strong>新規登録</strong>
+              </Button>
+            </Link>
           </div>
 
-          {/* デモアカウント情報（開発環境のみ） */}
-          {process.env.NODE_ENV === 'development' && (
-            <Card
-              size="small"
-              style={{
-                backgroundColor: '#f0f2f5',
-                marginTop: '16px',
-              }}
-            >
-              <Space direction="vertical" size="small">
-                <Text strong>開発用デモアカウント:</Text>
-                <Text code>エンジニア: engineer@example.com / password123</Text>
-                <Text code>管理者: admin@example.com / password123</Text>
-              </Space>
-            </Card>
-          )}
+          {/* 取引先企業向けログインリンク */}
+          <div style={{ textAlign: 'center', marginTop: '8px' }}>
+            <Link to="/client/login">
+              <Button type="link" icon={<TeamOutlined />}>
+                取引先企業の方はこちら
+              </Button>
+            </Link>
+          </div>
+
+          {/* デモアカウント情報 */}
+          <Card
+            size="small"
+            style={{
+              backgroundColor: '#f0f2f5',
+              marginTop: '16px',
+            }}
+          >
+            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+              <Text strong>デモアカウント:</Text>
+              <Row gutter={8}>
+                <Col span={12}>
+                  <Button
+                    size="small"
+                    block
+                    onClick={() => {
+                      form.setFieldsValue({
+                        email: 'admin@demo-ses.co.jp',
+                        password: 'password123'
+                      });
+                    }}
+                  >
+                    管理者でログイン
+                  </Button>
+                </Col>
+                <Col span={12}>
+                  <Button
+                    size="small"
+                    block
+                    onClick={() => {
+                      message.info('エンジニアアカウントは準備中です');
+                    }}
+                  >
+                    エンジニアでログイン
+                  </Button>
+                </Col>
+              </Row>
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                デモ用: admin@demo-ses.co.jp / password123
+              </Text>
+            </Space>
+          </Card>
         </Space>
       </Card>
     </div>

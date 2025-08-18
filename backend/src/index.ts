@@ -5,6 +5,12 @@ import morgan from 'morgan';
 import compression from 'compression';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import authRoutes from './routes/authRoutes';
+import companyRoutes from './routes/companyRoutes';
+import engineerAuthRoutes from './routes/engineer/authRoutes';
+import engineerDashboardRoutes from './routes/engineer/dashboardRoutes';
+import engineerSkillSheetRoutes from './routes/engineer/skillSheetRoutes';
+import clientRoutes from './routes/clientRoutes';
 
 // 環境変数の読み込み
 dotenv.config();
@@ -36,6 +42,14 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// APIルートの登録
+app.use('/api/auth', authRoutes);
+app.use('/api/companies', companyRoutes);
+app.use('/api/engineer/auth', engineerAuthRoutes);
+app.use('/api/engineers', engineerDashboardRoutes);
+app.use('/api/engineer/skill-sheet', engineerSkillSheetRoutes);
+app.use('/api', clientRoutes);  // 取引先企業関連のルート
+
 // APIルートのプレースホルダー
 app.get('/api/v1', (req, res) => {
   res.json({ 
@@ -44,6 +58,12 @@ app.get('/api/v1', (req, res) => {
     endpoints: {
       health: '/health',
       api: '/api/v1',
+      auth: '/api/auth',
+      engineer: {
+        auth: '/api/engineer/auth',
+        dashboard: '/api/engineers',
+        skillSheet: '/api/engineer/skill-sheet'
+      },
       test: '/api/v1/test'
     }
   });
