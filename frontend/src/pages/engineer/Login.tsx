@@ -16,7 +16,7 @@ interface LoginForm {
 const EngineerLogin: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const { setAuth } = useAuthStore();
+  const { setAuthTokens } = useAuthStore();
 
   const handleSubmit = async (values: LoginForm) => {
     try {
@@ -29,10 +29,11 @@ const EngineerLogin: React.FC = () => {
 
       if (response.success) {
         // 認証情報を保存
-        setAuth({
-          user: response.data.user,
-          tokens: response.data.tokens,
-        });
+        setAuthTokens(
+          response.data.user,
+          response.data.tokens.accessToken,
+          response.data.tokens.refreshToken
+        );
 
         message.success('ログインに成功しました');
         navigate('/engineer/skill-sheet');
