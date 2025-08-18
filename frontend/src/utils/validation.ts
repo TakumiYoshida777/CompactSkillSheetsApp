@@ -335,3 +335,215 @@ export function groupErrorsByField(
   
   return grouped;
 }
+
+/**
+ * 汎用バリデーション関数
+ */
+export const validators = {
+  /**
+   * メールアドレスのバリデーション
+   */
+  email: (value: string): boolean | string => {
+    if (!value) return '必須項目です'
+    
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!emailRegex.test(value)) {
+      return '有効なメールアドレスを入力してください'
+    }
+    
+    return true
+  },
+
+  /**
+   * 電話番号のバリデーション（日本）
+   */
+  phone: (value: string): boolean | string => {
+    if (!value) return '必須項目です'
+    
+    const phoneRegex = /^(0[0-9]{1,4}-?[0-9]{1,4}-?[0-9]{3,4}|0[789]0-?[0-9]{4}-?[0-9]{4})$/
+    const cleanValue = value.replace(/[-\s]/g, '')
+    
+    if (!phoneRegex.test(value) && !phoneRegex.test(cleanValue)) {
+      return '有効な電話番号を入力してください'
+    }
+    
+    return true
+  },
+
+  /**
+   * パスワードのバリデーション
+   */
+  password: (value: string, options?: {
+    minLength?: number
+    requireUppercase?: boolean
+    requireLowercase?: boolean
+    requireNumber?: boolean
+    requireSpecial?: boolean
+  }): boolean | string => {
+    const {
+      minLength = 8,
+      requireUppercase = true,
+      requireLowercase = true,
+      requireNumber = true,
+      requireSpecial = false
+    } = options || {}
+    
+    if (!value) return '必須項目です'
+    
+    if (value.length < minLength) {
+      return `パスワードは${minLength}文字以上必要です`
+    }
+    
+    if (requireUppercase && !/[A-Z]/.test(value)) {
+      return 'パスワードには大文字を含める必要があります'
+    }
+    
+    if (requireLowercase && !/[a-z]/.test(value)) {
+      return 'パスワードには小文字を含める必要があります'
+    }
+    
+    if (requireNumber && !/[0-9]/.test(value)) {
+      return 'パスワードには数字を含める必要があります'
+    }
+    
+    if (requireSpecial && !/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
+      return 'パスワードには特殊文字を含める必要があります'
+    }
+    
+    return true
+  },
+
+  /**
+   * URLのバリデーション
+   */
+  url: (value: string): boolean | string => {
+    if (!value) return true // オプショナル
+    
+    try {
+      new URL(value)
+      return true
+    } catch {
+      return '有効なURLを入力してください'
+    }
+  },
+
+  /**
+   * 日本語（ひらがな・カタカナ・漢字）のバリデーション
+   */
+  japanese: (value: string): boolean | string => {
+    if (!value) return '必須項目です'
+    
+    const japaneseRegex = /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3400-\u4DBF\s]+$/
+    if (!japaneseRegex.test(value)) {
+      return '日本語で入力してください'
+    }
+    
+    return true
+  },
+
+  /**
+   * 郵便番号のバリデーション
+   */
+  postalCode: (value: string): boolean | string => {
+    if (!value) return '必須項目です'
+    
+    const postalCodeRegex = /^\d{3}-?\d{4}$/
+    if (!postalCodeRegex.test(value)) {
+      return '有効な郵便番号を入力してください（例：123-4567）'
+    }
+    
+    return true
+  },
+
+  /**
+   * 事業者コード（法人番号）のバリデーション
+   */
+  businessCode: (value: string): boolean | string => {
+    if (!value) return true // オプショナル
+    
+    const cleanValue = value.replace(/[-\s]/g, '')
+    if (cleanValue.length !== 13 || !/^\d+$/.test(cleanValue)) {
+      return '13桁の法人番号を入力してください'
+    }
+    
+    return true
+  },
+
+  /**
+   * 数値範囲のバリデーション
+   */
+  numberRange: (value: string | number, min?: number, max?: number): boolean | string => {
+    const num = typeof value === 'string' ? parseFloat(value) : value
+    
+    if (isNaN(num)) {
+      return '数値を入力してください'
+    }
+    
+    if (min !== undefined && num < min) {
+      return `${min}以上の値を入力してください`
+    }
+    
+    if (max !== undefined && num > max) {
+      return `${max}以下の値を入力してください`
+    }
+    
+    return true
+  },
+
+  /**
+   * 文字数のバリデーション
+   */
+  length: (value: string, min?: number, max?: number): boolean | string => {
+    if (!value && min && min > 0) return '必須項目です'
+    
+    const length = value ? value.length : 0
+    
+    if (min !== undefined && length < min) {
+      return `${min}文字以上入力してください`
+    }
+    
+    if (max !== undefined && length > max) {
+      return `${max}文字以内で入力してください`
+    }
+    
+    return true
+  },
+
+  /**
+   * 必須入力のバリデーション
+   */
+  required: (value: any, message?: string): boolean | string => {
+    if (value === null || value === undefined || value === '' || 
+        (Array.isArray(value) && value.length === 0)) {
+      return message || '必須項目です'
+    }
+    
+    return true
+  },
+
+  /**
+   * 確認用フィールドのバリデーション
+   */
+  confirm: (value: string, confirmValue: string, fieldName?: string): boolean | string => {
+    if (value !== confirmValue) {
+      return fieldName ? `${fieldName}が一致しません` : '入力内容が一致しません'
+    }
+    
+    return true
+  },
+
+  /**
+   * 複数のバリデーションを組み合わせる
+   */
+  compose: (...validators: Array<(value: any) => boolean | string>) => {
+    return (value: any): boolean | string => {
+      for (const validator of validators) {
+        const result = validator(value)
+        if (result !== true) {
+          return result
+        }
+      }
+      return true
+    }
+  },
+}
