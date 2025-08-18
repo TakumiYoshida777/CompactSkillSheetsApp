@@ -75,38 +75,50 @@ export const EngineerCard: React.FC<EngineerCardProps> = ({
       <div className={styles.cardBody}>
         <div className={styles.infoRow}>
           <Text type="secondary">経験年数:</Text>
-          <Text strong>{engineer.experience}年</Text>
+          <Text strong>{engineer.experience || 0}年</Text>
         </div>
 
         <div className={styles.infoRow}>
           <Text type="secondary">単価:</Text>
           <Text strong>
-            <DollarOutlined /> ¥{engineer.hourlyRate.toLocaleString()}/時
+            <DollarOutlined /> {
+              engineer.rate && engineer.rate.min && engineer.rate.max 
+                ? `¥${engineer.rate.min}〜${engineer.rate.max}万/月`
+                : engineer.hourlyRate 
+                ? `¥${engineer.hourlyRate.toLocaleString()}/時`
+                : '-'
+            }
           </Text>
         </div>
 
         <div className={styles.infoRow}>
           <Text type="secondary">稼働可能:</Text>
           <Text>
-            <ClockCircleOutlined /> {engineer.availability}
+            <ClockCircleOutlined /> {engineer.availability || '-'}
           </Text>
         </div>
 
         <div className={styles.skillTags}>
-          {engineer.skills.slice(0, 3).map((skill, index) => (
-            <Tag key={index} color="blue">
-              {skill}
-            </Tag>
-          ))}
-          {engineer.skills.length > 3 && (
-            <Tag>+{engineer.skills.length - 3}</Tag>
+          {engineer.skills && engineer.skills.length > 0 ? (
+            <>
+              {engineer.skills.slice(0, 3).map((skill, index) => (
+                <Tag key={index} color="blue">
+                  {skill}
+                </Tag>
+              ))}
+              {engineer.skills.length > 3 && (
+                <Tag>+{engineer.skills.length - 3}</Tag>
+              )}
+            </>
+          ) : (
+            <Text type="secondary">スキル情報なし</Text>
           )}
         </div>
 
         <div className={styles.statusSection}>
           <Badge
-            status={getStatusColor(engineer.offerStatus)}
-            text={getStatusText(engineer.offerStatus)}
+            status={getStatusColor(engineer.offerStatus || 'none')}
+            text={getStatusText(engineer.offerStatus || 'none')}
           />
           {engineer.lastOfferDate && (
             <Text type="secondary" className={styles.lastOfferDate}>
