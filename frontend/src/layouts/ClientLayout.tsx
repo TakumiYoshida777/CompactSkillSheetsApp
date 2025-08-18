@@ -189,7 +189,7 @@ const ClientLayout: React.FC = () => {
               onClick={() => isMobile ? setMobileDrawerVisible(!mobileDrawerVisible) : setCollapsed(!collapsed)}
               className={styles.trigger}
             />
-            <Title level={5} className={styles.companyName}>
+            <Title level={5} className={styles.companyName} style={{ color: '#fff' }}>
               株式会社ABC商事
             </Title>
           </div>

@@ -58,7 +58,8 @@
 
 .companyName {
   margin: 0 !important;
-  color: #fff;
+  color: #fff !important;
+  opacity: 1;
 }
 
 .headerRight {
@@ -143,6 +144,7 @@
 
   .companyName {
     font-size: 14px !important;
+    color: #fff !important;
   }
 
   .userName {
@@ -163,6 +165,7 @@
 
   .companyName {
     font-size: 12px !important;
+    color: #fff !important;
   }
 
   .content {
