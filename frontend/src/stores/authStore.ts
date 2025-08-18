@@ -70,7 +70,9 @@ const useAuthStore = create<AuthState>()(
             rememberMe,
           });
           
-          const { user, accessToken, refreshToken } = response.data;
+          // APIレスポンスの構造に合わせて修正
+          const { data } = response.data;
+          const { user, accessToken, refreshToken } = data;
           
           // Axiosのデフォルトヘッダーに認証トークンを設定
           axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
@@ -86,7 +88,7 @@ const useAuthStore = create<AuthState>()(
         } catch (error: any) {
           set({
             isLoading: false,
-            error: error.response?.data?.message || 'ログインに失敗しました',
+            error: error.response?.data?.error?.message || error.response?.data?.message || 'ログインに失敗しました',
           });
           throw error;
         }
@@ -283,6 +285,12 @@ const useAuthStore = create<AuthState>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // ストレージから状態を復元した後、トークンがある場合はAxiosのデフォルトヘッダーを設定
+        if (state?.token) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+        }
+      },
     }
   )
 );

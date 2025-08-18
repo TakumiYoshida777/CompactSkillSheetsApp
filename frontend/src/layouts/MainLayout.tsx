@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Space, Button, Drawer } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Space, Button, Drawer, message } from 'antd';
 import {
   DashboardOutlined,
   TeamOutlined,
@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import useResponsive from '../hooks/useResponsive';
+import { useAuthStore } from '../stores/authStore';
 import type { MenuProps } from 'antd';
 
 const { Header, Sider, Content } = Layout;
@@ -141,10 +142,14 @@ const MainLayout: React.FC = () => {
     }
   };
 
+  const { logout, user } = useAuthStore();
+
   const handleUserMenuClick: MenuProps['onClick'] = (e) => {
     if (e.key === 'logout') {
       // ログアウト処理
-      console.log('Logout');
+      logout();
+      message.success('ログアウトしました');
+      navigate('/login');
     } else if (e.key === 'profile') {
       // プロフィール画面へ遷移
       navigate('/profile');
@@ -227,7 +232,7 @@ const MainLayout: React.FC = () => {
             >
               <Space className="cursor-pointer">
                 <Avatar icon={<UserOutlined />} />
-                {!isMobile && <span>田中太郎</span>}
+                {!isMobile && <span>{user?.name || 'ユーザー'}</span>}
               </Space>
             </Dropdown>
           </Space>

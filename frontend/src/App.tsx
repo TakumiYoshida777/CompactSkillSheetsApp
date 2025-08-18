@@ -64,12 +64,16 @@ const PageLoader = () => (
 );
 
 function App() {
-  const { checkAuth } = useAuthStore();
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const token = useAuthStore((state) => state.token);
 
   useEffect(() => {
     // アプリケーション起動時に認証状態をチェック
-    checkAuth();
-  }, [checkAuth]);
+    // Zustandのpersistがロード完了後、トークンがある場合のみチェック
+    if (token) {
+      checkAuth();
+    }
+  }, [token, checkAuth]);
 
   return (
     <ConfigProvider locale={jaJP}>

@@ -25,22 +25,29 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     isAuthenticated, 
     isLoading, 
     user,
+    token,
     checkAuth,
     hasRole,
     hasPermission,
   } = useAuthStore();
   
   const location = useLocation();
+  const [isInitialized, setIsInitialized] = React.useState(false);
 
   useEffect(() => {
     // 初回マウント時に認証状態をチェック
-    if (requireAuth && !isAuthenticated && !isLoading) {
-      checkAuth();
+    // トークンが存在し、まだ認証されていない場合のみチェック
+    if (!isInitialized) {
+      if (requireAuth && token && !isAuthenticated) {
+        checkAuth().finally(() => setIsInitialized(true));
+      } else {
+        setIsInitialized(true);
+      }
     }
-  }, [requireAuth, isAuthenticated, isLoading, checkAuth]);
+  }, [requireAuth, token, isAuthenticated, checkAuth, isInitialized]);
 
-  // ローディング中
-  if (isLoading) {
+  // ローディング中または初期化中
+  if (isLoading || !isInitialized) {
     return (
       <div style={{
         display: 'flex',
