@@ -29,6 +29,7 @@ const UserProfile = lazy(() => import('./pages/Profile/UserProfile'));
 const OfferBoard = lazy(() => import('./pages/Client/OfferBoard'));
 const OfferManagement = lazy(() => import('./pages/Client/OfferManagement'));
 const OfferHistory = lazy(() => import('./pages/Client/OfferHistory'));
+const ClientEngineerSearch = lazy(() => import('./pages/Client/EngineerSearch'));
 
 // ローディングコンポーネント
 const PageLoader = () => (
@@ -190,7 +191,11 @@ function App() {
                 </Suspense>
               } />
               {/* CLI002 - エンジニア検索（取引先用） */}
-              <Route path="engineers/search" element={<div>エンジニア検索（開発中）</div>} />
+              <Route path="engineers/search" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ClientEngineerSearch />
+                </Suspense>
+              } />
               {/* CLI003 - エンジニア詳細（取引先用） */}
               <Route path="engineers/:id" element={<div>エンジニア詳細（開発中）</div>} />
             </Route>
