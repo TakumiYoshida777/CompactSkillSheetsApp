@@ -59,6 +59,8 @@ interface EngineerSearchTableProps {
   showCompanyColumn?: boolean; // SES企業名列の表示
   title?: string;
   description?: string;
+  customActions?: React.ReactNode; // SES企業用のカスタムアクション
+  onRowClick?: (engineer: Engineer) => void; // 行クリック時の処理
 }
 
 export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
@@ -68,6 +70,8 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
   showCompanyColumn = false,
   title = 'エンジニア一覧',
   description = '登録されているエンジニアの管理',
+  customActions,
+  onRowClick,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<React.Key[]>([]);
   const [searchText, setSearchText] = React.useState('');
@@ -396,10 +400,11 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
             />
           </Col>
         </Row>
-        {showActions && (
+        {(showActions || customActions) && (
           <Row className="mt-4">
             <Col span={24}>
               <Space>
+                {customActions}
                 <Tooltip title="詳細フィルター">
                   <Button
                     icon={<FilterOutlined />}
@@ -502,6 +507,10 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
           columns={columns}
           dataSource={filteredEngineers}
           scroll={{ x: 1500 }}
+          onRow={(record) => ({
+            onClick: () => onRowClick && onRowClick(record),
+            style: { cursor: onRowClick ? 'pointer' : 'default' },
+          })}
           pagination={{
             total: filteredEngineers.length,
             pageSize: 10,
