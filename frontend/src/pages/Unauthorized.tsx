@@ -8,10 +8,15 @@ import { useAuthStore } from '../stores/authStore';
  */
 const Unauthorized: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, logout, isClientUser } = useAuthStore();
 
   const handleGoHome = () => {
-    navigate('/');
+    // 取引先ユーザーの場合は取引先ダッシュボードへ、それ以外は通常のダッシュボードへ
+    if (isClientUser()) {
+      navigate('/client/offer-board');
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleLogin = () => {

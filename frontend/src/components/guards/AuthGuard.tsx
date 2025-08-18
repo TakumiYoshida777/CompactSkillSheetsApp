@@ -73,7 +73,13 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // ロールのチェック
   if (requireRoles.length > 0 && user) {
+    console.log('AuthGuard - Required roles:', requireRoles);
+    console.log('AuthGuard - User roles:', user.roles);
+    console.log('AuthGuard - User type:', user.userType);
+    
     const hasRequiredRole = requireRoles.some(role => hasRole(role));
+    console.log('AuthGuard - Has required role:', hasRequiredRole);
+    
     if (!hasRequiredRole) {
       return (
         <Navigate 

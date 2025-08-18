@@ -105,6 +105,9 @@ const useAuthStore = create<AuthState>()(
           
           const { message, user, accessToken, refreshToken } = response.data;
           
+          console.log('Client Login Response:', response.data);
+          console.log('User data:', user);
+          
           // Axiosのデフォルトヘッダーに認証トークンを設定
           axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
           
@@ -262,7 +265,8 @@ const useAuthStore = create<AuthState>()(
       hasRole: (role: string) => {
         const { user } = get();
         if (!user) return false;
-        return user.roles.includes(role);
+        // rolesが配列であることを確認
+        return Array.isArray(user.roles) && user.roles.includes(role);
       },
 
       isAdmin: () => {
@@ -274,7 +278,9 @@ const useAuthStore = create<AuthState>()(
       isClientUser: () => {
         const { user } = get();
         if (!user) return false;
-        return user.userType === 'client' || user.roles.includes('client_admin') || user.roles.includes('client_user');
+        // userTypeがclientの場合、またはrolesが配列でclient_adminかclient_userを含む場合
+        return user.userType === 'client' || 
+               (Array.isArray(user.roles) && (user.roles.includes('client_admin') || user.roles.includes('client_user')));
       },
     }),
     {
