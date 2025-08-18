@@ -4,6 +4,8 @@
  */
 
 import axios from '../../lib/axios';
+import { parseApiError } from '../../utils/apiErrorHandler';
+import { validateEngineerCreateRequest } from '../../utils/validation';
 import type { 
   Engineer, 
   EngineerListResponse, 
@@ -40,8 +42,27 @@ export const engineerApi = {
    * エンジニア作成
    */
   async create(data: EngineerCreateRequest): Promise<Engineer> {
-    const response = await axios.post<Engineer>(API_BASE, data);
-    return response.data;
+    // クライアントサイドバリデーション
+    const validation = validateEngineerCreateRequest(data);
+    if (!validation.isValid) {
+      throw parseApiError({
+        response: {
+          status: 422,
+          data: {
+            code: 'VALIDATION_ERROR',
+            message: '入力内容に誤りがあります',
+            details: { errors: validation.errors },
+          },
+        },
+      });
+    }
+
+    try {
+      const response = await axios.post<Engineer>(API_BASE, data);
+      return response.data;
+    } catch (error) {
+      throw parseApiError(error);
+    }
   },
 
   /**

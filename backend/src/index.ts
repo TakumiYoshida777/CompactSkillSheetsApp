@@ -6,6 +6,10 @@ import compression from 'compression';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 
+// ルートのインポート
+import analyticsRoutes from './routes/analytics.routes';
+import notificationsRoutes from './routes/notifications.routes';
+
 // 環境変数の読み込み
 dotenv.config();
 
@@ -62,6 +66,10 @@ app.post('/api/v1/test', (req, res) => {
     }
   });
 });
+
+// APIルートの登録
+app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/notifications', notificationsRoutes);
 
 // エラーハンドリングミドルウェア
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

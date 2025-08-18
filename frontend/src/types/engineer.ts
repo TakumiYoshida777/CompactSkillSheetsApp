@@ -10,7 +10,17 @@ export type EngineerType = 'employee' | 'partner' | 'freelance';
 /**
  * エンジニアステータス
  */
-export type EngineerStatus = 'working' | 'waiting' | 'adjusting' | 'leaving';
+export type EngineerStatus = 'working' | 'waiting' | 'waiting_soon' | 'leaving';
+
+/**
+ * エンジニアステータスの日本語表示マッピング
+ */
+export const EngineerStatusLabels: Record<EngineerStatus, string> = {
+  working: '稼働中',
+  waiting: '待機中',
+  waiting_soon: '待機予定',
+  leaving: '退職予定',
+};
 
 /**
  * エンジニア基本情報

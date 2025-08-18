@@ -549,12 +549,31 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
   reset: () => set(initialState),
 }));
 
-// 自動保存の設定（5秒間隔）
-setInterval(() => {
-  const state = useSkillSheetStore.getState();
-  if (state.autoSaveEnabled && state.isDirty && !state.isSaving) {
-    state.autoSave();
+// 自動保存のタイマーID管理
+let autoSaveTimerId: NodeJS.Timeout | null = null;
+
+/**
+ * 自動保存を開始
+ */
+export function startAutoSave() {
+  if (autoSaveTimerId) return;
+  
+  autoSaveTimerId = setInterval(() => {
+    const state = useSkillSheetStore.getState();
+    if (state.autoSaveEnabled && state.isDirty && !state.isSaving) {
+      state.autoSave();
+    }
+  }, 5000);
+}
+
+/**
+ * 自動保存を停止
+ */
+export function stopAutoSave() {
+  if (autoSaveTimerId) {
+    clearInterval(autoSaveTimerId);
+    autoSaveTimerId = null;
   }
-}, 5000);
+}
 
 export { useSkillSheetStore };
