@@ -233,7 +233,10 @@ const useAuthStore = create<AuthState>()(
 
       checkAuth: async () => {
         const { token, user } = get();
+        console.log('[checkAuth] Starting - Token exists:', !!token, 'User:', user);
+        
         if (!token) {
+          console.log('[checkAuth] No token found, setting isAuthenticated to false');
           set({ isAuthenticated: false });
           return;
         }
@@ -244,25 +247,34 @@ const useAuthStore = create<AuthState>()(
           
           // ユーザータイプに応じて適切なエンドポイントを使用
           const endpoint = user?.userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
+          console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', user?.userType);
+          
           const response = await axios.get(endpoint);
+          console.log('[checkAuth] Success - Response:', response.data);
           
           set({
             user: response.data,
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error) {
+        } catch (error: any) {
+          console.log('[checkAuth] Initial request failed:', error.response?.status, error.response?.data);
+          
           // トークンが無効な場合はリフレッシュを試みる
           try {
             await get().refreshAccessToken();
-            const endpoint = user?.userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
+            const { user: refreshedUser } = get(); // リフレッシュ後に再取得
+            const endpoint = refreshedUser?.userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
+            console.log('[checkAuth] After refresh, using endpoint:', endpoint);
+            
             const response = await axios.get(endpoint);
             set({
               user: response.data,
               isAuthenticated: true,
               isLoading: false,
             });
-          } catch (refreshError) {
+          } catch (refreshError: any) {
+            console.log('[checkAuth] Refresh also failed:', refreshError.response?.status);
             get().logout();
             set({ isLoading: false });
           }

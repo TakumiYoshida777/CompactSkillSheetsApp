@@ -55,6 +55,7 @@ const ClientEngineerSearch = lazy(() => import('./pages/Client/EngineerSearch'))
 const ClientTestPage = lazy(() => import('./pages/Client/TestPage'));
 const ClientDebug = lazy(() => import('./pages/Client/Debug'));
 const ClientApiTest = lazy(() => import('./pages/Client/ApiTest'));
+const ClientAuthDebug = lazy(() => import('./pages/Client/AuthDebug'));
 
 // ローディングコンポーネント
 const PageLoader = () => (
@@ -113,6 +114,11 @@ function App() {
             <Route path="/client/api-test" element={
               <Suspense fallback={<PageLoader />}>
                 <ClientApiTest />
+              </Suspense>
+            } />
+            <Route path="/client/auth-debug" element={
+              <Suspense fallback={<PageLoader />}>
+                <ClientAuthDebug />
               </Suspense>
             } />
             <Route path="/unauthorized" element={
