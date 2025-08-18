@@ -39,6 +39,7 @@ interface AuthState {
   // Actions
   login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   clientLogin: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
+  setAuthTokens: (user: User, accessToken: string, refreshToken: string) => void;
   logout: () => void;
   register: (data: any) => Promise<void>;
   refreshAccessToken: () => Promise<void>;
@@ -92,6 +93,20 @@ const useAuthStore = create<AuthState>()(
           });
           throw error;
         }
+      },
+
+      setAuthTokens: (user: User, accessToken: string, refreshToken: string) => {
+        // Axiosのデフォルトヘッダーに認証トークンを設定
+        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        
+        set({
+          user,
+          token: accessToken,
+          refreshToken,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
       },
 
       clientLogin: async (email: string, password: string, rememberMe?: boolean) => {
