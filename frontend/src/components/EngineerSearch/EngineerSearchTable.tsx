@@ -11,6 +11,10 @@ import {
   Row,
   Col,
   Tooltip,
+  Modal,
+  Form,
+  InputNumber,
+  Slider,
 } from 'antd';
 import {
   SearchOutlined,
@@ -69,7 +73,12 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
   const [searchText, setSearchText] = React.useState('');
   const [filterStatus, setFilterStatus] = React.useState<string>('all');
   const [filterSkills, setFilterSkills] = React.useState<string[]>([]);
+  const [showAdvancedFilter, setShowAdvancedFilter] = React.useState(false);
+  const [experienceRange, setExperienceRange] = React.useState<[number, number]>([0, 20]);
+  const [ageRange, setAgeRange] = React.useState<[number, number]>([20, 60]);
+  const [rateRange, setRateRange] = React.useState<[number, number]>([0, 200]);
   const { isMobile } = useResponsive();
+  const [form] = Form.useForm();
 
   const getStatusColor = (status: Engineer['status']) => {
     switch (status) {
@@ -131,8 +140,28 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
       );
     }
 
+    // 経験年数フィルター
+    filtered = filtered.filter(e => 
+      e.experience >= experienceRange[0] && e.experience <= experienceRange[1]
+    );
+
+    // 年齢フィルター
+    filtered = filtered.filter(e => 
+      e.age >= ageRange[0] && e.age <= ageRange[1]
+    );
+
+    // 単価フィルター
+    if (showCompanyColumn) {
+      filtered = filtered.filter(e => {
+        if (e.rate && e.rate.min && e.rate.max) {
+          return e.rate.min >= rateRange[0] && e.rate.max <= rateRange[1];
+        }
+        return true;
+      });
+    }
+
     return filtered;
-  }, [engineers, searchText, filterStatus, filterSkills]);
+  }, [engineers, searchText, filterStatus, filterSkills, experienceRange, ageRange, rateRange, showCompanyColumn]);
 
   const columns: ColumnsType<Engineer> = [
     {
@@ -285,6 +314,29 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
     return Array.from(skillSet).sort();
   }, [engineers]);
 
+  // 詳細フィルターのリセット
+  const handleResetAdvancedFilter = () => {
+    setExperienceRange([0, 20]);
+    setAgeRange([20, 60]);
+    setRateRange([0, 200]);
+    form.resetFields();
+  };
+
+  // 詳細フィルターの適用
+  const handleApplyAdvancedFilter = () => {
+    const values = form.getFieldsValue();
+    if (values.experienceRange) {
+      setExperienceRange(values.experienceRange);
+    }
+    if (values.ageRange) {
+      setAgeRange(values.ageRange);
+    }
+    if (values.rateRange) {
+      setRateRange(values.rateRange);
+    }
+    setShowAdvancedFilter(false);
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -352,6 +404,7 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
                   <Button
                     icon={<FilterOutlined />}
                     size="large"
+                    onClick={() => setShowAdvancedFilter(true)}
                   >
                     詳細フィルター
                   </Button>
@@ -509,6 +562,102 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
           )}
         />
       </Card>
+
+      {/* 詳細フィルターモーダル */}
+      <Modal
+        title="詳細フィルター"
+        open={showAdvancedFilter}
+        onOk={handleApplyAdvancedFilter}
+        onCancel={() => setShowAdvancedFilter(false)}
+        width={600}
+        footer={[
+          <Button key="reset" onClick={handleResetAdvancedFilter}>
+            リセット
+          </Button>,
+          <Button key="cancel" onClick={() => setShowAdvancedFilter(false)}>
+            キャンセル
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleApplyAdvancedFilter}>
+            適用
+          </Button>,
+        ]}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{
+            experienceRange,
+            ageRange,
+            rateRange,
+          }}
+        >
+          <Form.Item label="経験年数" name="experienceRange">
+            <Slider
+              range
+              min={0}
+              max={20}
+              marks={{
+                0: '0年',
+                5: '5年',
+                10: '10年',
+                15: '15年',
+                20: '20年',
+              }}
+              tooltip={{ formatter: (value) => `${value}年` }}
+            />
+          </Form.Item>
+
+          <Form.Item label="年齢" name="ageRange">
+            <Slider
+              range
+              min={20}
+              max={60}
+              marks={{
+                20: '20歳',
+                30: '30歳',
+                40: '40歳',
+                50: '50歳',
+                60: '60歳',
+              }}
+              tooltip={{ formatter: (value) => `${value}歳` }}
+            />
+          </Form.Item>
+
+          {showCompanyColumn && (
+            <Form.Item label="単価（万円/月）" name="rateRange">
+              <Slider
+                range
+                min={0}
+                max={200}
+                marks={{
+                  0: '0',
+                  50: '50万',
+                  100: '100万',
+                  150: '150万',
+                  200: '200万',
+                }}
+                tooltip={{ formatter: (value) => `${value}万円` }}
+              />
+            </Form.Item>
+          )}
+
+          <Form.Item label="稼働可能時期">
+            <RangePicker style={{ width: '100%' }} />
+          </Form.Item>
+
+          <Form.Item label="除外するスキル">
+            <Select
+              mode="multiple"
+              placeholder="除外したいスキルを選択"
+              style={{ width: '100%' }}
+            >
+              {allSkills.map(skill => (
+                <Option key={skill} value={skill}>{skill}</Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
