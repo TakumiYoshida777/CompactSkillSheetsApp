@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -13,6 +13,7 @@ import {
   Typography,
   Timeline,
   Statistic,
+  Alert,
 } from 'antd';
 import {
   SearchOutlined,
@@ -32,6 +33,20 @@ const { Option } = Select;
 const OfferHistory: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchText, setSearchText] = useState('');
+
+  // レスポンシブ対応
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ブレークポイント（要件定義書準拠）
+  const isMobile = windowWidth < 768;
+  const isTablet = windowWidth >= 768 && windowWidth < 1366;
+  const isDesktop = windowWidth >= 1366;
 
   // モックデータ
   const mockData = [
@@ -156,7 +171,7 @@ const OfferHistory: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <Title level={2}>オファー履歴</Title>
+      <Title level={isMobile ? 3 : 2}>オファー履歴</Title>
 
       {/* 統計情報 */}
       <Row gutter={[16, 16]} className={styles.statistics}>
@@ -236,22 +251,98 @@ const OfferHistory: React.FC = () => {
       </Card>
 
       {/* 履歴テーブル */}
-      <Card title="オファー履歴一覧">
-        <Table 
-          columns={columns} 
-          dataSource={mockData} 
-          rowKey="id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `全${total}件`,
-          }}
-        />
+      <Card title={<Title level={isMobile ? 5 : 4}>オファー履歴一覧</Title>}>
+        {/* タブレット警告 */}
+        {isTablet && (
+          <Alert
+            message="タブレット表示"
+            description="タブレットでは参照機能のみ利用可能です。"
+            type="info"
+            showIcon
+            className={styles.tabletAlert}
+            style={{ marginBottom: 16 }}
+          />
+        )}
+
+        {/* デスクトップビュー */}
+        {isDesktop && (
+          <Table 
+            columns={columns} 
+            dataSource={mockData} 
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `全${total}件`,
+            }}
+            scroll={{ x: 'max-content' }}
+          />
+        )}
+
+        {/* タブレットビュー */}
+        {isTablet && (
+          <Table 
+            columns={columns.filter(col => 
+              ['offerNumber', 'projectName', 'company', 'status', 'sentDate'].includes(col.key as string)
+            )} 
+            dataSource={mockData} 
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              simple: true,
+            }}
+            scroll={{ x: 'max-content' }}
+          />
+        )}
+
+        {/* モバイルビュー */}
+        {isMobile && (
+          <div className={styles.mobileView}>
+            {mockData.map((item) => (
+              <Card key={item.id} className={styles.mobileCard}>
+                <div className={styles.mobileHeader}>
+                  <span className={styles.offerNumber}>{item.offerNumber}</span>
+                  <Tag 
+                    color={item.status === 'accepted' ? 'green' : item.status === 'declined' ? 'red' : 'gray'}
+                    icon={item.status === 'accepted' ? <CheckCircleOutlined /> : item.status === 'declined' ? <CloseCircleOutlined /> : <ClockCircleOutlined />}
+                  >
+                    {item.status === 'accepted' ? '成約' : item.status === 'declined' ? '辞退' : '取下げ'}
+                  </Tag>
+                </div>
+                <div className={styles.mobileBody}>
+                  <h4>{item.projectName}</h4>
+                  <div className={styles.mobileInfo}>
+                    <div>{item.company}</div>
+                    <div>対象: {item.engineerCount}名</div>
+                  </div>
+                  <div className={styles.mobileDates}>
+                    <span>送信: {item.sentDate}</span>
+                    <span>返答: {item.responseDate}</span>
+                  </div>
+                  {item.status === 'accepted' && (
+                    <div className={styles.startDate}>
+                      開始日: {item.startDate}
+                    </div>
+                  )}
+                  <Button 
+                    icon={<FileTextOutlined />} 
+                    size="middle" 
+                    block 
+                    className={styles.mobileDetailButton}
+                  >
+                    詳細を見る
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </Card>
 
-      {/* タイムライン表示（オプション） */}
-      <Card title="最近のオファー活動" className={styles.timelineCard}>
-        <Timeline
+      {/* タイムライン表示（デスクトップのみ） */}
+      {!isMobile && (
+        <Card title="最近のオファー活動" className={styles.timelineCard}>
+          <Timeline
           items={[
             {
               color: 'green',
@@ -281,8 +372,9 @@ const OfferHistory: React.FC = () => {
               ),
             },
           ]}
-        />
-      </Card>
+          />
+        </Card>
+      )}
     </div>
   );
 };

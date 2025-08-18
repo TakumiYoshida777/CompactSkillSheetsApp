@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card, Table, Tag, Space, Button, Badge, Statistic, Row, Col, Typography } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Table, Tag, Space, Button, Badge, Statistic, Row, Col, Typography, Alert, List } from 'antd';
 import {
   EyeOutlined,
   MailOutlined,
@@ -14,6 +14,20 @@ import styles from './OfferManagement.module.css';
 const { Title } = Typography;
 
 const OfferManagement: React.FC = () => {
+  // レスポンシブ対応
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ブレークポイント（要件定義書準拠）
+  const isMobile = windowWidth < 768;
+  const isTablet = windowWidth >= 768 && windowWidth < 1366;
+  const isDesktop = windowWidth >= 1366;
+
   // モックデータ
   const mockData = [
     {
@@ -158,14 +172,91 @@ const OfferManagement: React.FC = () => {
 
       {/* オファー一覧 */}
       <Card
-        title="アクティブオファー一覧"
+        title={<Title level={isMobile ? 5 : 4}>アクティブオファー一覧</Title>}
         extra={
-          <Button type="primary" icon={<ReloadOutlined />}>
-            更新
-          </Button>
+          !isMobile && (
+            <Button type="primary" icon={<ReloadOutlined />}>
+              更新
+            </Button>
+          )
         }
       >
-        <Table columns={columns} dataSource={mockData} rowKey="id" />
+        {/* タブレット警告 */}
+        {isTablet && (
+          <Alert
+            message="タブレット表示"
+            description="タブレットでは参照機能のみ利用可能です。編集はPC版をご利用ください。"
+            type="info"
+            showIcon
+            className={styles.tabletAlert}
+          />
+        )}
+
+        {/* デスクトップビュー */}
+        {isDesktop && (
+          <Table 
+            columns={columns} 
+            dataSource={mockData} 
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showTotal: (total) => `全${total}件`,
+            }}
+            scroll={{ x: 'max-content' }}
+          />
+        )}
+
+        {/* タブレットビュー */}
+        {isTablet && (
+          <Table 
+            columns={columns.filter(col => 
+              ['offerNumber', 'projectName', 'status', 'responseRate'].includes(col.key as string)
+            )} 
+            dataSource={mockData} 
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              simple: true,
+            }}
+            scroll={{ x: 'max-content' }}
+          />
+        )}
+
+        {/* モバイルビュー */}
+        {isMobile && (
+          <List
+            dataSource={mockData}
+            renderItem={(item) => (
+              <Card className={styles.mobileCard}>
+                <div className={styles.mobileHeader}>
+                  <Tag color={item.status === 'pending' ? 'orange' : 'blue'}>
+                    {item.status === 'pending' ? '返答待ち' : '送信済み'}
+                  </Tag>
+                  <span className={styles.offerNumber}>{item.offerNumber}</span>
+                </div>
+                <div className={styles.mobileBody}>
+                  <h4>{item.projectName}</h4>
+                  <div className={styles.mobileInfo}>
+                    <span>対象: {item.engineerCount}名</span>
+                    <span>送信日: {item.sentDate}</span>
+                  </div>
+                  <div className={styles.mobileStats}>
+                    <Badge
+                      count={`返答率 ${item.responseRate}%`}
+                      style={{ backgroundColor: item.responseRate > 50 ? '#52c41a' : '#faad14' }}
+                    />
+                  </div>
+                  <div className={styles.mobileActions}>
+                    <Button icon={<EyeOutlined />} size="middle" block>
+                      詳細を見る
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
+          />
+        )}
       </Card>
     </div>
   );

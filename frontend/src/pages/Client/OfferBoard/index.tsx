@@ -53,7 +53,7 @@ export const OfferBoard: React.FC = () => {
   const [sortField, setSortField] = useState<string>('');
   const [sortOrder, setSortOrder] = useState<'ascend' | 'descend'>('ascend');
 
-  // レスポンシブ対応
+  // レスポンシブ対応（要件定義書準拠）
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   React.useEffect(() => {
@@ -62,9 +62,10 @@ export const OfferBoard: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isMobile = windowWidth < 576;
-  const isTablet = windowWidth >= 576 && windowWidth < 992;
-  const isDesktop = windowWidth >= 992;
+  // ブレークポイント（要件定義書準拠）
+  const isMobile = windowWidth < 768;  // スマートフォン: 375px〜767px
+  const isTablet = windowWidth >= 768 && windowWidth < 1366;  // タブレット: 768px〜1365px
+  const isDesktop = windowWidth >= 1366;  // デスクトップ: 1366px以上
 
   // フィルタリング処理
   const filteredEngineers = useMemo(() => {
@@ -331,8 +332,8 @@ export const OfferBoard: React.FC = () => {
       <Card
         title={
           <div className={styles.cardHeader}>
-            <Title level={4}>オファー可能エンジニア一覧</Title>
-            {selectedEngineers.length > 0 && (
+            <Title level={isMobile ? 5 : 4}>オファー可能エンジニア一覧</Title>
+            {!isMobile && selectedEngineers.length > 0 && (
               <span className={styles.selectedCount}>
                 {selectedEngineers.length}名選択中
               </span>
@@ -340,25 +341,27 @@ export const OfferBoard: React.FC = () => {
           </div>
         }
         extra={
-          <Space>
-            <Button onClick={handleSelectAll}>全て選択</Button>
-            <Button onClick={clearSelection} disabled={selectedEngineers.length === 0}>
-              選択をクリア
-            </Button>
-            <Button
-              type="primary"
-              icon={<SendOutlined />}
-              disabled={selectedEngineers.length === 0}
-              onClick={() => setShowOfferDialog(true)}
-            >
-              選択したエンジニアにオファー送信
-            </Button>
-          </Space>
+          !isMobile && (
+            <Space wrap>
+              <Button onClick={handleSelectAll}>全て選択</Button>
+              <Button onClick={clearSelection} disabled={selectedEngineers.length === 0}>
+                選択をクリア
+              </Button>
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                disabled={selectedEngineers.length === 0}
+                onClick={() => setShowOfferDialog(true)}
+              >
+                {isTablet ? 'オファー送信' : '選択したエンジニアにオファー送信'}
+              </Button>
+            </Space>
+          )
         }
       >
-        {/* デスクトップビュー */}
+        {/* デスクトップビュー (1366px以上) */}
         {isDesktop && (
-          <div data-testid="desktop-view">
+          <div data-testid="desktop-view" className={styles.desktopView}>
             <Table
               columns={columns}
               dataSource={filteredEngineers}
@@ -370,13 +373,21 @@ export const OfferBoard: React.FC = () => {
                 showTotal: (total) => `全${total}件`,
               }}
               scroll={{ x: 1200 }}
+              className={styles.responsiveTable}
             />
           </div>
         )}
 
-        {/* タブレットビュー */}
+        {/* タブレットビュー (768px〜1365px) - 参照機能のみ */}
         {isTablet && (
-          <div data-testid="tablet-view">
+          <div data-testid="tablet-view" className={styles.tabletView}>
+            <Alert
+              message="タブレット表示"
+              description="タブレットでは参照機能のみ利用可能です。編集はPC版をご利用ください。"
+              type="info"
+              showIcon
+              className={styles.tabletAlert}
+            />
             <Table
               columns={columns.filter(col => 
                 ['select', 'name', 'experience', 'offerStatus'].includes(col.key as string)
@@ -387,13 +398,39 @@ export const OfferBoard: React.FC = () => {
                 pageSize: 10,
                 simple: true,
               }}
+              scroll={{ x: 'max-content' }}
+              className={styles.responsiveTable}
             />
           </div>
         )}
 
-        {/* モバイルビュー */}
+        {/* モバイルビュー (375px〜767px) - レスポンシブ対応 */}
         {isMobile && (
-          <div data-testid="mobile-view">
+          <div data-testid="mobile-view" className={styles.mobileView}>
+            {/* モバイル用選択バー */}
+            <div className={styles.mobileSelectionBar}>
+              <Button 
+                size="small" 
+                onClick={handleSelectAll}
+                className={styles.mobileButton}
+              >
+                全選択
+              </Button>
+              <span className={styles.mobileSelectedCount}>
+                {selectedEngineers.length}名選択
+              </span>
+              <Button
+                type="primary"
+                size="small"
+                icon={<SendOutlined />}
+                disabled={selectedEngineers.length === 0}
+                onClick={() => setShowOfferDialog(true)}
+                className={styles.mobileButton}
+              >
+                オファー
+              </Button>
+            </div>
+            {/* エンジニアカード一覧 */}
             {filteredEngineers.map((engineer) => (
               <EngineerCard
                 key={engineer.id}

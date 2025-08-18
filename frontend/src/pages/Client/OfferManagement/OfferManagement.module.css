@@ -6,19 +6,91 @@
   margin-bottom: 24px;
 }
 
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
+/* タブレット警告 */
+.tabletAlert {
+  margin-bottom: 16px;
+}
+
+/* モバイルカード */
+.mobileCard {
+  margin-bottom: 12px;
+  touch-action: manipulation;
+}
+
+.mobileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.offerNumber {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.mobileBody h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.mobileInfo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #595959;
+  margin-bottom: 12px;
+}
+
+.mobileStats {
+  margin-bottom: 12px;
+}
+
+.mobileActions {
+  display: flex;
+  gap: 8px;
+}
+
+.mobileActions button {
+  min-height: 44px;
+}
+
+/* レスポンシブ対応（要件定義書準拠） */
+/* タブレット (768px〜1365px) */
+@media (min-width: 768px) and (max-width: 1365px) {
   .container {
-    padding: 16px;
+    padding: 20px;
+  }
+
+  .statistics {
+    margin-bottom: 20px;
+  }
+}
+
+/* モバイル (375px〜767px) */
+@media (max-width: 767px) {
+  .container {
+    padding: 12px;
   }
 
   .statistics {
     margin-bottom: 16px;
   }
-}
 
-@media (max-width: 576px) {
-  .container {
-    padding: 12px;
+  /* タッチターゲット最適化（44px） */
+  button,
+  .ant-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .ant-input,
+  .ant-select-selector {
+    min-height: 44px;
+  }
+
+  /* フォントサイズ最適化（16px以上） */
+  body {
+    font-size: 16px;
   }
 }
