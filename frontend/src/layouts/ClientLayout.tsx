@@ -208,7 +208,10 @@ const ClientLayout: React.FC = () => {
                 arrow
               >
                 <Space className={styles.userInfo}>
-                  <Avatar icon={<UserOutlined />} />
+                  <Avatar 
+                    icon={<UserOutlined />}
+                    style={{ backgroundColor: '#1890ff' }}
+                  />
                   <span className={styles.userName}>取引先担当者</span>
                 </Space>
               </Dropdown>

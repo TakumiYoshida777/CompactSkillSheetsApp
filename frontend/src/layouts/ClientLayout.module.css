@@ -27,9 +27,9 @@
 }
 
 .header {
-  background: #fff;
+  background: #001529;
   padding: 0 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -49,15 +49,16 @@
   padding: 0 12px;
   cursor: pointer;
   transition: color 0.3s;
+  color: #fff;
 }
 
 .trigger:hover {
-  color: #1890ff;
+  color: #40a9ff !important;
 }
 
 .companyName {
   margin: 0 !important;
-  color: #001529;
+  color: #fff;
 }
 
 .headerRight {
@@ -69,6 +70,14 @@
   cursor: pointer;
 }
 
+.notification button {
+  color: #fff;
+}
+
+.notification button:hover {
+  color: #40a9ff;
+}
+
 .userInfo {
   cursor: pointer;
   padding: 8px 12px;
@@ -77,12 +86,12 @@
 }
 
 .userInfo:hover {
-  background: #f0f0f0;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .userName {
   font-weight: 500;
-  color: #262626;
+  color: #fff;
 }
 
 .content {
@@ -162,26 +171,4 @@
   }
 }
 
-/* ダークモード対応（将来実装用） */
-@media (prefers-color-scheme: dark) {
-  .header {
-    background: #141414;
-    border-bottom: 1px solid #303030;
-  }
-
-  .companyName {
-    color: #fff;
-  }
-
-  .userName {
-    color: #fff;
-  }
-
-  .userInfo:hover {
-    background: #303030;
-  }
-
-  .trigger:hover {
-    color: #40a9ff;
-  }
-}
+/* ダークモード対応は削除（ヘッダーは常にダークテーマ） */
