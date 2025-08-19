@@ -21,8 +21,8 @@ import { useAuthStore } from './stores/authStore';
 // Axios設定
 import axios from 'axios';
 
-// APIベースURLの設定（/api/v1を削除）
-axios.defaults.baseURL = 'http://localhost:8000';
+// APIベースURLの設定（環境変数から取得）
+axios.defaults.baseURL = import.meta.env.VITE_API_URL?.replace(/\/api\/v1$/, '').replace(/\/api$/, '') || 'http://localhost:8000';
 
 // 認証ページ
 const Login = lazy(() => import('./pages/auth/Login'));
