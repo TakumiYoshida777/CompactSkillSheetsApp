@@ -14,8 +14,6 @@ import { useNavigate } from 'react-router-dom';
 import { useDashboardData, useEngineerStatistics, useApproachStatistics } from '../../hooks/queries/useDashboardQueries';
 import { useUnreadCount } from '../../hooks/queries/useNotificationQueries';
 import { useEffect } from 'react';
-import { format } from 'date-fns';
-import { ja } from 'date-fns/locale';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
