@@ -123,6 +123,7 @@ async function createOfficialClientUsers() {
         adminRole = await prisma.role.create({
           data: {
             name: 'client_admin',
+            displayName: '取引先管理者',
             description: '取引先企業管理者ロール'
           }
         });
@@ -232,6 +233,7 @@ async function createOfficialClientUsers() {
         userRole = await prisma.role.create({
           data: {
             name: 'client_user',
+            displayName: '取引先ユーザー',
             description: '取引先企業一般ユーザーロール'
           }
         });
