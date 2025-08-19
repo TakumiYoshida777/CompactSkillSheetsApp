@@ -20,13 +20,13 @@ import {
   LoginOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
-import { useAuthStore } from '../../stores/authStore';
+import useClientAuthStore from '../../stores/clientAuthStore';
 
 const { Title, Text, Link: AntLink } = Typography;
 
 const ClientLogin: React.FC = () => {
   const navigate = useNavigate();
-  const { clientLogin, isLoading } = useAuthStore();
+  const { login, isLoading } = useClientAuthStore();
   const [form] = Form.useForm();
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -54,7 +54,7 @@ const ClientLogin: React.FC = () => {
 
   const handleLogin = async (values: { email: string; password: string }) => {
     try {
-      await clientLogin(values.email, values.password, rememberMe);
+      await login(values.email, values.password, rememberMe);
       
       // 取引先企業ユーザーのダッシュボードへリダイレクト
       navigate('/client/offer-board');

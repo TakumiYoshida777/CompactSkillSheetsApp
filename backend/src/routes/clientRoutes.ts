@@ -59,26 +59,18 @@ router.get('/client-companies/:clientCompanyId/permissions',
 // 取引先企業向けエンジニア情報閲覧エンドポイント
 // ============================================
 
-// オファーボードデータ取得
-router.get('/client/offer-board',
+// オファーボードデータ取得（特定のURLを先に定義）
+router.get('/client/engineers/offer-board',
   authenticateClientUser,
   logClientView,
   clientEngineerController.getOfferBoard.bind(clientEngineerController)
 );
 
-// エンジニア一覧取得（アクセス権限に基づいてフィルタリング）
-router.get('/client/engineers', 
+// 利用可能なエンジニア取得（オファー用）
+router.get('/client/engineers/available',
   authenticateClientUser,
   logClientView,
   clientEngineerController.getEngineers.bind(clientEngineerController)
-);
-
-// エンジニア詳細取得（アクセス権限チェック付き）
-router.get('/client/engineers/:engineerId', 
-  authenticateClientUser,
-  checkClientAccessPermission,
-  logClientView,
-  clientEngineerController.getEngineerDetail.bind(clientEngineerController)
 );
 
 // エンジニア検索（アクセス権限に基づいてフィルタリング）
@@ -88,11 +80,19 @@ router.post('/client/engineers/search',
   clientEngineerController.searchEngineers.bind(clientEngineerController)
 );
 
-// 利用可能なエンジニア取得（オファー用）
-router.get('/client/engineers/available',
+// エンジニア一覧取得（アクセス権限に基づいてフィルタリング）
+router.get('/client/engineers', 
   authenticateClientUser,
   logClientView,
   clientEngineerController.getEngineers.bind(clientEngineerController)
+);
+
+// エンジニア詳細取得（アクセス権限チェック付き）（パラメータ付きルートは最後に）
+router.get('/client/engineers/:engineerId', 
+  authenticateClientUser,
+  checkClientAccessPermission,
+  logClientView,
+  clientEngineerController.getEngineerDetail.bind(clientEngineerController)
 );
 
 export default router;

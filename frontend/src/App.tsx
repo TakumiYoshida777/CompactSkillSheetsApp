@@ -13,6 +13,7 @@ import ClientLayout from './layouts/ClientLayout';
 import AuthGuard from './components/guards/AuthGuard';
 import AdminGuard from './components/guards/AdminGuard';
 import CompanyGuard from './components/guards/CompanyGuard';
+import ClientPrivateRoute from './components/auth/ClientPrivateRoute';
 
 // 認証ストア
 import { useAuthStore } from './stores/authStore';
@@ -270,9 +271,9 @@ function App() {
 
             {/* 取引先企業向け画面（専用レイアウト付き） - 認証必須 */}
             <Route path="/client" element={
-              <AuthGuard requireRoles={['client_admin', 'client_user']} redirectTo="/client/login">
+              <ClientPrivateRoute>
                 <ClientLayout />
-              </AuthGuard>
+              </ClientPrivateRoute>
             }>
               <Route index element={<Navigate to="/client/offer-board" replace />} />
               {/* テストページ（デバッグ用） */}

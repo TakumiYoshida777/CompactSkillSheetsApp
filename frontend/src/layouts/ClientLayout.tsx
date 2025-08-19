@@ -26,7 +26,7 @@ import {
   MenuUnfoldOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { useAuthStore } from '../stores/authStore';
+import useClientAuthStore from '../stores/clientAuthStore';
 import styles from './ClientLayout.module.css';
 
 const { Header, Sider, Content } = Layout;
@@ -35,7 +35,7 @@ const { Title } = Typography;
 const ClientLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isClientUser } = useAuthStore();
+  const { user, logout, isClientAdmin } = useClientAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);

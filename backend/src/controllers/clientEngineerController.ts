@@ -482,20 +482,34 @@ export class ClientEngineerController {
     });
 
     return {
-      engineers: engineers.map(eng => ({
-        id: eng.id.toString(),
-        name: eng.name,
-        skills: eng.skillSheet?.technicalSkills || [],
-        experience: 5, // TODO: 経験年数の計算
-        availability: eng.availableDate?.toISOString() || '即日',
-        availabilityStatus: eng.currentStatus === 'WAITING' ? 'available' : 'unavailable',
-        rate: {
-          min: 40,
-          max: 60
-        },
-        lastOfferStatus: null,
-        offerHistory: []
-      }))
+      engineers: engineers.map(eng => {
+        // スキルシートからスキル情報を取得（JSON形式）
+        const programmingLanguages = eng.skillSheet?.programmingLanguages as any[] || [];
+        const frameworks = eng.skillSheet?.frameworks as any[] || [];
+        const databases = eng.skillSheet?.databases as any[] || [];
+        
+        // スキルを統合
+        const skills = [
+          ...programmingLanguages.map((lang: any) => lang.name || lang),
+          ...frameworks.map((fw: any) => fw.name || fw),
+          ...databases.map((db: any) => db.name || db)
+        ].filter(Boolean);
+        
+        return {
+          id: eng.id.toString(),
+          name: eng.name,
+          skills: skills,
+          experience: eng.skillSheet?.totalExperienceYears || 0,
+          availability: eng.availableDate?.toISOString() || '即日',
+          availabilityStatus: eng.currentStatus === 'WAITING' ? 'available' : 'unavailable',
+          rate: {
+            min: 40,
+            max: 60
+          },
+          lastOfferStatus: null,
+          offerHistory: []
+        };
+      })
     };
   }
 }
