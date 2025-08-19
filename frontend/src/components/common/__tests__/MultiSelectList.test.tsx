@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 import { MultiSelectList } from '../MultiSelectList';
 
 describe('MultiSelectList', () => {
@@ -13,11 +14,11 @@ describe('MultiSelectList', () => {
   const defaultProps = {
     items: mockItems,
     selectedIds: [],
-    onSelectionChange: jest.fn(),
+    onSelectionChange: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('アイテムリストを表示する', () => {
