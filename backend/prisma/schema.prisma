@@ -82,6 +82,7 @@ model Role {
   updatedAt   DateTime  @updatedAt
 
   userRoles        UserRole[]
+  clientUserRoles  ClientUserRole[]
   rolePermissions  RolePermission[]
 
   @@map("roles")
@@ -160,6 +161,8 @@ model Engineer {
   engineerProjects EngineerProject[]
   targetExclusions Exclusion[]
   offerEngineers   OfferEngineer[]
+  clientAccessPermissions ClientAccessPermission[]
+  clientViewLogs   ClientViewLog[]
 
   @@index([companyId])
   @@index([currentStatus])
@@ -279,10 +282,92 @@ model BusinessPartner {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  sesCompany    Company @relation("SESCompany", fields: [sesCompanyId], references: [id])
-  clientCompany Company @relation("ClientCompany", fields: [clientCompanyId], references: [id])
+  sesCompany             Company                @relation("SESCompany", fields: [sesCompanyId], references: [id])
+  clientCompany          Company                @relation("ClientCompany", fields: [clientCompanyId], references: [id])
+  clientUsers            ClientUser[]
+  accessPermissions      ClientAccessPermission[]
 
   @@map("business_partners")
+}
+
+// 取引先企業ユーザー
+model ClientUser {
+  id                 BigInt    @id @default(autoincrement())
+  businessPartnerId  BigInt
+  email              String    @unique @db.VarChar(255)
+  passwordHash       String    @db.VarChar(255)
+  name               String    @db.VarChar(100)
+  phone              String?   @db.VarChar(20)
+  department         String?   @db.VarChar(100)
+  position           String?   @db.VarChar(100)
+  lastLoginAt        DateTime?
+  failedLoginCount   Int       @default(0)
+  accountLockedUntil DateTime?
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  businessPartner BusinessPartner @relation(fields: [businessPartnerId], references: [id])
+  clientUserRoles ClientUserRole[]
+  viewLogs        ClientViewLog[]
+  offers          Offer[]
+
+  @@index([businessPartnerId])
+  @@index([isActive])
+  @@map("client_users")
+}
+
+// 取引先企業ユーザーロール
+model ClientUserRole {
+  id           BigInt   @id @default(autoincrement())
+  clientUserId BigInt
+  roleId       BigInt
+  grantedBy    BigInt
+  createdAt    DateTime @default(now())
+
+  clientUser ClientUser @relation(fields: [clientUserId], references: [id])
+  role       Role       @relation(fields: [roleId], references: [id])
+
+  @@unique([clientUserId, roleId])
+  @@map("client_user_roles")
+}
+
+// 取引先企業アクセス権限
+model ClientAccessPermission {
+  id                BigInt   @id @default(autoincrement())
+  businessPartnerId BigInt
+  engineerId        BigInt?
+  permissionType    ClientPermissionType
+  isActive          Boolean  @default(true)
+  createdBy         BigInt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  businessPartner BusinessPartner @relation(fields: [businessPartnerId], references: [id])
+  engineer        Engineer?       @relation(fields: [engineerId], references: [id])
+
+  @@index([businessPartnerId])
+  @@index([engineerId])
+  @@map("client_access_permissions")
+}
+
+// 取引先企業閲覧ログ
+model ClientViewLog {
+  id           BigInt   @id @default(autoincrement())
+  clientUserId BigInt
+  engineerId   BigInt?
+  action       String   @db.VarChar(50)
+  ipAddress    String?  @db.VarChar(45)
+  userAgent    String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  clientUser ClientUser @relation(fields: [clientUserId], references: [id])
+  engineer   Engineer?  @relation(fields: [engineerId], references: [id])
+
+  @@index([clientUserId])
+  @@index([engineerId])
+  @@index([createdAt])
+  @@map("client_view_logs")
 }
 
 // アプローチ履歴
@@ -709,12 +794,14 @@ model Offer {
   respondedAt          DateTime?
   reminderSentAt       DateTime?
   reminderCount        Int              @default(0)
-  createdBy            BigInt
+  createdBy            BigInt?
+  clientUserId         BigInt?
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 
   clientCompany        Company          @relation(fields: [clientCompanyId], references: [id])
-  creator              User             @relation(fields: [createdBy], references: [id])
+  creator              User?            @relation(fields: [createdBy], references: [id])
+  clientUser           ClientUser?      @relation(fields: [clientUserId], references: [id])
   offerEngineers       OfferEngineer[]
 
   @@index([clientCompanyId])
@@ -993,4 +1080,12 @@ enum OfferEngineerStatus {
   DECLINED
 
   @@map("offer_engineer_status")
+}
+
+enum ClientPermissionType {
+  FULL_ACCESS        // 全エンジニア閲覧可能
+  SELECTED_ONLY      // 選択されたエンジニアのみ閲覧可能
+  WAITING_ONLY       // 待機中エンジニアのみ閲覧可能
+
+  @@map("client_permission_type")
 }

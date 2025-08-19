@@ -10,6 +10,7 @@ import {
   Button,
   Typography,
   Drawer,
+  message,
 } from 'antd';
 import {
   AppstoreOutlined,
@@ -25,6 +26,7 @@ import {
   MenuUnfoldOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
+import useClientAuthStore from '../stores/clientAuthStore';
 import styles from './ClientLayout.module.css';
 
 const { Header, Sider, Content } = Layout;
@@ -33,6 +35,7 @@ const { Title } = Typography;
 const ClientLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, logout, isClientAdmin } = useClientAuthStore();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -119,8 +122,9 @@ const ClientLayout: React.FC = () => {
       label: 'ログアウト',
       danger: true,
       onClick: () => {
-        // ログアウト処理
-        console.log('Logout');
+        logout();
+        message.success('ログアウトしました');
+        navigate('/client/login');
       },
     },
   ];
@@ -190,7 +194,7 @@ const ClientLayout: React.FC = () => {
               className={styles.trigger}
             />
             <Title level={5} className={styles.companyName} style={{ color: '#fff' }}>
-              株式会社ABC商事
+              {user?.clientCompany?.name || user?.company?.name || '取引先企業'}
             </Title>
           </div>
           <div className={styles.headerRight}>
@@ -211,8 +215,9 @@ const ClientLayout: React.FC = () => {
                   <Avatar 
                     icon={<UserOutlined />}
                     style={{ backgroundColor: '#1890ff' }}
+                    src={user?.avatarUrl}
                   />
-                  <span className={styles.userName}>取引先担当者</span>
+                  <span className={styles.userName}>{user?.name || '取引先担当者'}</span>
                 </Space>
               </Dropdown>
             </Space>

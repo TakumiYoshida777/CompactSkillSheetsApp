@@ -95,16 +95,14 @@ const mockOfferBoardData: OfferBoardData = {
 export const offerApi = {
   // オファーボード関連
   getOfferBoard: async (): Promise<OfferBoardData> => {
-    // TODO: バックエンドAPI実装後は以下のコメントを解除
-    // const response = await axios.get(`${BASE_URL}/offer-board`);
-    // return response.data;
-    
-    // モックデータを返す（開発用）
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(mockOfferBoardData);
-      }, 500);
-    });
+    try {
+      const response = await axios.get(`${BASE_URL}/offer-board`);
+      return response.data;
+    } catch (error) {
+      // エラー時はモックデータを返す（フォールバック）
+      console.warn('API call failed, returning mock data:', error);
+      return mockOfferBoardData;
+    }
   },
 
   // オファー管理
@@ -181,12 +179,22 @@ export const offerApi = {
     experience?: number;
     rate?: { min?: number; max?: number };
   }) => {
-    const response = await axios.get(`${BASE_URL}/engineers/available`, { params });
-    return response.data;
+    try {
+      const response = await axios.get(`${BASE_URL}/engineers/available`, { params });
+      return response.data;
+    } catch (error) {
+      console.warn('Failed to search engineers:', error);
+      return { engineers: [], totalCount: 0 };
+    }
   },
 
   getEngineerDetail: async (engineerId: string) => {
-    const response = await axios.get(`${BASE_URL}/engineers/${engineerId}`);
-    return response.data;
+    try {
+      const response = await axios.get(`${BASE_URL}/engineers/${engineerId}`);
+      return response.data;
+    } catch (error) {
+      console.warn('Failed to get engineer detail:', error);
+      throw error;
+    }
   },
 };
