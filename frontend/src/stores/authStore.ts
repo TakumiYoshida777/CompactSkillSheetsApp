@@ -325,8 +325,19 @@ const useAuthStore = create<AuthState>()(
       },
 
       isClientUser: () => {
-        const { user } = get();
+        const { user, token } = get();
+        
+        // 1. まずトークンから判定（最も信頼できる）
+        if (token) {
+          const userTypeFromToken = getUserTypeFromToken(token);
+          if (userTypeFromToken === 'client') {
+            return true;
+          }
+        }
+        
+        // 2. 次にuserオブジェクトから判定
         if (!user) return false;
+        
         // userTypeがclientの場合、またはrolesが配列でclient_adminかclient_userを含む場合
         return user.userType === 'client' || 
                (Array.isArray(user.roles) && (user.roles.includes('client_admin') || user.roles.includes('client_user')));
