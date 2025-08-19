@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { OfferController } from '../offerController';
+import { OfferController } from '../offer';
 import { offerService } from '../../../services/offerService';
 import { emailService } from '../../../services/emailService';
 import { offerValidator } from '../../../validators/offerValidator';
@@ -23,9 +23,11 @@ describe('OfferController', () => {
     
     mockRequest = {
       user: {
-        id: '1',
+        userId: '1',
         companyId: '100',
-        role: 'client'
+        email: 'test@example.com',
+        roles: ['client'],
+        permissions: []
       },
       body: {},
       params: {},
