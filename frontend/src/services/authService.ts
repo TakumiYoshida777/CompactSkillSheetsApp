@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from '../lib/axios';
 import type { AxiosResponse } from 'axios';
 import { AppError, ErrorFactory } from '../errors/AppError';
 
@@ -67,7 +67,7 @@ export class AuthService {
     credentials: LoginCredentials
   ): Promise<AuthResponse> {
     try {
-      const response: AxiosResponse<ApiLoginResponse> = await axios.post(endpoint, credentials);
+      const response: AxiosResponse<ApiLoginResponse> = await axiosInstance.post(endpoint, credentials);
       
       // APIレスポンスの構造を正規化
       const authResponse = this.normalizeAuthResponse(response.data);
@@ -111,14 +111,14 @@ export class AuthService {
    * @param token アクセストークン
    */
   static setAuthorizationHeader(token: string): void {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 
   /**
    * Axiosのデフォルトヘッダーから認証トークンを削除
    */
   static removeAuthorizationHeader(): void {
-    delete axios.defaults.headers.common['Authorization'];
+    delete axiosInstance.defaults.headers.common['Authorization'];
   }
 
   /**
@@ -141,7 +141,7 @@ export class AuthService {
     refreshToken: string
   ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
-      const response = await axios.post(endpoint, { refreshToken });
+      const response = await axiosInstance.post(endpoint, { refreshToken });
       const { accessToken, refreshToken: newRefreshToken } = response.data;
       
       this.setAuthorizationHeader(accessToken);
@@ -162,7 +162,7 @@ export class AuthService {
    */
   static async fetchUserInfo(endpoint: string): Promise<any> {
     try {
-      const response = await axios.get(endpoint);
+      const response = await axiosInstance.get(endpoint);
       return response.data;
     } catch (error) {
       throw this.handleAuthError(error);
