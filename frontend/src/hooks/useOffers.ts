@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import * as offerApi from '../api/client/offerApi';
-import { OfferStatus } from '../stores/offerStore';
+import type { OfferStatus } from '../stores/offerStore';
 
 const QUERY_KEYS = {
   offers: 'offers',

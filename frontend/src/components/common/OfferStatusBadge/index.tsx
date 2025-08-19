@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge, Tag } from 'antd';
-import { OfferStatus } from '../../../stores/offerStore';
+import type { OfferStatus } from '../../../stores/offerStore';
 
 interface OfferStatusBadgeProps {
   status: OfferStatus;

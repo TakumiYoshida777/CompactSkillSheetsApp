@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Notification, SystemAnnouncement } from '../../stores/notificationStore';
+import type { Notification, SystemAnnouncement } from '../../stores/notificationStore';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
