@@ -30,6 +30,28 @@ const ClientLogin: React.FC = () => {
   const [form] = Form.useForm();
   const [rememberMe, setRememberMe] = useState(false);
 
+  // デモアカウント情報
+  const demoAccounts = [
+    {
+      email: 'admin@client-a.co.jp',
+      password: 'Admin123!',
+      description: '株式会社クライアントA（全エンジニア閲覧可能）'
+    },
+    {
+      email: 'user@client-b.co.jp',
+      password: 'Admin123!',
+      description: '株式会社クライアントB（待機中のみ閲覧可能）'
+    }
+  ];
+
+  const handleDemoLogin = (account: typeof demoAccounts[0]) => {
+    form.setFieldsValue({
+      email: account.email,
+      password: account.password,
+    });
+    message.info(`デモアカウント: ${account.description}`);
+  };
+
   const handleLogin = async (values: { email: string; password: string }) => {
     try {
       await clientLogin(values.email, values.password, rememberMe);
@@ -161,6 +183,48 @@ const ClientLogin: React.FC = () => {
               </Button>
             </Form.Item>
           </Form>
+
+          {/* デモアカウント情報 */}
+          <Card
+            size="small"
+            style={{
+              backgroundColor: '#f0f2f5',
+              marginTop: '16px',
+            }}
+          >
+            <Space direction="vertical" size="small" style={{ width: '100%' }}>
+              <Text strong>デモアカウント:</Text>
+              <Row gutter={8}>
+                <Col span={12}>
+                  <Button
+                    size="small"
+                    block
+                    onClick={() => handleDemoLogin(demoAccounts[0])}
+                  >
+                    クライアントA
+                  </Button>
+                </Col>
+                <Col span={12}>
+                  <Button
+                    size="small"
+                    block
+                    onClick={() => handleDemoLogin(demoAccounts[1])}
+                  >
+                    クライアントB
+                  </Button>
+                </Col>
+              </Row>
+              <div style={{ marginTop: 8 }}>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  クライアントA: 全エンジニア閲覧可能
+                </Text>
+                <br />
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  クライアントB: 待機中のみ閲覧可能
+                </Text>
+              </div>
+            </Space>
+          </Card>
 
           <Divider>または</Divider>
 
