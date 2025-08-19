@@ -1,13 +1,34 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, Spin } from 'antd';
 import jaJP from 'antd/locale/ja_JP';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import './App.css';
 
 // レイアウトコンポーネント（常に必要なので通常インポート）
 import MainLayout from './layouts/MainLayout';
 import EngineerLayout from './layouts/EngineerLayout';
 import ClientLayout from './layouts/ClientLayout';
+
+// ガードコンポーネント
+import AuthGuard from './components/guards/AuthGuard';
+import AdminGuard from './components/guards/AdminGuard';
+import CompanyGuard from './components/guards/CompanyGuard';
+import ClientPrivateRoute from './components/auth/ClientPrivateRoute';
+
+// 認証ストア
+import { useAuthStore } from './stores/authStore';
+
+// Axios設定
+import axios from 'axios';
+
+// APIベースURLの設定（/api/v1を削除）
+axios.defaults.baseURL = 'http://localhost:8000';
+
+// 認証ページ
+const Login = lazy(() => import('./pages/auth/Login'));
+const ClientLogin = lazy(() => import('./pages/auth/ClientLogin'));
+const Unauthorized = lazy(() => import('./pages/Unauthorized'));
+const Test = lazy(() => import('./pages/Test'));
 
 // ページコンポーネントを動的インポート
 const Dashboard = lazy(() => import('./pages/Dashboard/Dashboard'));
@@ -17,6 +38,8 @@ const EngineerRegister = lazy(() => import('./pages/Engineers/EngineerRegister')
 const SkillSheetEdit = lazy(() => import('./pages/engineer/SkillSheet'));
 const SkillSheetPreview = lazy(() => import('./pages/engineer/SkillSheetPreview'));
 const EngineerDashboard = lazy(() => import('./pages/engineer/Dashboard'));
+const EngineerLogin = lazy(() => import('./pages/engineer/Login'));
+const EngineerSignup = lazy(() => import('./pages/engineer/Register'));
 const BusinessPartnerRegister = lazy(() => import('./pages/BusinessPartners/BusinessPartnerRegister'));
 const BusinessPartnerList = lazy(() => import('./pages/BusinessPartners/BusinessPartnerList'));
 const BusinessPartnerDetail = lazy(() => import('./pages/BusinessPartners/BusinessPartnerDetail'));
@@ -30,6 +53,10 @@ const OfferBoard = lazy(() => import('./pages/Client/OfferBoard'));
 const OfferManagement = lazy(() => import('./pages/Client/OfferManagement'));
 const OfferHistory = lazy(() => import('./pages/Client/OfferHistory'));
 const ClientEngineerSearch = lazy(() => import('./pages/Client/EngineerSearch'));
+const ClientTestPage = lazy(() => import('./pages/Client/TestPage'));
+const ClientDebug = lazy(() => import('./pages/Client/Debug'));
+const ClientApiTest = lazy(() => import('./pages/Client/ApiTest'));
+const ClientAuthDebug = lazy(() => import('./pages/Client/AuthDebug'));
 
 // ローディングコンポーネント
 const PageLoader = () => (
@@ -39,13 +66,74 @@ const PageLoader = () => (
 );
 
 function App() {
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    // アプリケーション起動時に認証状態をチェック
+    // Zustandのpersistがロード完了後、トークンがある場合のみチェック
+    // ユーザー情報もロードされていることを確認（userTypeの判定のため）
+    if (token) {
+      checkAuth();
+    }
+  }, [token, checkAuth]);
+
   return (
     <ConfigProvider locale={jaJP}>
       <Router>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            {/* SES企業向け画面（設計書準拠） */}
-            <Route path="/" element={<MainLayout />}>
+            {/* テストページ */}
+            <Route path="/test" element={
+              <Suspense fallback={<PageLoader />}>
+                <Test />
+              </Suspense>
+            } />
+            
+            {/* 認証ページ（ガードなし） */}
+            <Route path="/login" element={
+              <Suspense fallback={<PageLoader />}>
+                <Login />
+              </Suspense>
+            } />
+            <Route path="/client/login" element={
+              <Suspense fallback={<PageLoader />}>
+                <ClientLogin />
+              </Suspense>
+            } />
+            <Route path="/client/test-noauth" element={
+              <Suspense fallback={<PageLoader />}>
+                <ClientTestPage />
+              </Suspense>
+            } />
+            <Route path="/client/debug" element={
+              <Suspense fallback={<PageLoader />}>
+                <ClientDebug />
+              </Suspense>
+            } />
+            <Route path="/client/api-test" element={
+              <Suspense fallback={<PageLoader />}>
+                <ClientApiTest />
+              </Suspense>
+            } />
+            <Route path="/client/auth-debug" element={
+              <Suspense fallback={<PageLoader />}>
+                <ClientAuthDebug />
+              </Suspense>
+            } />
+            <Route path="/unauthorized" element={
+              <Suspense fallback={<PageLoader />}>
+                <Unauthorized />
+              </Suspense>
+            } />
+
+            {/* SES企業向け画面（設計書準拠） - 認証必須 */}
+            <Route path="/" element={
+              <AuthGuard>
+                <MainLayout />
+              </AuthGuard>
+            }>
               <Route index element={<Navigate to="/dashboard" replace />} />
               {/* DASH001 - ダッシュボード */}
               <Route path="dashboard" element={
@@ -146,7 +234,19 @@ function App() {
               } />
             </Route>
 
-            {/* エンジニア個人用画面（専用レイアウト付き） */}
+            {/* エンジニア認証画面（レイアウトなし） */}
+            <Route path="/engineer/login" element={
+              <Suspense fallback={<PageLoader />}>
+                <EngineerLogin />
+              </Suspense>
+            } />
+            <Route path="/engineer/register" element={
+              <Suspense fallback={<PageLoader />}>
+                <EngineerSignup />
+              </Suspense>
+            } />
+
+            {/* エンジニア個人用画面（専用レイアウト付き） - 認証必鞈 */}
             <Route path="/engineer" element={<EngineerLayout />}>
               <Route index element={<Navigate to="/engineer/dashboard" replace />} />
               <Route path="dashboard" element={
@@ -169,9 +269,19 @@ function App() {
               <Route path="settings" element={<div>エンジニア設定（開発中）</div>} />
             </Route>
 
-            {/* 取引先企業向け画面（専用レイアウト付き） */}
-            <Route path="/client" element={<ClientLayout />}>
+            {/* 取引先企業向け画面（専用レイアウト付き） - 認証必須 */}
+            <Route path="/client" element={
+              <ClientPrivateRoute>
+                <ClientLayout />
+              </ClientPrivateRoute>
+            }>
               <Route index element={<Navigate to="/client/offer-board" replace />} />
+              {/* テストページ（デバッグ用） */}
+              <Route path="test" element={
+                <Suspense fallback={<PageLoader />}>
+                  <ClientTestPage />
+                </Suspense>
+              } />
               {/* CLI001 - オファーボード */}
               <Route path="offer-board" element={
                 <Suspense fallback={<PageLoader />}>

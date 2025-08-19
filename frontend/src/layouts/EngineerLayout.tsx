@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Avatar, Dropdown, Space, Badge, Button, Drawer } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Space, Badge, Button, Drawer, message } from 'antd';
 import useResponsive from '../hooks/useResponsive';
+import { useAuthStore } from '../stores/authStore';
 import {
   DashboardOutlined,
   FileTextOutlined,
@@ -23,6 +24,7 @@ const EngineerLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isMobile } = useResponsive();
+  const { logout, user } = useAuthStore();
 
   // エンジニア用メニュー項目
   const menuItems: MenuProps['items'] = [
@@ -63,8 +65,9 @@ const EngineerLayout: React.FC = () => {
       label: 'ログアウト',
       onClick: () => {
         // ログアウト処理
-        console.log('Logout');
-        navigate('/login');
+        logout();
+        message.success('ログアウトしました');
+        navigate('/engineer/login');
       },
     },
   ];
