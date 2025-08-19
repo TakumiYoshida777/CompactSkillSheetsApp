@@ -43,6 +43,11 @@ const EngineerSignup = lazy(() => import('./pages/engineer/Register'));
 const BusinessPartnerRegister = lazy(() => import('./pages/BusinessPartners/BusinessPartnerRegister'));
 const BusinessPartnerList = lazy(() => import('./pages/BusinessPartners/BusinessPartnerList'));
 const BusinessPartnerDetail = lazy(() => import('./pages/BusinessPartners/BusinessPartnerDetail'));
+const BusinessPartnerEdit = lazy(() => import('./pages/BusinessPartners/BusinessPartnerEdit'));
+const BusinessPartnerListEnhanced = lazy(() => import('./pages/BusinessPartners/BusinessPartnerListEnhanced'));
+const ClientUserManagement = lazy(() => import('./pages/BusinessPartners/ClientUserManagement'));
+const AccessControlPanel = lazy(() => import('./pages/BusinessPartners/AccessControlPanel'));
+const NGListManagement = lazy(() => import('./pages/BusinessPartners/NGListManagement'));
 const ApproachHistory = lazy(() => import('./pages/Approaches/ApproachHistory'));
 const ApproachCreate = lazy(() => import('./pages/Approaches/ApproachCreate'));
 const UserProfile = lazy(() => import('./pages/Profile/UserProfile'));
@@ -200,6 +205,11 @@ function App() {
               
               {/* 取引先管理 */}
               <Route path="business-partners">
+                <Route index element={
+                  <Suspense fallback={<PageLoader />}>
+                    <BusinessPartnerListEnhanced />
+                  </Suspense>
+                } />
                 <Route path="list" element={
                   <Suspense fallback={<PageLoader />}>
                     <BusinessPartnerList />
@@ -208,6 +218,26 @@ function App() {
                 <Route path=":id" element={
                   <Suspense fallback={<PageLoader />}>
                     <BusinessPartnerDetail />
+                  </Suspense>
+                } />
+                <Route path=":id/edit" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <BusinessPartnerEdit />
+                  </Suspense>
+                } />
+                <Route path=":partnerId/users" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <ClientUserManagement />
+                  </Suspense>
+                } />
+                <Route path=":partnerId/access-control" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <AccessControlPanel />
+                  </Suspense>
+                } />
+                <Route path=":partnerId/ng-list" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <NGListManagement />
                   </Suspense>
                 } />
                 <Route path="new" element={

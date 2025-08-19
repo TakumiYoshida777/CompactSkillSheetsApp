@@ -58,15 +58,17 @@ export const useErrorHandler = () => {
         placement: 'topRight',
         ...(error.isRetryable && options.retryCallback && {
           btn: (
-            <button
-              className="ant-btn ant-btn-primary ant-btn-sm"
-              onClick={async () => {
-                notification.close('error-notification');
-                await options.retryCallback?.();
-              }}
-            >
-              再試行
-            </button>
+            React.createElement(
+              'button',
+              {
+                className: 'ant-btn ant-btn-primary ant-btn-sm',
+                onClick: async () => {
+                  notification.close('error-notification');
+                  await options.retryCallback?.();
+                }
+              },
+              '再試行'
+            )
           ),
           key: 'error-notification'
         })
