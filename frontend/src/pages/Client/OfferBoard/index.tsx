@@ -1,44 +1,38 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Card,
   Table,
   Button,
-  Checkbox,
-  Badge,
   Space,
   Spin,
   Alert,
-  Input,
-  Select,
-  Row,
-  Col,
-  Statistic,
   Typography,
 } from 'antd';
-import {
-  SendOutlined,
-  TeamOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  PercentageOutlined,
-  SearchOutlined,
-  FilterOutlined,
-} from '@ant-design/icons';
+import { SendOutlined } from '@ant-design/icons';
 import { useOfferBoard } from '@/hooks/useOfferBoard';
 import { useOfferStore } from '@/stores/offerStore';
+import { useOfferFilters } from '@/hooks/useOfferFilters';
+import { useResponsive } from '@/hooks/useResponsive';
 import { OfferDialog } from './OfferDialog';
 import { OfferSummary } from './OfferSummary';
 import { EngineerCard } from './EngineerCard';
-import type { ColumnsType } from 'antd/es/table';
-import type { Engineer, OfferStatus } from '@/types/offer';
+import { OfferFilters } from './OfferFilters';
+import { OfferStatistics } from './OfferStatistics';
+import { createOfferTableColumns } from './OfferTableConfig';
+import type { Engineer } from '@/types/offer';
 import styles from './OfferBoard.module.css';
 
-const { Search } = Input;
-const { Option } = Select;
 const { Title } = Typography;
 
+/**
+ * オファーボード - リファクタリング版
+ * 責務を分割し、各コンポーネントを独立させた実装
+ */
 export const OfferBoard: React.FC = () => {
+  // データ取得
   const { data: boardData, isLoading, error } = useOfferBoard();
+  
+  // 選択状態管理
   const {
     selectedEngineers,
     toggleEngineer,
@@ -46,409 +40,169 @@ export const OfferBoard: React.FC = () => {
     clearSelection,
   } = useOfferStore();
 
+  // フィルタリング機能
+  const {
+    filters,
+    setStatusFilter,
+    setSkillFilter,
+    setAvailabilityFilter,
+    applyFilters,
+    handleTableChange,
+  } = useOfferFilters();
+
+  // レスポンシブ対応
+  const { isMobile, isTablet, isDesktop } = useResponsive();
+
+  // ローカル状態
   const [showOfferDialog, setShowOfferDialog] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<OfferStatus | 'all'>('all');
-  const [skillFilter, setSkillFilter] = useState('');
-  const [availabilityFilter, setAvailabilityFilter] = useState<string>('all');
-  const [sortField, setSortField] = useState<string>('');
-  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend'>('ascend');
 
-  // レスポンシブ対応（要件定義書準拠）
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-
-  React.useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // ブレークポイント（要件定義書準拠）
-  const isMobile = windowWidth < 768;  // スマートフォン: 375px〜767px
-  const isTablet = windowWidth >= 768 && windowWidth < 1366;  // タブレット: 768px〜1365px
-  const isDesktop = windowWidth >= 1366;  // デスクトップ: 1366px以上
-
-  // フィルタリング処理
+  // フィルタリング済みエンジニアリスト
   const filteredEngineers = useMemo(() => {
     if (!boardData?.engineers) return [];
+    return applyFilters(boardData.engineers);
+  }, [boardData?.engineers, applyFilters]);
 
-    let filtered = [...boardData.engineers];
-
-    // ステータスフィルター
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(e => e.offerStatus === statusFilter);
-    }
-
-    // スキルフィルター
-    if (skillFilter) {
-      filtered = filtered.filter(e =>
-        e.skills.some(skill =>
-          skill.toLowerCase().includes(skillFilter.toLowerCase())
-        )
-      );
-    }
-
-    // 稼働可能時期フィルター
-    if (availabilityFilter !== 'all') {
-      filtered = filtered.filter(e => {
-        if (availabilityFilter === 'immediate') {
-          return e.availability === '即日';
-        } else if (availabilityFilter === 'within2weeks') {
-          return e.availability === '即日' || e.availability === '2週間後';
-        } else if (availabilityFilter === 'within1month') {
-          return e.availability !== '1ヶ月以上';
-        }
-        return true;
-      });
-    }
-
-    // ソート処理
-    if (sortField) {
-      filtered.sort((a, b) => {
-        let compareResult = 0;
-        switch (sortField) {
-          case 'name':
-            compareResult = a.name.localeCompare(b.name);
-            break;
-          case 'experience':
-            compareResult = a.experience - b.experience;
-            break;
-          case 'hourlyRate':
-            compareResult = a.hourlyRate - b.hourlyRate;
-            break;
-          default:
-            break;
-        }
-        return sortOrder === 'ascend' ? compareResult : -compareResult;
-      });
-    }
-
-    return filtered;
-  }, [boardData?.engineers, statusFilter, skillFilter, availabilityFilter, sortField, sortOrder]);
-
+  // 全選択ハンドラー
   const handleSelectAll = () => {
     const allIds = filteredEngineers.map(e => e.id);
     selectAllEngineers(allIds);
   };
 
-  const getStatusColor = (status: OfferStatus) => {
-    switch (status) {
-      case 'none':
-        return 'default';
-      case 'sent':
-        return 'processing';
-      case 'opened':
-        return 'warning';
-      case 'pending':
-        return 'warning';
-      case 'accepted':
-        return 'success';
-      case 'declined':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
+  // テーブルカラム定義
+  const columns = useMemo(() => 
+    createOfferTableColumns({
+      selectedEngineers,
+      toggleEngineer,
+    }), 
+    [selectedEngineers, toggleEngineer]
+  );
 
-  const getStatusText = (status: OfferStatus) => {
-    switch (status) {
-      case 'none':
-        return '未送信';
-      case 'sent':
-        return '送信済み';
-      case 'opened':
-        return '開封済み';
-      case 'pending':
-        return '検討中';
-      case 'accepted':
-        return '承諾';
-      case 'declined':
-        return '辞退';
-      default:
-        return '-';
-    }
-  };
-
-  const columns: ColumnsType<Engineer> = [
-    {
-      title: '',
-      dataIndex: 'select',
-      key: 'select',
-      width: 50,
-      fixed: 'left',
-      render: (_, record) => (
-        <Checkbox
-          checked={selectedEngineers.includes(record.id)}
-          onChange={() => toggleEngineer(record.id)}
-        />
-      ),
-    },
-    {
-      title: 'エンジニア名',
-      dataIndex: 'name',
-      key: 'name',
-      sorter: true,
-      render: (name, record) => (
-        <div data-testid="engineer-name">
-          <strong>{name}</strong>
-          <div className="text-gray-500 text-sm">
-            {record.skills.slice(0, 3).join(', ')}
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: '経験年数',
-      dataIndex: 'experience',
-      key: 'experience',
-      width: 100,
-      sorter: true,
-      render: (exp) => <span data-testid="engineer-experience">{exp}年</span>,
-    },
-    {
-      title: '単価',
-      dataIndex: 'rate',
-      key: 'hourlyRate',
-      width: 150,
-      sorter: true,
-      render: (rate) => (
-        <span data-testid="engineer-rate">
-          {rate && rate.min && rate.max 
-            ? `¥${rate.min}〜${rate.max}万/月`
-            : '-'}
-        </span>
-      ),
-    },
-    {
-      title: '稼働可能時期',
-      dataIndex: 'availability',
-      key: 'availability',
-      width: 120,
-    },
-    {
-      title: 'オファー状況',
-      dataIndex: 'lastOfferStatus',
-      key: 'offerStatus',
-      width: 120,
-      render: (status) => (
-        <Badge
-          status={getStatusColor(status || 'none')}
-          text={getStatusText(status || 'none')}
-        />
-      ),
-    },
-    {
-      title: '最終オファー日',
-      dataIndex: 'lastOfferDate',
-      key: 'lastOfferDate',
-      width: 120,
-      render: (date) => date ? new Date(date).toLocaleDateString('ja-JP') : '-',
-    },
-  ];
-
-  const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-    if (sorter.field) {
-      setSortField(sorter.field);
-      setSortOrder(sorter.order || 'ascend');
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <Spin size="large" data-testid="loading-spinner" />
-      </div>
-    );
-  }
-
+  // エラー処理
   if (error) {
     return (
       <Alert
         message="エラー"
-        description="データの取得に失敗しました"
+        description="データの取得に失敗しました。再度お試しください。"
         type="error"
         showIcon
       />
     );
   }
 
+  // ローディング処理
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Spin size="large" tip="データを読み込んでいます..." />
+      </div>
+    );
+  }
+
   return (
     <div className={styles.offerBoard}>
-      {/* サマリーカード */}
-      <OfferSummary data={boardData?.summary} />
+      {/* ヘッダー */}
+      <div className={styles.header}>
+        <Title level={2}>オファーボード</Title>
+        <Space>
+          <Button
+            type="primary"
+            icon={<SendOutlined />}
+            onClick={() => setShowOfferDialog(true)}
+            disabled={selectedEngineers.length === 0}
+          >
+            オファーを送信 ({selectedEngineers.length})
+          </Button>
+          {selectedEngineers.length > 0 && (
+            <Button onClick={clearSelection}>
+              選択をクリア
+            </Button>
+          )}
+        </Space>
+      </div>
 
-      {/* フィルターバー */}
-      <Card className={styles.filterBar}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              style={{ width: '100%' }}
-              placeholder="オファーステータス"
-              value={statusFilter}
-              onChange={setStatusFilter}
-              data-testid="status-filter"
-            >
-              <Option value="all">すべて</Option>
-              <Option value="none">未送信</Option>
-              <Option value="sent">送信済み</Option>
-              <Option value="opened">開封済み</Option>
-              <Option value="pending">検討中</Option>
-              <Option value="accepted">承諾</Option>
-              <Option value="declined">辞退</Option>
-            </Select>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Search
-              placeholder="スキルで検索"
-              value={skillFilter}
-              onChange={(e) => setSkillFilter(e.target.value)}
-              prefix={<SearchOutlined />}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              style={{ width: '100%' }}
-              placeholder="稼働可能時期"
-              value={availabilityFilter}
-              onChange={setAvailabilityFilter}
-              data-testid="availability-filter"
-            >
-              <Option value="all">すべて</Option>
-              <Option value="immediate">即日</Option>
-              <Option value="within2weeks">2週間以内</Option>
-              <Option value="within1month">1ヶ月以内</Option>
-            </Select>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Space>
-              <Button icon={<FilterOutlined />}>
-                詳細フィルター
-              </Button>
-            </Space>
-          </Col>
-        </Row>
+      {/* 統計情報 */}
+      <OfferStatistics
+        boardData={boardData}
+        selectedCount={selectedEngineers.length}
+        isMobile={isMobile}
+      />
+
+      {/* フィルター */}
+      <Card style={{ marginTop: 16 }}>
+        <OfferFilters
+          statusFilter={filters.statusFilter}
+          skillFilter={filters.skillFilter}
+          availabilityFilter={filters.availabilityFilter}
+          onStatusChange={setStatusFilter}
+          onSkillChange={setSkillFilter}
+          onAvailabilityChange={setAvailabilityFilter}
+          isMobile={isMobile}
+        />
       </Card>
 
-      {/* エンジニア一覧 */}
-      <Card
-        title={
-          <div className={styles.cardHeader}>
-            <Title level={isMobile ? 5 : 4}>オファー可能エンジニア一覧</Title>
-            {!isMobile && selectedEngineers.length > 0 && (
-              <span className={styles.selectedCount}>
-                {selectedEngineers.length}名選択中
+      {/* データテーブル / カードビュー */}
+      <Card style={{ marginTop: 16 }}>
+        {isMobile ? (
+          // モバイル: カードビュー
+          <div className={styles.mobileView}>
+            <div style={{ marginBottom: 16 }}>
+              <Button onClick={handleSelectAll} type="link">
+                全て選択
+              </Button>
+              <span style={{ marginLeft: 16 }}>
+                {filteredEngineers.length}件のエンジニア
               </span>
-            )}
+            </div>
+            {filteredEngineers.map((engineer) => (
+              <EngineerCard
+                key={engineer.id}
+                engineer={engineer}
+                isSelected={selectedEngineers.includes(engineer.id)}
+                onToggle={() => toggleEngineer(engineer.id)}
+              />
+            ))}
           </div>
-        }
-        extra={
-          !isMobile && (
-            <Space wrap>
-              <Button onClick={handleSelectAll}>全て選択</Button>
-              <Button onClick={clearSelection} disabled={selectedEngineers.length === 0}>
-                選択をクリア
+        ) : (
+          // デスクトップ/タブレット: テーブルビュー
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <Button onClick={handleSelectAll} type="link">
+                全て選択
               </Button>
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                disabled={selectedEngineers.length === 0}
-                onClick={() => setShowOfferDialog(true)}
-              >
-                {isTablet ? 'オファー送信' : '選択したエンジニアにオファー送信'}
-              </Button>
-            </Space>
-          )
-        }
-      >
-        {/* デスクトップビュー (1366px以上) */}
-        {isDesktop && (
-          <div data-testid="desktop-view" className={styles.desktopView}>
+              <span style={{ marginLeft: 16 }}>
+                {filteredEngineers.length}件のエンジニア
+              </span>
+            </div>
             <Table
               columns={columns}
               dataSource={filteredEngineers}
               rowKey="id"
               onChange={handleTableChange}
+              scroll={{ x: isTablet ? 800 : 1200 }}
               pagination={{
-                pageSize: 10,
+                pageSize: 20,
                 showSizeChanger: true,
-                showTotal: (total) => `全${total}件`,
+                showTotal: (total) => `全 ${total} 件`,
               }}
-              scroll={{ x: 1200 }}
-              className={styles.responsiveTable}
             />
-          </div>
-        )}
-
-        {/* タブレットビュー (768px〜1365px) - 参照機能のみ */}
-        {isTablet && (
-          <div data-testid="tablet-view" className={styles.tabletView}>
-            <Alert
-              message="タブレット表示"
-              description="タブレットでは参照機能のみ利用可能です。編集はPC版をご利用ください。"
-              type="info"
-              showIcon
-              className={styles.tabletAlert}
-            />
-            <Table
-              columns={columns.filter(col => 
-                ['select', 'name', 'experience', 'offerStatus'].includes(col.key as string)
-              )}
-              dataSource={filteredEngineers}
-              rowKey="id"
-              pagination={{
-                pageSize: 10,
-                simple: true,
-              }}
-              scroll={{ x: 'max-content' }}
-              className={styles.responsiveTable}
-            />
-          </div>
-        )}
-
-        {/* モバイルビュー (375px〜767px) - レスポンシブ対応 */}
-        {isMobile && (
-          <div data-testid="mobile-view" className={styles.mobileView}>
-            {/* モバイル用選択バー */}
-            <div className={styles.mobileSelectionBar}>
-              <Button 
-                size="small" 
-                onClick={handleSelectAll}
-                className={styles.mobileButton}
-              >
-                全選択
-              </Button>
-              <span className={styles.mobileSelectedCount}>
-                {selectedEngineers.length}名選択
-              </span>
-              <Button
-                type="primary"
-                size="small"
-                icon={<SendOutlined />}
-                disabled={selectedEngineers.length === 0}
-                onClick={() => setShowOfferDialog(true)}
-                className={styles.mobileButton}
-              >
-                オファー
-              </Button>
-            </div>
-            {/* エンジニアカード一覧 */}
-            {filteredEngineers.map((engineer) => (
-              <EngineerCard
-                key={engineer.id}
-                engineer={engineer}
-                selected={selectedEngineers.includes(engineer.id)}
-                onToggle={() => toggleEngineer(engineer.id)}
-              />
-            ))}
-          </div>
+          </>
         )}
       </Card>
 
-      {/* オファー送信ダイアログ */}
+      {/* オファーサマリー */}
+      {selectedEngineers.length > 0 && (
+        <OfferSummary
+          selectedEngineers={selectedEngineers}
+          engineers={filteredEngineers}
+        />
+      )}
+
+      {/* オファーダイアログ */}
       <OfferDialog
         visible={showOfferDialog}
         onClose={() => setShowOfferDialog(false)}
         selectedEngineers={selectedEngineers}
-        engineers={filteredEngineers.filter(e => selectedEngineers.includes(e.id))}
+        engineers={filteredEngineers}
       />
     </div>
   );
