@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Form, Input, Button, Card, message, Checkbox, Typography } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { Form, Input, Button, Card, message, Checkbox, Typography, Space, Row, Col, Alert } from 'antd';
+import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
 import { useAuthStore } from '../../stores/authStore';
 import { engineerAuthService } from '../../services/engineer/authService';
 
@@ -16,7 +16,22 @@ interface LoginForm {
 const EngineerLogin: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
   const { setAuthTokens } = useAuthStore();
+
+  // デモアカウント情報
+  const demoAccounts = [
+    {
+      type: 'engineerA',
+      name: 'エンジニアA',
+      description: '全クライアント対応可能',
+    },
+    {
+      type: 'engineerB',
+      name: 'エンジニアB',
+      description: '待機中ステータス',
+    },
+  ];
 
   const handleSubmit = async (values: LoginForm) => {
     try {
@@ -46,6 +61,30 @@ const EngineerLogin: React.FC = () => {
     }
   };
 
+  const handleDemoLogin = async (accountType: string) => {
+    try {
+      setLoading(true);
+      const response = await engineerAuthService.demoLogin(accountType);
+
+      if (response.success) {
+        // 認証情報を保存
+        setAuthTokens(
+          response.data.user,
+          response.data.tokens.accessToken,
+          response.data.tokens.refreshToken
+        );
+
+        message.success(response.message);
+        navigate('/engineer/skill-sheet');
+      }
+    } catch (error: any) {
+      console.error('Demo login error:', error);
+      message.error(error.response?.data?.message || 'デモログインに失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
@@ -55,6 +94,7 @@ const EngineerLogin: React.FC = () => {
         </div>
 
         <Form
+          form={form}
           name="engineer-login"
           onFinish={handleSubmit}
           layout="vertical"
@@ -102,6 +142,7 @@ const EngineerLogin: React.FC = () => {
               loading={loading}
               block
               className="bg-blue-600 hover:bg-blue-700"
+              icon={<LoginOutlined />}
             >
               ログイン
             </Button>
@@ -125,6 +166,56 @@ const EngineerLogin: React.FC = () => {
             </div>
           </div>
         </Form>
+
+        {/* デモアカウント情報 */}
+        <Card
+          size="small"
+          style={{
+            backgroundColor: '#f0f2f5',
+            marginTop: '16px',
+          }}
+        >
+          <Space direction="vertical" size="small" style={{ width: '100%' }}>
+            <Text strong>デモアカウント:</Text>
+            <Row gutter={8}>
+              {demoAccounts.map((account) => (
+                <Col span={12} key={account.type}>
+                  <Button
+                    size="small"
+                    block
+                    onClick={() => handleDemoLogin(account.type)}
+                    loading={loading}
+                  >
+                    {account.name}
+                  </Button>
+                </Col>
+              ))}
+            </Row>
+            <div style={{ marginTop: 8 }}>
+              {demoAccounts.map((account) => (
+                <div key={account.type}>
+                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                    {account.name}: {account.description}
+                  </Text>
+                </div>
+              ))}
+            </div>
+          </Space>
+        </Card>
+
+        {/* セキュリティ注意事項 */}
+        <Alert
+          message="セキュリティに関する注意"
+          description={
+            <ul style={{ paddingLeft: 20, marginBottom: 0, fontSize: '12px' }}>
+              <li>ログイン情報は第三者に共有しないでください</li>
+              <li>定期的にパスワードを変更することをお勧めします</li>
+            </ul>
+          }
+          type="warning"
+          showIcon
+          style={{ marginTop: '16px', fontSize: '12px' }}
+        />
       </Card>
     </div>
   );

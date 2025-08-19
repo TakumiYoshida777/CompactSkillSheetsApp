@@ -163,6 +163,82 @@ const initializeMockData = () => {
   (engineerUser as any).passwordHash = hashedPassword;
   mockUsers.set(engineerUser.id, engineerUser);
 
+  // デモエンジニアA: 全クライアント対応可能
+  const demoEngineerA: User = {
+    id: 'user-demo-engineer-a',
+    email: 'demo-engineer-a@example.com',
+    name: 'デモエンジニアA',
+    companyId: demoCompany.id,
+    engineerId: 'engineer-demo-a',
+    roles: [{
+      id: 'role-demo-engineer-a',
+      name: USER_ROLES.ENGINEER,
+      displayName: 'エンジニア',
+      permissions: [
+        {
+          id: 'perm-demo-eng-a-1',
+          name: PERMISSIONS.SKILL_SHEET_VIEW,
+          displayName: 'スキルシート閲覧',
+          resource: 'skill_sheet',
+          action: 'view'
+        },
+        {
+          id: 'perm-demo-eng-a-2',
+          name: PERMISSIONS.SKILL_SHEET_UPDATE,
+          displayName: 'スキルシート更新',
+          resource: 'skill_sheet',
+          action: 'update'
+        }
+      ],
+      isSystem: false
+    }],
+    permissions: [],
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  // DemoPass123! のハッシュ
+  (demoEngineerA as any).passwordHash = '$2b$10$jxpI2aT/wIx7CsNFvIHqIuNVxvFxdvxOeY4jEbktY.Fz/5.32IF2y';
+  mockUsers.set(demoEngineerA.id, demoEngineerA);
+
+  // デモエンジニアB: 待機中ステータス
+  const demoEngineerB: User = {
+    id: 'user-demo-engineer-b',
+    email: 'demo-engineer-b@example.com',
+    name: 'デモエンジニアB',
+    companyId: demoCompany.id,
+    engineerId: 'engineer-demo-b',
+    roles: [{
+      id: 'role-demo-engineer-b',
+      name: USER_ROLES.ENGINEER,
+      displayName: 'エンジニア',
+      permissions: [
+        {
+          id: 'perm-demo-eng-b-1',
+          name: PERMISSIONS.SKILL_SHEET_VIEW,
+          displayName: 'スキルシート閲覧',
+          resource: 'skill_sheet',
+          action: 'view'
+        },
+        {
+          id: 'perm-demo-eng-b-2',
+          name: PERMISSIONS.SKILL_SHEET_UPDATE,
+          displayName: 'スキルシート更新',
+          resource: 'skill_sheet',
+          action: 'update'
+        }
+      ],
+      isSystem: false
+    }],
+    permissions: [],
+    isActive: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  // DemoPass123! のハッシュ
+  (demoEngineerB as any).passwordHash = '$2b$10$jxpI2aT/wIx7CsNFvIHqIuNVxvFxdvxOeY4jEbktY.Fz/5.32IF2y';
+  mockUsers.set(demoEngineerB.id, demoEngineerB);
+
   // デモ用営業ユーザー
   const salesUser: User = {
     id: 'user-sales-1',
