@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import axios from 'axios';
 import { getUserTypeFromToken } from '../utils/jwtHelper';
 import { AuthService } from '../services/authService';
+import { AuthCheckService } from '../services/authCheckService';
 
 interface Company {
   id: string;
@@ -230,57 +231,32 @@ const useAuthStore = create<AuthState>()(
         const { token, user } = get();
         console.log('[checkAuth] Starting - Token exists:', !!token, 'User:', user);
         
-        if (!token) {
-          console.log('[checkAuth] No token found, setting isAuthenticated to false');
+        // トークンの初期検証
+        if (!AuthCheckService.validateToken({ token, user })) {
           set({ isAuthenticated: false });
           return;
         }
 
         set({ isLoading: true });
-        try {
-          AuthService.setAuthorizationHeader(token);
-          
-          // JWTトークンからuserTypeを取得
-          const userTypeFromToken = getUserTypeFromToken(token);
-          console.log('[checkAuth] UserType from token:', userTypeFromToken);
-          
-          // トークンから取得したuserTypeまたは既存のuserTypeを使用
-          const userType = userTypeFromToken || user?.userType;
-          const endpoint = userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
-          console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', userType);
-          
-          const userData = await AuthService.fetchUserInfo(endpoint);
-          console.log('[checkAuth] Success - Response:', userData);
-          
+        
+        // 認証チェックを実行
+        const result = await AuthCheckService.performAuthCheck(
+          { token, user },
+          () => get().refreshAccessToken(),
+          () => get().token
+        );
+        
+        // 結果に基づいて状態を更新
+        if (result.success && result.user) {
           set({
-            user: userData,
+            user: result.user,
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
-          console.log('[checkAuth] Initial request failed:', error.message);
-          
-          // トークンが無効な場合はリフレッシュを試みる
-          try {
-            await get().refreshAccessToken();
-            const { token: newToken } = get(); // 新しいトークンを取得
-            
-            // 新しいトークンからuserTypeを取得
-            const userTypeFromNewToken = getUserTypeFromToken(newToken || '');
-            const endpoint = userTypeFromNewToken === 'client' ? '/api/client/auth/me' : '/api/auth/me';
-            console.log('[checkAuth] After refresh, using endpoint:', endpoint, 'UserType:', userTypeFromNewToken);
-            
-            const userData = await AuthService.fetchUserInfo(endpoint);
-            set({
-              user: userData,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-          } catch (refreshError: any) {
-            console.log('[checkAuth] Refresh also failed:', refreshError.message);
-            get().logout();
-            set({ isLoading: false });
-          }
+        } else {
+          // 認証失敗時はログアウト
+          get().logout();
+          set({ isLoading: false });
         }
       },
 
