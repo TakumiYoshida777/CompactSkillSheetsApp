@@ -169,24 +169,6 @@ class EngineerAuthService {
   }
 
   /**
-   * デモアカウントログイン
-   */
-  async demoLogin(accountType: string): Promise<AuthResponse> {
-    const response = await axios.post(`${this.apiUrl}/demo-login`, { accountType });
-    
-    // トークンを保存
-    if (response.data.success && response.data.data.tokens) {
-      localStorage.setItem('accessToken', response.data.data.tokens.accessToken);
-      localStorage.setItem('refreshToken', response.data.data.tokens.refreshToken);
-      
-      // axios のデフォルトヘッダーに設定
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.tokens.accessToken}`;
-    }
-    
-    return response.data;
-  }
-
-  /**
    * 認証状態チェック
    */
   isAuthenticated(): boolean {

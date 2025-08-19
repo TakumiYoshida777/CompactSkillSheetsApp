@@ -22,14 +22,14 @@ const EngineerLogin: React.FC = () => {
   // デモアカウント情報
   const demoAccounts = [
     {
-      type: 'engineerA',
-      name: 'エンジニアA',
-      description: '全クライアント対応可能',
+      email: 'demo-engineer-a@example.com',
+      password: 'DemoPass123!',
+      description: 'エンジニアA: 全クライアント対応可能',
     },
     {
-      type: 'engineerB',
-      name: 'エンジニアB',
-      description: '待機中ステータス',
+      email: 'demo-engineer-b@example.com',
+      password: 'DemoPass123!',
+      description: 'エンジニアB: 待機中ステータス',
     },
   ];
 
@@ -61,28 +61,12 @@ const EngineerLogin: React.FC = () => {
     }
   };
 
-  const handleDemoLogin = async (accountType: string) => {
-    try {
-      setLoading(true);
-      const response = await engineerAuthService.demoLogin(accountType);
-
-      if (response.success) {
-        // 認証情報を保存
-        setAuthTokens(
-          response.data.user,
-          response.data.tokens.accessToken,
-          response.data.tokens.refreshToken
-        );
-
-        message.success(response.message);
-        navigate('/engineer/skill-sheet');
-      }
-    } catch (error: any) {
-      console.error('Demo login error:', error);
-      message.error(error.response?.data?.message || 'デモログインに失敗しました');
-    } finally {
-      setLoading(false);
-    }
+  const handleDemoLogin = (account: typeof demoAccounts[0]) => {
+    form.setFieldsValue({
+      email: account.email,
+      password: account.password,
+    });
+    message.info(`デモアカウント: ${account.description}`);
   };
 
   return (
@@ -178,27 +162,33 @@ const EngineerLogin: React.FC = () => {
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Text strong>デモアカウント:</Text>
             <Row gutter={8}>
-              {demoAccounts.map((account) => (
-                <Col span={12} key={account.type}>
-                  <Button
-                    size="small"
-                    block
-                    onClick={() => handleDemoLogin(account.type)}
-                    loading={loading}
-                  >
-                    {account.name}
-                  </Button>
-                </Col>
-              ))}
+              <Col span={12}>
+                <Button
+                  size="small"
+                  block
+                  onClick={() => handleDemoLogin(demoAccounts[0])}
+                >
+                  エンジニアA
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button
+                  size="small"
+                  block
+                  onClick={() => handleDemoLogin(demoAccounts[1])}
+                >
+                  エンジニアB
+                </Button>
+              </Col>
             </Row>
             <div style={{ marginTop: 8 }}>
-              {demoAccounts.map((account) => (
-                <div key={account.type}>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                    {account.name}: {account.description}
-                  </Text>
-                </div>
-              ))}
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                エンジニアA: 全クライアント対応可能
+              </Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                エンジニアB: 待機中ステータス
+              </Text>
             </div>
           </Space>
         </Card>

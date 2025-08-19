@@ -22,9 +22,6 @@ router.post(
 
 router.post('/refresh', engineerAuthController.refreshToken);
 
-// デモアカウントログイン（認証不要）
-router.post('/demo-login', engineerAuthController.demoLogin);
-
 // 認証が必要なエンドポイント
 router.use(authenticateToken);
 router.use(requireRole('engineer'));
