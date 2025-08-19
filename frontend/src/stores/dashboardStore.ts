@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { dashboardAPI } from '../api/ses/dashboardApi';
-import {
+import type {
   DashboardData,
   EngineerStatistics,
   ApproachStatistics
