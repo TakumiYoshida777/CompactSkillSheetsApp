@@ -27,6 +27,12 @@
 6. **コミットルール**
    - 自分が用意したTODOを1つ完了するごとにGitコミットを行う。
 
+7. ChatGPTへ質問
+   - 「ChatGPTへ質問してください」と言われたら以下を実施すること
+     - /Users/takumi/workspace/Project/Dev2_CompactSkillSheetsApp/Dev2_CompactSkillSheetsApp/_Features/Bug/Promptディレクトリに質問用のプロンプトをmdファイル形式で記載すること
+     - 質問はAIが理解できる粒度で記載すること
+     
+
 ---
 
 ## 1. ChatGPTへの質問手順
