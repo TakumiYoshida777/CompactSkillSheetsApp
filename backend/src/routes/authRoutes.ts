@@ -119,6 +119,8 @@ router.post(
  * @desc    権限確認
  * @access  Private
  */
-router.get('/check-permission', authenticateToken, authController.checkPermission);
+// TODO: authController.checkPermissionメソッドの実装後に有効化する
+// 一時的にコメントアウト - エラーハンドリング統一作業中に無効化
+// router.get('/check-permission', authenticateToken, authController.checkPermission);
 
 export default router;

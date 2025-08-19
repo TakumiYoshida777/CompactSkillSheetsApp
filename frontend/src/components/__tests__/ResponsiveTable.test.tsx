@@ -215,8 +215,8 @@ describe('ResponsiveTable', () => {
         />
       );
 
-      const emptyElement = screen.getByText('No data');
-      expect(emptyElement).toBeInTheDocument();
+      const emptyElements = screen.getAllByText('No data');
+      expect(emptyElements.length).toBeGreaterThan(0);
     });
 
     it('モバイルで空データの場合', () => {

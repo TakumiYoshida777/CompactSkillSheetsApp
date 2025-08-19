@@ -26,10 +26,11 @@ const customFormat = winston.format.combine(
     let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
     
     // HTTPリクエスト情報がある場合は追加
-    if (metadata.req) {
-      msg += ` | Method: ${metadata.req.method}`;
-      msg += ` | URL: ${metadata.req.url}`;
-      msg += ` | IP: ${metadata.req.ip}`;
+    if (metadata.req && typeof metadata.req === 'object') {
+      const reqMeta = metadata.req as any;
+      msg += ` | Method: ${reqMeta.method || 'N/A'}`;
+      msg += ` | URL: ${reqMeta.url || 'N/A'}`;
+      msg += ` | IP: ${reqMeta.ip || 'N/A'}`;
       msg += ` | Status: ${metadata.status || 'N/A'}`;
       msg += ` | ResponseTime: ${metadata.responseTime || 'N/A'}ms`;
     }
