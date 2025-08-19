@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { companyMiddleware } from '../../middleware/company.middleware';
 
 // 各ルートのインポート
+import authRoutes from './auth.routes';
 import engineerRoutes from './engineer.routes';
 import projectRoutes from './project.routes';
 import partnerRoutes from './partner.routes';
@@ -32,6 +33,9 @@ router.get('/version', (req, res) => {
     documentation: 'https://docs.api.skillsheet.com'
   });
 });
+
+// 認証ルート（企業ID不要）
+router.use('/auth', authRoutes);
 
 // 企業IDが必要なルート
 // SES企業向けAPI

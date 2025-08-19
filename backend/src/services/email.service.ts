@@ -20,7 +20,7 @@ export class EmailService {
     
     // Nodemailer設定
     if (config.smtp.host && config.smtp.user) {
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: config.smtp.host,
         port: config.smtp.port,
         secure: false,
