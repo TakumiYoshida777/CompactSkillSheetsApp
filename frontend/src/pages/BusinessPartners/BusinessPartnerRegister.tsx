@@ -22,6 +22,7 @@ import {
   Switch,
   Radio,
   Table,
+  Spin,
 } from 'antd';
 import {
   SaveOutlined,
@@ -38,6 +39,9 @@ import {
   RobotOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useBusinessPartnerStore } from '../../stores/useBusinessPartnerStore';
+import type { CreateBusinessPartnerDto } from '../../services/businessPartnerService';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -57,6 +61,7 @@ interface ContactPerson {
 const BusinessPartnerRegister: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const { createBusinessPartner, isLoading, error, clearError } = useBusinessPartnerStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [contacts, setContacts] = useState<ContactPerson[]>([]);
@@ -194,12 +199,25 @@ Email: sales@example.com
       setLoading(true);
       const values = await form.validateFields();
       
-      // デモ用の処理
-      console.log('Registration data:', {
-        ...values,
-        contacts,
-        autoEmailEnabled,
-      });
+      // API用のデータ整形
+      const businessPartnerData: CreateBusinessPartnerDto = {
+        companyName: values.companyName,
+        companyNameKana: values.companyNameKana,
+        address: values.address,
+        phoneNumber: values.phone,
+        email: contacts.find(c => c.isPrimary)?.email || contacts[0]?.email || '',
+        websiteUrl: values.website,
+        establishedDate: values.establishedDate ? dayjs(values.establishedDate).format('YYYY-MM-DD') : undefined,
+        capitalStock: values.capitalStock,
+        numberOfEmployees: values.employeeSize ? parseInt(values.employeeSize.split('-')[0]) : undefined,
+        businessDescription: values.businessDescription,
+        contractType: values.contractType?.[0] || 'basic',
+        contractStartDate: dayjs().format('YYYY-MM-DD'),
+        contractEndDate: values.contractEndDate ? dayjs(values.contractEndDate).format('YYYY-MM-DD') : undefined,
+      };
+
+      // API呼び出し
+      const newPartner = await createBusinessPartner(businessPartnerData);
 
       // 自動営業メール送信の確認
       if (autoEmailEnabled && contacts.length > 0) {
@@ -238,8 +256,9 @@ Email: sales@example.com
           navigate('/business-partners/list');
         }, 1000);
       }
-    } catch (error) {
-      message.error('登録に失敗しました');
+    } catch (error: any) {
+      console.error('登録エラー:', error);
+      message.error(error.response?.data?.message || '登録に失敗しました');
     } finally {
       setLoading(false);
     }
