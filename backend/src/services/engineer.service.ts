@@ -22,6 +22,21 @@ export class EngineerService {
     this.prisma = new PrismaClient();
   }
   
+  async checkEmailExists(email: string, companyId: number): Promise<boolean> {
+    try {
+      const count = await this.prisma.engineer.count({
+        where: {
+          email: email.toLowerCase(),
+          companyId: BigInt(companyId)
+        }
+      });
+      return count > 0;
+    } catch (error) {
+      logger.error('メールアドレス確認エラー:', error);
+      throw new AppError('メールアドレスの確認に失敗しました', 500);
+    }
+  }
+  
   async findAll(companyId: number, pagination: PaginationOptions, filters: any) {
     try {
       const where: Prisma.EngineerWhereInput = {

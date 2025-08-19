@@ -10,6 +10,28 @@ export class EngineerController {
     this.service = new EngineerService();
   }
   
+  // メールアドレス重複チェック
+  checkEmail = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { email } = req.query;
+      
+      if (!email || typeof email !== 'string') {
+        res.status(400).json(ApiResponse.error('INVALID_REQUEST', 'メールアドレスが指定されていません'));
+        return;
+      }
+      
+      const exists = await this.service.checkEmailExists(email, req.companyId!);
+      
+      res.json(ApiResponse.success({
+        email,
+        available: !exists,
+        exists
+      }));
+    } catch (error) {
+      next(error);
+    }
+  };
+  
   // エンジニア一覧取得
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {

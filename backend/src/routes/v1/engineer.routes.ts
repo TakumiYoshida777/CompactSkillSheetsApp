@@ -15,6 +15,7 @@ router.use(companyMiddleware);
 
 // 基本CRUD
 router.get('/', paginationMiddleware, controller.getAll);
+router.get('/check-email', controller.checkEmail);
 router.get('/:id', controller.getById);
 router.post('/', validateRequest(engineerValidation.create), controller.create);
 router.put('/:id', validateRequest(engineerValidation.update), controller.update);
