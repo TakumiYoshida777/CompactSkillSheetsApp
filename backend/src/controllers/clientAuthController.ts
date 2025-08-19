@@ -303,11 +303,17 @@ export class ClientAuthController {
    */
   async me(req: Request, res: Response) {
     try {
-      const clientUserId = req.user?.id;
+      console.log('[clientAuthController.me] Request received');
+      console.log('[clientAuthController.me] req.clientUser:', (req as any).clientUser);
+      
+      const clientUserId = (req as any).clientUser?.id;
 
       if (!clientUserId) {
+        console.log('[clientAuthController.me] No clientUserId found in request');
         return res.status(401).json({ error: '認証が必要です' });
       }
+      
+      console.log('[clientAuthController.me] ClientUserId:', clientUserId);
 
       const clientUser = await prisma.clientUser.findUnique({
         where: { id: BigInt(clientUserId) },

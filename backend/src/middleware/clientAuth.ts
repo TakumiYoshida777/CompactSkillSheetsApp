@@ -33,21 +33,26 @@ export const authenticateClientUser = async (
 ) => {
   try {
     const authHeader = req.headers.authorization;
+    console.log('[authenticateClientUser] Authorization header:', authHeader ? 'Present' : 'Missing');
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[authenticateClientUser] Invalid or missing Bearer token');
       return res.status(401).json({ error: '認証トークンが必要です' });
     }
 
     const token = authHeader.substring(7);
+    console.log('[authenticateClientUser] Token extracted:', token.substring(0, 20) + '...');
 
     // トークン検証
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || 'your-secret-key'
     ) as any;
+    console.log('[authenticateClientUser] Token decoded - UserType:', decoded.userType, 'Sub:', decoded.sub);
 
     // 取引先企業ユーザーかチェック
     if (decoded.userType !== 'client') {
+      console.log('[authenticateClientUser] Not a client user, denying access');
       return res.status(403).json({ error: '権限が不足しています' });
     }
 
@@ -74,15 +79,18 @@ export const authenticateClientUser = async (
       return res.status(403).json({ error: 'アカウントが無効になっています' });
     }
 
+    console.log('[authenticateClientUser] Authentication successful for user:', decoded.email);
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
+      console.log('[authenticateClientUser] Token expired');
       return res.status(401).json({ error: 'トークンの有効期限が切れています' });
     }
     if (error instanceof jwt.JsonWebTokenError) {
+      console.log('[authenticateClientUser] Invalid token:', error.message);
       return res.status(401).json({ error: '無効なトークンです' });
     }
-    console.error('認証エラー:', error);
+    console.error('[authenticateClientUser] Authentication error:', error);
     return res.status(500).json({ error: 'サーバーエラーが発生しました' });
   }
 };
