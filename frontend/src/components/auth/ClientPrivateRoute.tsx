@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { Spin } from 'antd';
 import useClientAuthStore from '../../stores/clientAuthStore';
-import LoadingScreen from '../common/LoadingScreen';
 
 interface ClientPrivateRouteProps {
   children: React.ReactNode;
@@ -20,7 +20,16 @@ const ClientPrivateRoute: React.FC<ClientPrivateRouteProps> = ({
   }, [checkAuth]);
 
   if (isLoading) {
-    return <LoadingScreen />;
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
+      }}>
+        <Spin size="large" tip="読み込み中..." />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
