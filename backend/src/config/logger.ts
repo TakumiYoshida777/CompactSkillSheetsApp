@@ -2,6 +2,7 @@ import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import fs from 'fs';
+import moment from 'moment-timezone';
 
 // Logsディレクトリのパス
 const logDir = path.join(__dirname, '../../Logs');
@@ -11,9 +12,15 @@ if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
 
+// 日本時間でのタイムスタンプ生成
+const japanTimestamp = winston.format((info) => {
+  info.timestamp = moment().tz('Asia/Tokyo').format('YYYY-MM-DD HH:mm:ss');
+  return info;
+});
+
 // カスタムフォーマット
 const customFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  japanTimestamp(),
   winston.format.errors({ stack: true }),
   winston.format.printf(({ timestamp, level, message, ...metadata }) => {
     let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
