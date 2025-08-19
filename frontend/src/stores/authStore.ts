@@ -4,56 +4,7 @@ import axios from 'axios';
 import { getUserTypeFromToken } from '../utils/jwtHelper';
 import { AuthService } from '../services/authService';
 import { AuthCheckService } from '../services/authCheckService';
-
-interface Company {
-  id: string;
-  name: string;
-  companyType: 'ses' | 'client';
-  emailDomain?: string;
-  maxEngineers: number;
-  isActive: boolean;
-}
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  companyId?: string;
-  company?: Company;
-  roles: string[];
-  permissions: string[];
-  engineerId?: string;
-  avatarUrl?: string;
-  userType?: 'ses' | 'client' | 'engineer';
-  clientCompany?: Company;
-  sesCompany?: Company;
-  department?: string;
-  position?: string;
-}
-
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  refreshToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-
-  // Actions
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  clientLogin: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  setAuthTokens: (user: User, accessToken: string, refreshToken: string) => void;
-  logout: () => void;
-  register: (data: any) => Promise<void>;
-  refreshAccessToken: () => Promise<void>;
-  updateProfile: (data: any) => Promise<void>;
-  checkAuth: () => Promise<void>;
-  clearError: () => void;
-  hasPermission: (resource: string, action: string) => boolean;
-  hasRole: (role: string) => boolean;
-  isAdmin: () => boolean;
-  isClientUser: () => boolean;
-}
+import type { AuthState, User } from './types/authTypes';
 
 const useAuthStore = create<AuthState>()(
   persist(
