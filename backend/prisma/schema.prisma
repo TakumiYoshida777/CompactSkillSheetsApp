@@ -24,11 +24,13 @@ model Company {
 
   users           User[]
   engineers       Engineer[]
+  projects        Project[]
   sesPartners     BusinessPartner[] @relation("SESCompany")
   clientPartners  BusinessPartner[] @relation("ClientCompany")
   emailTemplates  EmailTemplate[]
   sentApproaches  Approach[] @relation("FromCompany")
   receivedApproaches Approach[] @relation("ToCompany")
+  periodicApproaches PeriodicApproach[]
   exclusions      Exclusion[]
   targetExclusions Exclusion[] @relation("TargetCompany")
   contracts       Contract[]
@@ -159,6 +161,7 @@ model Engineer {
   skillSheet       SkillSheet?
   freelancer       Freelancer?
   engineerProjects EngineerProject[]
+  projectAssignments ProjectAssignment[]
   targetExclusions Exclusion[]
   offerEngineers   OfferEngineer[]
   clientAccessPermissions ClientAccessPermission[]
@@ -202,22 +205,31 @@ model SkillSheet {
 // プロジェクト
 model Project {
   id                     BigInt        @id @default(autoincrement())
+  companyId              BigInt
   name                   String        @db.VarChar(255)
   clientCompany          String?       @db.VarChar(255)
+  status                 ProjectStatus @default(PLANNING)
   startDate              DateTime      @db.Date
   endDate                DateTime?     @db.Date
   plannedEndDate         DateTime?     @db.Date
+  contractType           String?       @db.VarChar(50)
+  monthlyRate            Int?
+  requiredEngineers      Int           @default(1)
   projectScale           ProjectScale?
   industry               String?       @db.VarChar(100)
   businessType           String?       @db.VarChar(100)
   developmentMethodology String?       @db.VarChar(100)
   teamSize               Int?
   description            String?       @db.Text
+  requiredSkills         Json?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
+  company          Company           @relation(fields: [companyId], references: [id])
   engineerProjects EngineerProject[]
+  projectAssignments ProjectAssignment[]
 
+  @@index([companyId])
   @@index([startDate, endDate])
   @@index([plannedEndDate])
   @@map("projects")
@@ -246,6 +258,28 @@ model EngineerProject {
   @@index([isCurrent])
   @@index([startDate, endDate])
   @@map("engineer_projects")
+}
+
+// プロジェクトアサインメント
+model ProjectAssignment {
+  id                  BigInt              @id @default(autoincrement())
+  projectId           BigInt
+  engineerId          BigInt
+  role                String?             @db.VarChar(100)
+  startDate           DateTime            @db.Date
+  endDate             DateTime?           @db.Date
+  allocationPercentage Int                @default(100)
+  status              AssignmentStatus    @default(ASSIGNED)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  project  Project  @relation(fields: [projectId], references: [id])
+  engineer Engineer @relation(fields: [engineerId], references: [id])
+
+  @@index([projectId])
+  @@index([engineerId])
+  @@index([startDate, endDate])
+  @@map("project_assignments")
 }
 
 // フリーランス
@@ -394,6 +428,7 @@ model Approach {
   emailTemplate  EmailTemplate? @relation(fields: [emailTemplateId], references: [id])
   sentByUser     User           @relation(fields: [sentBy], references: [id])
   emailLogs      EmailLog[]
+  periodicApproach PeriodicApproach?
 
   @@index([fromCompanyId])
   @@index([toCompanyId])
@@ -467,6 +502,36 @@ model EmailLog {
   emailTemplate EmailTemplate? @relation(fields: [templateId], references: [id])
 
   @@map("email_logs")
+}
+
+// 定期アプローチ
+model PeriodicApproach {
+  id                BigInt               @id @default(autoincrement())
+  approachId        BigInt               @unique
+  companyId         BigInt
+  name              String               @db.VarChar(255)
+  description       String?              @db.Text
+  frequency         ApproachFrequency    @default(MONTHLY)
+  dayOfWeek         Int?                 // 0-6 (日曜日-土曜日)
+  dayOfMonth        Int?                 // 1-31
+  timeOfDay         String?              @db.VarChar(5) // HH:MM形式
+  nextRunAt         DateTime?
+  lastRunAt         DateTime?
+  runCount          Int                  @default(0)
+  isActive          Boolean              @default(true)
+  isPaused          Boolean              @default(false)
+  pausedAt          DateTime?
+  pausedBy          BigInt?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  
+  approach   Approach @relation(fields: [approachId], references: [id])
+  company    Company  @relation(fields: [companyId], references: [id])
+  
+  @@index([companyId])
+  @@index([nextRunAt])
+  @@index([isActive, isPaused])
+  @@map("periodic_approaches")
 }
 
 // 管理者ユーザー
@@ -900,6 +965,32 @@ enum ApproachStatus {
   REJECTED
 
   @@map("approach_status")
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+  @@map("project_status")
+}
+
+enum AssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  @@map("assignment_status")
+}
+
+enum ApproachFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  @@map("approach_frequency")
 }
 
 enum ExclusionType {
