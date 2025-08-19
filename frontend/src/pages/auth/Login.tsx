@@ -12,7 +12,6 @@ import {
   Checkbox,
   Row,
   Col,
-  Alert,
 } from 'antd';
 import {
   UserOutlined,
@@ -221,33 +220,18 @@ const Login: React.FC = () => {
           >
             <Space direction="vertical" size="small" style={{ width: '100%' }}>
               <Text strong>デモアカウント:</Text>
-              <Row gutter={8}>
-                <Col span={12}>
-                  <Button
-                    size="small"
-                    block
-                    onClick={() => {
-                      form.setFieldsValue({
-                        email: 'admin@demo-ses.co.jp',
-                        password: 'password123'
-                      });
-                    }}
-                  >
-                    管理者でログイン
-                  </Button>
-                </Col>
-                <Col span={12}>
-                  <Button
-                    size="small"
-                    block
-                    onClick={() => {
-                      message.info('エンジニアアカウントは準備中です');
-                    }}
-                  >
-                    エンジニアでログイン
-                  </Button>
-                </Col>
-              </Row>
+              <Button
+                size="small"
+                block
+                onClick={() => {
+                  form.setFieldsValue({
+                    email: 'admin@demo-ses.co.jp',
+                    password: 'password123'
+                  });
+                }}
+              >
+                管理者でログイン
+              </Button>
               <Text type="secondary" style={{ fontSize: '12px' }}>
                 デモ用: admin@demo-ses.co.jp / password123
               </Text>
