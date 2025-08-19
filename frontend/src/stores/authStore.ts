@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
+import { getUserTypeFromToken } from '../utils/jwtHelper';
 
 interface Company {
   id: string;
@@ -185,14 +186,20 @@ const useAuthStore = create<AuthState>()(
       },
 
       refreshAccessToken: async () => {
-        const { refreshToken, user } = get();
+        const { refreshToken, token } = get();
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
 
         try {
+          // 現在のトークンからuserTypeを取得
+          const userType = token ? getUserTypeFromToken(token) : null;
+          console.log('[refreshAccessToken] UserType from token:', userType);
+          
           // ユーザータイプに応じて適切なエンドポイントを使用
-          const endpoint = user?.userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
+          const endpoint = userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
+          console.log('[refreshAccessToken] Using endpoint:', endpoint);
+          
           const response = await axios.post(endpoint, {
             refreshToken,
           });
@@ -205,7 +212,8 @@ const useAuthStore = create<AuthState>()(
             token: accessToken,
             refreshToken: newRefreshToken,
           });
-        } catch (error) {
+        } catch (error: any) {
+          console.log('[refreshAccessToken] Failed:', error.response?.status);
           // リフレッシュトークンが無効な場合はログアウト
           get().logout();
           throw error;
@@ -245,9 +253,14 @@ const useAuthStore = create<AuthState>()(
         try {
           axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           
-          // ユーザータイプに応じて適切なエンドポイントを使用
-          const endpoint = user?.userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
-          console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', user?.userType);
+          // JWTトークンからuserTypeを取得
+          const userTypeFromToken = getUserTypeFromToken(token);
+          console.log('[checkAuth] UserType from token:', userTypeFromToken);
+          
+          // トークンから取得したuserTypeまたは既存のuserTypeを使用
+          const userType = userTypeFromToken || user?.userType;
+          const endpoint = userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
+          console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', userType);
           
           const response = await axios.get(endpoint);
           console.log('[checkAuth] Success - Response:', response.data);
@@ -263,9 +276,12 @@ const useAuthStore = create<AuthState>()(
           // トークンが無効な場合はリフレッシュを試みる
           try {
             await get().refreshAccessToken();
-            const { user: refreshedUser } = get(); // リフレッシュ後に再取得
-            const endpoint = refreshedUser?.userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
-            console.log('[checkAuth] After refresh, using endpoint:', endpoint);
+            const { token: newToken } = get(); // 新しいトークンを取得
+            
+            // 新しいトークンからuserTypeを取得
+            const userTypeFromNewToken = getUserTypeFromToken(newToken || '');
+            const endpoint = userTypeFromNewToken === 'client' ? '/api/client/auth/me' : '/api/auth/me';
+            console.log('[checkAuth] After refresh, using endpoint:', endpoint, 'UserType:', userTypeFromNewToken);
             
             const response = await axios.get(endpoint);
             set({
