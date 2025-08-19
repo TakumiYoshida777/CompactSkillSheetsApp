@@ -1,24 +1,41 @@
-import { Row, Col, Card, Statistic, Progress, Button, Space, Spin, Alert } from 'antd';
+import { Row, Col, Card, Statistic, Progress, Button, Space, Spin, Alert, Badge, List, Tag } from 'antd';
 import {
   UserOutlined,
   TeamOutlined,
   ClockCircleOutlined,
   ArrowUpOutlined,
   SendOutlined,
+  BellOutlined,
+  DollarOutlined,
+  CheckCircleOutlined,
+  SyncOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useDashboardStats } from '../../hooks/useDashboardStats';
+import { useDashboardData, useEngineerStatistics, useApproachStatistics } from '../../hooks/queries/useDashboardQueries';
+import { useUnreadCount } from '../../hooks/queries/useNotificationQueries';
+import { useEffect } from 'react';
+import { format } from 'date-fns';
+import { ja } from 'date-fns/locale';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const {
-    stats,
-    loading,
-    error,
-    engineerActivePercent,
-    engineerWaitingPercent,
-    engineerWaitingScheduledPercent,
-  } = useDashboardStats();
+  
+  // API連携フック
+  const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError, refetch: refetchDashboard } = useDashboardData();
+  const { data: engineerStats, isLoading: engineerLoading } = useEngineerStatistics();
+  const { data: approachStats, isLoading: approachLoading } = useApproachStatistics();
+  const { data: unreadCount } = useUnreadCount();
+  
+  // 30秒ごとにデータを更新
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchDashboard();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [refetchDashboard]);
+  
+  const loading = dashboardLoading || engineerLoading || approachLoading;
+  const error = dashboardError;
 
   if (loading) {
     return (
@@ -39,9 +56,17 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  if (!stats) {
+  if (!dashboardData) {
     return null;
   }
+  
+  // パーセンテージ計算
+  const engineerActivePercent = dashboardData.kpi.totalEngineers > 0 
+    ? Math.round((dashboardData.kpi.activeEngineers / dashboardData.kpi.totalEngineers) * 100)
+    : 0;
+  const engineerWaitingPercent = dashboardData.kpi.totalEngineers > 0
+    ? Math.round((dashboardData.kpi.waitingEngineers / dashboardData.kpi.totalEngineers) * 100)
+    : 0;
 
   return (
     <div>
@@ -56,15 +81,8 @@ const Dashboard: React.FC = () => {
           <Card>
             <Statistic
               title="エンジニア総数"
-              value={stats.engineers.total}
+              value={dashboardData.kpi.totalEngineers}
               prefix={<TeamOutlined />}
-              suffix={
-                stats.engineers.totalChange > 0 && (
-                  <span className="text-green-500 text-sm">
-                    <ArrowUpOutlined /> {stats.engineers.totalChange}
-                  </span>
-                )
-              }
             />
             <Progress 
               percent={75} 
@@ -77,7 +95,7 @@ const Dashboard: React.FC = () => {
           <Card>
             <Statistic
               title="稼働中"
-              value={stats.engineers.active}
+              value={dashboardData.kpi.activeEngineers}
               prefix={<UserOutlined />}
               valueStyle={{ color: '#52c41a' }}
             />
@@ -92,7 +110,7 @@ const Dashboard: React.FC = () => {
           <Card>
             <Statistic
               title="待機中"
-              value={stats.engineers.waiting}
+              value={dashboardData.kpi.waitingEngineers}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: '#faad14' }}
             />
@@ -106,16 +124,16 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="待機予定"
-              value={stats.engineers.waitingScheduled}
-              prefix={<ClockCircleOutlined />}
+              title="月間売上予測"
+              value={dashboardData.kpi.monthlyRevenue}
+              prefix={<DollarOutlined />}
               valueStyle={{ color: '#1890ff' }}
+              formatter={(value) => `¥${Number(value).toLocaleString()}`}
             />
-            <Progress 
-              percent={engineerWaitingScheduledPercent} 
-              strokeColor="#1890ff" 
-              showInfo={false} 
-            />
+            <div className="mt-2">
+              <span className="text-gray-500 text-sm">成約率: </span>
+              <span className="text-green-500 font-bold">{dashboardData.kpi.acceptanceRate}%</span>
+            </div>
           </Card>
         </Col>
       </Row>
@@ -128,12 +146,12 @@ const Dashboard: React.FC = () => {
               <Col span={12}>
                 <Statistic
                   title="アプローチ数"
-                  value={stats.approaches.monthlyCount}
+                  value={dashboardData.approaches.current}
                   prefix={<SendOutlined />}
                   suffix={
-                    stats.approaches.monthlyChange > 0 && (
+                    dashboardData.approaches.growth > 0 && (
                       <span className="text-green-500 text-sm">
-                        <ArrowUpOutlined /> {stats.approaches.monthlyChange}
+                        <ArrowUpOutlined /> {dashboardData.approaches.growth}%
                       </span>
                     )
                   }
@@ -141,40 +159,94 @@ const Dashboard: React.FC = () => {
               </Col>
               <Col span={12}>
                 <Statistic
-                  title="成約率"
-                  value={stats.approaches.successRate}
-                  suffix="%"
-                  valueStyle={{ color: '#52c41a' }}
+                  title="先月比"
+                  value={dashboardData.approaches.previous}
+                  suffix="件"
+                  valueStyle={{ color: dashboardData.approaches.growth >= 0 ? '#52c41a' : '#ff4d4f' }}
                 />
               </Col>
             </Row>
           </Card>
         </Col>
 
-        {/* スキルシート更新状況 */}
+        {/* 最近のアクティビティ */}
         <Col xs={24} md={12}>
-          <Card title="スキルシート更新状況">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Statistic
-                  title="今月更新"
-                  value={stats.skillSheets.monthlyUpdated}
-                  suffix="件"
-                />
-              </Col>
-              <Col span={12}>
-                <Statistic
-                  title="要更新"
-                  value={stats.skillSheets.needsUpdate}
-                  suffix="件"
-                  valueStyle={{ color: '#faad14' }}
-                />
-              </Col>
-            </Row>
+          <Card 
+            title="最近のアクティビティ"
+            extra={
+              <Badge count={unreadCount || 0}>
+                <BellOutlined style={{ fontSize: '18px' }} />
+              </Badge>
+            }
+          >
+            <List
+              size="small"
+              dataSource={dashboardData.recentActivities.slice(0, 5)}
+              renderItem={(activity) => (
+                <List.Item>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-2">
+                      {activity.type === 'approach' ? (
+                        <SendOutlined className="text-blue-500" />
+                      ) : activity.type === 'project' ? (
+                        <CheckCircleOutlined className="text-green-500" />
+                      ) : (
+                        <BellOutlined className="text-gray-500" />
+                      )}
+                      <span className="text-sm">{activity.title}</span>
+                    </div>
+                    <Tag color={activity.status === 'active' ? 'green' : 'orange'}>
+                      {activity.status}
+                    </Tag>
+                  </div>
+                </List.Item>
+              )}
+            />
           </Card>
         </Col>
       </Row>
 
+      {/* 統計情報 */}
+      {engineerStats && approachStats && (
+        <Row gutter={[16, 16]} className="mt-6">
+          <Col xs={24} md={12}>
+            <Card title="スキル分布TOP5">
+              <List
+                size="small"
+                dataSource={engineerStats.skillDistribution.slice(0, 5)}
+                renderItem={(skill) => (
+                  <List.Item>
+                    <div className="flex justify-between w-full">
+                      <span>{skill.skillName}</span>
+                      <Badge count={skill.count} showZero color="blue" />
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} md={12}>
+            <Card title="取引先TOP3">
+              <List
+                size="small"
+                dataSource={approachStats.topClients.slice(0, 3)}
+                renderItem={(client, index) => (
+                  <List.Item>
+                    <div className="flex justify-between w-full">
+                      <span>
+                        <span className="font-bold mr-2">{index + 1}.</span>
+                        {client.clientName}
+                      </span>
+                      <span className="text-blue-500 font-bold">{client.count}件</span>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </Col>
+        </Row>
+      )}
+      
       {/* クイックアクション */}
       <Row gutter={[16, 16]} className="mt-6">
         <Col xs={24}>
@@ -198,9 +270,17 @@ const Dashboard: React.FC = () => {
               <Button 
                 icon={<TeamOutlined />} 
                 size="large"
-                onClick={() => navigate('/engineers/list')}
+                onClick={() => navigate('/engineers')}
               >
                 エンジニア一覧
+              </Button>
+              <Button
+                icon={<SyncOutlined />}
+                size="large"
+                onClick={() => refetchDashboard()}
+                loading={loading}
+              >
+                データ更新
               </Button>
             </Space>
           </Card>

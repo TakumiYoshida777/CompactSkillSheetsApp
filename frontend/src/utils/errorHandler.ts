@@ -1,234 +1,228 @@
-/**
- * エラーハンドリングユーティリティ
- */
+import { message, notification } from 'antd';
+import { AxiosError } from 'axios';
 
-import { AxiosError } from 'axios'
-import { ApiError, ErrorDetail } from '@/types/api.types'
-import { toast } from 'react-hot-toast'
-import { ERROR_CODES } from '@/api/config'
+// エラーレスポンスの型定義
+interface APIErrorResponse {
+  success: boolean;
+  message: string;
+  code?: string;
+  details?: any;
+}
 
-/**
- * APIエラーハンドラークラス
- */
-export class ApiErrorHandler {
-  private static errorCallbacks: Map<string, (error: AxiosError<ApiError>) => void> = new Map()
+// エラーレベルの定義
+export enum ErrorLevel {
+  INFO = 'info',
+  WARNING = 'warning',
+  ERROR = 'error',
+  CRITICAL = 'critical'
+}
 
-  /**
-   * エラーハンドリング
-   */
-  static handle(error: AxiosError<ApiError>): void {
+// エラー処理クラス
+export class ErrorHandler {
+  // APIエラーハンドリング
+  static handleAPIError(error: AxiosError<APIErrorResponse>) {
+    console.error('APIエラー:', error);
+
+    // ネットワークエラー
     if (!error.response) {
-      this.handleNetworkError(error)
-      return
+      notification.error({
+        message: 'ネットワークエラー',
+        description: 'サーバーとの通信に失敗しました。インターネット接続を確認してください。',
+        duration: 5
+      });
+      return;
     }
 
-    const errorCode = error.response?.data?.code
-    
-    // カスタムエラーハンドラーが登録されている場合
-    const customHandler = this.errorCallbacks.get(errorCode || '')
-    if (customHandler) {
-      customHandler(error)
-      return
-    }
+    const status = error.response.status;
+    const errorData = error.response.data;
 
-    // デフォルトのエラーハンドリング
-    switch (errorCode) {
-      case 'AUTH_001':
-      case 'AUTH_002':
-      case 'AUTH_003':
-        this.handleAuthError(error)
-        break
-      case 'VAL_001':
-      case 'VAL_002':
-      case 'VAL_003':
-        this.handleValidationError(error)
-        break
-      case 'BIZ_001':
-      case 'BIZ_002':
-      case 'BIZ_003':
-        this.handleBusinessError(error)
-        break
-      case 'SYS_001':
-      case 'SYS_002':
-      case 'SYS_003':
-        this.handleSystemError(error)
-        break
+    switch (status) {
+      case 400:
+        // バリデーションエラー
+        message.error(errorData?.message || '入力内容に誤りがあります');
+        break;
+
+      case 401:
+        // 認証エラー
+        notification.warning({
+          message: '認証エラー',
+          description: 'ログインし直してください',
+          duration: 5
+        });
+        // ログイン画面へリダイレクト
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+        break;
+
+      case 403:
+        // 権限エラー
+        notification.error({
+          message: '権限エラー',
+          description: errorData?.message || 'この操作を実行する権限がありません',
+          duration: 5
+        });
+        break;
+
+      case 404:
+        // リソースが見つからない
+        message.error(errorData?.message || 'データが見つかりません');
+        break;
+
+      case 409:
+        // 競合エラー
+        notification.warning({
+          message: 'データ競合',
+          description: errorData?.message || '既に存在するデータです',
+          duration: 5
+        });
+        break;
+
+      case 429:
+        // レート制限
+        notification.warning({
+          message: 'アクセス制限',
+          description: 'アクセスが多すぎます。しばらく待ってから再度お試しください。',
+          duration: 10
+        });
+        break;
+
+      case 500:
+      case 502:
+      case 503:
+        // サーバーエラー
+        notification.error({
+          message: 'サーバーエラー',
+          description: 'サーバーでエラーが発生しました。しばらく待ってから再度お試しください。',
+          duration: 10
+        });
+        break;
+
       default:
-        this.handleGenericError(error)
+        // その他のエラー
+        notification.error({
+          message: 'エラー',
+          description: errorData?.message || '予期しないエラーが発生しました',
+          duration: 5
+        });
     }
   }
 
-  /**
-   * ネットワークエラー処理
-   */
-  private static handleNetworkError(error: AxiosError): void {
-    console.error('Network error:', error)
-    toast.error('ネットワークエラーが発生しました。インターネット接続を確認してください。')
+  // 一般的なエラーハンドリング
+  static handleError(error: Error | unknown, level: ErrorLevel = ErrorLevel.ERROR) {
+    console.error('エラー:', error);
+
+    const errorMessage = error instanceof Error ? error.message : '予期しないエラーが発生しました';
+
+    switch (level) {
+      case ErrorLevel.INFO:
+        message.info(errorMessage);
+        break;
+      case ErrorLevel.WARNING:
+        message.warning(errorMessage);
+        break;
+      case ErrorLevel.ERROR:
+        message.error(errorMessage);
+        break;
+      case ErrorLevel.CRITICAL:
+        notification.error({
+          message: '重大なエラー',
+          description: errorMessage,
+          duration: 0 // 手動で閉じるまで表示
+        });
+        break;
+    }
   }
 
-  /**
-   * 認証エラー処理
-   */
-  private static handleAuthError(error: AxiosError<ApiError>): void {
-    const message = error.response?.data?.message || ERROR_CODES.AUTH_001
-    toast.error(message)
-    
-    // 認証エラーの場合、ログイン画面へリダイレクト（認証担当者が実装）
-    // TODO: 認証担当者が実装
-    // window.location.href = '/login'
+  // フォームバリデーションエラーハンドリング
+  static handleValidationError(errors: Record<string, string[]>) {
+    const errorMessages = Object.entries(errors)
+      .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+      .join('\n');
+
+    notification.error({
+      message: '入力エラー',
+      description: errorMessages,
+      duration: 5
+    });
   }
 
-  /**
-   * バリデーションエラー処理
-   */
-  private static handleValidationError(error: AxiosError<ApiError>): void {
-    const details = error.response?.data?.details || []
-    
-    if (details.length > 0) {
-      // フィールドごとのエラーを表示
-      details.forEach((detail: ErrorDetail) => {
-        const message = `${detail.field}: ${detail.message}`
-        toast.error(message)
-      })
+  // 成功メッセージ表示
+  static showSuccess(message: string, description?: string) {
+    if (description) {
+      notification.success({
+        message,
+        description,
+        duration: 3
+      });
     } else {
-      const message = error.response?.data?.message || ERROR_CODES.VAL_001
-      toast.error(message)
+      message.success(message);
     }
   }
 
-  /**
-   * ビジネスエラー処理
-   */
-  private static handleBusinessError(error: AxiosError<ApiError>): void {
-    const message = error.response?.data?.message || ERROR_CODES.BIZ_001
-    toast.error(message)
-  }
-
-  /**
-   * システムエラー処理
-   */
-  private static handleSystemError(error: AxiosError<ApiError>): void {
-    const message = error.response?.data?.message || ERROR_CODES.SYS_001
-    toast.error(message)
-    
-    // エラーログを送信（オプション）
-    this.logError(error)
-  }
-
-  /**
-   * 汎用エラー処理
-   */
-  private static handleGenericError(error: AxiosError<ApiError>): void {
-    const message = error.response?.data?.message || 'エラーが発生しました。'
-    toast.error(message)
-  }
-
-  /**
-   * カスタムエラーハンドラーの登録
-   */
-  static registerHandler(errorCode: string, handler: (error: AxiosError<ApiError>) => void): void {
-    this.errorCallbacks.set(errorCode, handler)
-  }
-
-  /**
-   * カスタムエラーハンドラーの削除
-   */
-  static unregisterHandler(errorCode: string): void {
-    this.errorCallbacks.delete(errorCode)
-  }
-
-  /**
-   * エラーログの送信
-   */
-  private static logError(error: AxiosError<ApiError>): void {
-    // エラーログをサーバーに送信（実装はオプション）
-    console.error('System error logged:', {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-      timestamp: new Date().toISOString(),
-    })
-  }
-
-  /**
-   * エラーメッセージの取得
-   */
-  static getErrorMessage(error: unknown): string {
-    if (error instanceof AxiosError) {
-      return error.response?.data?.message || error.message || 'エラーが発生しました'
+  // 情報メッセージ表示
+  static showInfo(msg: string, description?: string) {
+    if (description) {
+      notification.info({
+        message: msg,
+        description,
+        duration: 4
+      });
+    } else {
+      message.info(msg);
     }
-    if (error instanceof Error) {
-      return error.message
-    }
-    return String(error)
   }
 
-  /**
-   * エラーの詳細情報取得
-   */
-  static getErrorDetails(error: unknown): ErrorDetail[] {
-    if (error instanceof AxiosError && error.response?.data?.details) {
-      return error.response.data.details
+  // 警告メッセージ表示
+  static showWarning(msg: string, description?: string) {
+    if (description) {
+      notification.warning({
+        message: msg,
+        description,
+        duration: 4
+      });
+    } else {
+      message.warning(msg);
     }
-    return []
   }
 
-  /**
-   * エラーコードの取得
-   */
-  static getErrorCode(error: unknown): string | null {
-    if (error instanceof AxiosError && error.response?.data?.code) {
-      return error.response.data.code
+  // エラーログ送信（将来的な実装用）
+  static async logError(error: Error, context?: any) {
+    try {
+      // エラーログをサーバーに送信
+      const errorLog = {
+        message: error.message,
+        stack: error.stack,
+        context,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href
+      };
+
+      console.log('エラーログ:', errorLog);
+      // TODO: エラーログAPIに送信
+    } catch (logError) {
+      console.error('エラーログ送信失敗:', logError);
     }
-    return null
-  }
-
-  /**
-   * リトライ可能なエラーかどうかの判定
-   */
-  static isRetryableError(error: unknown): boolean {
-    if (!(error instanceof AxiosError)) {
-      return false
-    }
-
-    // ネットワークエラーまたは5xx系エラーの場合はリトライ可能
-    if (!error.response) {
-      return true
-    }
-
-    const status = error.response.status
-    return status >= 500 && status < 600
-  }
-
-  /**
-   * 認証エラーかどうかの判定
-   */
-  static isAuthError(error: unknown): boolean {
-    if (!(error instanceof AxiosError)) {
-      return false
-    }
-
-    const status = error.response?.status
-    const code = error.response?.data?.code
-
-    return status === 401 || code?.startsWith('AUTH_')
-  }
-
-  /**
-   * バリデーションエラーかどうかの判定
-   */
-  static isValidationError(error: unknown): boolean {
-    if (!(error instanceof AxiosError)) {
-      return false
-    }
-
-    const status = error.response?.status
-    const code = error.response?.data?.code
-
-    return status === 422 || code?.startsWith('VAL_')
   }
 }
 
-// デフォルトエクスポート
-export default ApiErrorHandler
+// グローバルエラーハンドラー設定
+export const setupGlobalErrorHandler = () => {
+  // 未処理のPromiseエラーをキャッチ
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('未処理のPromiseエラー:', event.reason);
+    ErrorHandler.handleError(event.reason);
+    event.preventDefault();
+  });
+
+  // 一般的なJavaScriptエラーをキャッチ
+  window.addEventListener('error', (event) => {
+    console.error('JavaScriptエラー:', event.error);
+    ErrorHandler.handleError(event.error, ErrorLevel.CRITICAL);
+    event.preventDefault();
+  });
+};
+
+// エクスポート
+export default ErrorHandler;
