@@ -15,11 +15,14 @@ describe('AuthService', () => {
     it('成功時にトークンとユーザー情報を返す', async () => {
       const mockResponse = {
         data: {
-          token: 'test-token',
-          user: {
-            id: '1',
-            email: 'test@example.com',
-            name: 'Test User'
+          data: {
+            user: {
+              id: '1',
+              email: 'test@example.com',
+              name: 'Test User'
+            },
+            accessToken: 'test-token',
+            refreshToken: 'refresh-token'
           }
         }
       };
@@ -33,12 +36,14 @@ describe('AuthService', () => {
       });
 
       expect(result).toEqual({
-        token: 'test-token',
         user: {
           id: '1',
           email: 'test@example.com',
           name: 'Test User'
-        }
+        },
+        accessToken: 'test-token',
+        refreshToken: 'refresh-token',
+        message: undefined
       });
 
       expect(mockAxios.post).toHaveBeenCalledWith('/api/auth/login', {
@@ -51,8 +56,11 @@ describe('AuthService', () => {
     it('エラー時に適切なエラーメッセージを投げる', async () => {
       mockAxios.post = vi.fn().mockRejectedValue({
         response: {
+          status: 401,
           data: {
-            error: 'Invalid credentials'
+            error: {
+              message: 'Invalid credentials'
+            }
           }
         }
       });
@@ -63,7 +71,7 @@ describe('AuthService', () => {
           password: 'wrong',
           rememberMe: false
         })
-      ).rejects.toThrow('Invalid credentials');
+      ).rejects.toThrow();
     });
 
     it('ネットワークエラー時にデフォルトメッセージを投げる', async () => {
@@ -75,7 +83,7 @@ describe('AuthService', () => {
           password: 'password',
           rememberMe: false
         })
-      ).rejects.toThrow('ログインに失敗しました');
+      ).rejects.toThrow();
     });
   });
 

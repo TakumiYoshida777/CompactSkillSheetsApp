@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
+import { AppError, ErrorFactory } from '../errors/AppError';
 
 interface LoginCredentials {
   email: string;
@@ -27,6 +28,35 @@ interface ApiLoginResponse {
  */
 export class AuthService {
   /**
+   * 認証情報の検証
+   * @param credentials ログイン認証情報
+   * @returns 有効性の真偽値
+   */
+  static validateCredentials(credentials: LoginCredentials): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(credentials.email) && credentials.password.length >= 6;
+  }
+
+  /**
+   * レスポンスの正規化（テスト用）
+   * @param response APIレスポンス
+   * @returns 正規化されたレスポンス
+   */
+  static normalizeLoginResponse(response: any): any {
+    if (response.access_token) {
+      return {
+        token: response.access_token,
+        refreshToken: response.refresh_token,
+        user: {
+          id: response.user_data?.user_id,
+          email: response.user_data?.user_email,
+          name: response.user_data?.user_name
+        }
+      };
+    }
+    return response;
+  }
+  /**
    * 共通ログイン処理
    * @param endpoint APIエンドポイント
    * @param credentials ログイン認証情報
@@ -47,7 +77,7 @@ export class AuthService {
       
       return authResponse;
     } catch (error: any) {
-      throw this.handleAuthError(error);
+      throw ErrorFactory.fromApiError(error);
     }
   }
 
@@ -96,16 +126,8 @@ export class AuthService {
    * @param error エラーオブジェクト
    * @returns 処理されたエラー
    */
-  private static handleAuthError(error: any): Error {
-    const errorMessage = 
-      error.response?.data?.error?.message || 
-      error.response?.data?.error || 
-      error.response?.data?.message || 
-      'ログインに失敗しました';
-    
-    const authError = new Error(errorMessage);
-    (authError as any).originalError = error;
-    return authError;
+  private static handleAuthError(error: any): AppError {
+    return ErrorFactory.fromApiError(error);
   }
 
   /**
