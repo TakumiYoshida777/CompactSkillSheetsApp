@@ -12,6 +12,7 @@ import engineerAuthRoutes from './routes/engineer/authRoutes';
 import engineerDashboardRoutes from './routes/engineer/dashboardRoutes';
 import engineerSkillSheetRoutes from './routes/engineer/skillSheetRoutes';
 import clientRoutes from './routes/clientRoutes';
+import businessPartnerRoutes from './routes/businessPartnerRoutes';
 
 // 環境変数の読み込み
 dotenv.config();
@@ -54,6 +55,7 @@ app.use('/api/engineer/auth', engineerAuthRoutes);
 app.use('/api/engineers', engineerDashboardRoutes);
 app.use('/api/engineer/skill-sheet', engineerSkillSheetRoutes);
 app.use('/api', clientRoutes);  // 取引先企業関連のルート
+app.use('/api/business-partners', businessPartnerRoutes);  // 取引先企業管理ルート
 
 // APIルートのプレースホルダー
 app.get('/api/v1', (req, res) => {
