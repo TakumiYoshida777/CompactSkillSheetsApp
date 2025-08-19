@@ -81,7 +81,7 @@ class OfferService {
     
     const offerEngineers = data.engineer_ids.map(engineerId => ({
       offerId: offer.id,
-      engineerId,
+      engineerId: BigInt(engineerId),
       individualStatus: 'SENT' as const
     }));
     

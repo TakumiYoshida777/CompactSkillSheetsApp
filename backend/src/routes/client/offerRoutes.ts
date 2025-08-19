@@ -1,10 +1,9 @@
 import { Router } from 'express';
-import { OfferController } from '../../controllers/client/offerController';
+import { offerController } from '../../controllers/client/offer';
 import { authenticateToken } from '../../middleware/auth';
 import { requireRole } from '../../middleware/roleAuth';
 
 const router = Router();
-const offerController = new OfferController();
 
 // 全てのルートで認証と取引先権限が必要
 router.use(authenticateToken);

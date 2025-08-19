@@ -2,56 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
 import { getUserTypeFromToken } from '../utils/jwtHelper';
-
-interface Company {
-  id: string;
-  name: string;
-  companyType: 'ses' | 'client';
-  emailDomain?: string;
-  maxEngineers: number;
-  isActive: boolean;
-}
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  companyId?: string;
-  company?: Company;
-  roles: string[];
-  permissions: string[];
-  engineerId?: string;
-  avatarUrl?: string;
-  userType?: 'ses' | 'client' | 'engineer';
-  clientCompany?: Company;
-  sesCompany?: Company;
-  department?: string;
-  position?: string;
-}
-
-interface AuthState {
-  user: User | null;
-  token: string | null;
-  refreshToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-
-  // Actions
-  login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  clientLogin: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-  setAuthTokens: (user: User, accessToken: string, refreshToken: string) => void;
-  logout: () => void;
-  register: (data: any) => Promise<void>;
-  refreshAccessToken: () => Promise<void>;
-  updateProfile: (data: any) => Promise<void>;
-  checkAuth: () => Promise<void>;
-  clearError: () => void;
-  hasPermission: (resource: string, action: string) => boolean;
-  hasRole: (role: string) => boolean;
-  isAdmin: () => boolean;
-  isClientUser: () => boolean;
-}
+import { AuthService } from '../services/authService';
+import { AuthCheckService } from '../services/authCheckService';
+import type { AuthState, User } from './types/authTypes';
 
 const useAuthStore = create<AuthState>()(
   persist(
@@ -66,31 +19,25 @@ const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post('/api/auth/login', {
+          const authResponse = await AuthService.performLogin('/api/auth/login', {
             email,
             password,
             rememberMe,
           });
           
-          // APIレスポンスの構造に合わせて修正
-          const { data } = response.data;
-          const { user, accessToken, refreshToken } = data;
-          
-          // Axiosのデフォルトヘッダーに認証トークンを設定
-          axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-          
           set({
-            user,
-            token: accessToken,
-            refreshToken,
+            user: authResponse.user,
+            token: authResponse.accessToken,
+            refreshToken: authResponse.refreshToken,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
         } catch (error: any) {
+          const errorMessage = error.message || 'ログインに失敗しました';
           set({
             isLoading: false,
-            error: error.response?.data?.error?.message || error.response?.data?.message || 'ログインに失敗しました',
+            error: errorMessage,
           });
           throw error;
         }
@@ -98,7 +45,7 @@ const useAuthStore = create<AuthState>()(
 
       setAuthTokens: (user: User, accessToken: string, refreshToken: string) => {
         // Axiosのデフォルトヘッダーに認証トークンを設定
-        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        AuthService.setAuthorizationHeader(accessToken);
         
         set({
           user,
@@ -113,34 +60,32 @@ const useAuthStore = create<AuthState>()(
       clientLogin: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post('/api/client/auth/login', {
+          const authResponse = await AuthService.performLogin('/api/client/auth/login', {
             email,
             password,
             rememberMe,
           });
           
-          const { message, user, accessToken, refreshToken } = response.data;
-          
-          console.log('Client Login Response:', response.data);
-          console.log('User data:', user);
-          
-          // Axiosのデフォルトヘッダーに認証トークンを設定
-          axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          console.log('Client Login Response:', authResponse);
+          console.log('User data:', authResponse.user);
           
           set({
-            user,
-            token: accessToken,
-            refreshToken,
+            user: authResponse.user,
+            token: authResponse.accessToken,
+            refreshToken: authResponse.refreshToken,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
           
-          console.log(message); // ログインに成功しました
+          if (authResponse.message) {
+            console.log(authResponse.message); // ログインに成功しました
+          }
         } catch (error: any) {
+          const errorMessage = error.message || 'ログインに失敗しました';
           set({
             isLoading: false,
-            error: error.response?.data?.error || 'ログインに失敗しました',
+            error: errorMessage,
           });
           throw error;
         }
@@ -148,7 +93,7 @@ const useAuthStore = create<AuthState>()(
 
       logout: () => {
         // Axiosのデフォルトヘッダーから認証トークンを削除
-        delete axios.defaults.headers.common['Authorization'];
+        AuthService.removeAuthorizationHeader();
         
         set({
           user: null,
@@ -166,7 +111,7 @@ const useAuthStore = create<AuthState>()(
           
           const { user, accessToken, refreshToken } = response.data;
           
-          axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          AuthService.setAuthorizationHeader(accessToken);
           
           set({
             user,
@@ -200,20 +145,14 @@ const useAuthStore = create<AuthState>()(
           const endpoint = userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
           console.log('[refreshAccessToken] Using endpoint:', endpoint);
           
-          const response = await axios.post(endpoint, {
-            refreshToken,
-          });
-          
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
-          
-          axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          const tokens = await AuthService.refreshToken(endpoint, refreshToken);
           
           set({
-            token: accessToken,
-            refreshToken: newRefreshToken,
+            token: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
           });
         } catch (error: any) {
-          console.log('[refreshAccessToken] Failed:', error.response?.status);
+          console.log('[refreshAccessToken] Failed:', error.message);
           // リフレッシュトークンが無効な場合はログアウト
           get().logout();
           throw error;
@@ -243,57 +182,32 @@ const useAuthStore = create<AuthState>()(
         const { token, user } = get();
         console.log('[checkAuth] Starting - Token exists:', !!token, 'User:', user);
         
-        if (!token) {
-          console.log('[checkAuth] No token found, setting isAuthenticated to false');
+        // トークンの初期検証
+        if (!AuthCheckService.validateToken({ token, user })) {
           set({ isAuthenticated: false });
           return;
         }
 
         set({ isLoading: true });
-        try {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
-          // JWTトークンからuserTypeを取得
-          const userTypeFromToken = getUserTypeFromToken(token);
-          console.log('[checkAuth] UserType from token:', userTypeFromToken);
-          
-          // トークンから取得したuserTypeまたは既存のuserTypeを使用
-          const userType = userTypeFromToken || user?.userType;
-          const endpoint = userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
-          console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', userType);
-          
-          const response = await axios.get(endpoint);
-          console.log('[checkAuth] Success - Response:', response.data);
-          
+        
+        // 認証チェックを実行
+        const result = await AuthCheckService.performAuthCheck(
+          { token, user },
+          () => get().refreshAccessToken(),
+          () => get().token
+        );
+        
+        // 結果に基づいて状態を更新
+        if (result.success && result.user) {
           set({
-            user: response.data,
+            user: result.user,
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
-          console.log('[checkAuth] Initial request failed:', error.response?.status, error.response?.data);
-          
-          // トークンが無効な場合はリフレッシュを試みる
-          try {
-            await get().refreshAccessToken();
-            const { token: newToken } = get(); // 新しいトークンを取得
-            
-            // 新しいトークンからuserTypeを取得
-            const userTypeFromNewToken = getUserTypeFromToken(newToken || '');
-            const endpoint = userTypeFromNewToken === 'client' ? '/api/client/auth/me' : '/api/auth/me';
-            console.log('[checkAuth] After refresh, using endpoint:', endpoint, 'UserType:', userTypeFromNewToken);
-            
-            const response = await axios.get(endpoint);
-            set({
-              user: response.data,
-              isAuthenticated: true,
-              isLoading: false,
-            });
-          } catch (refreshError: any) {
-            console.log('[checkAuth] Refresh also failed:', refreshError.response?.status);
-            get().logout();
-            set({ isLoading: false });
-          }
+        } else {
+          // 認証失敗時はログアウト
+          get().logout();
+          set({ isLoading: false });
         }
       },
 
@@ -354,7 +268,7 @@ const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         // ストレージから状態を復元した後、トークンがある場合はAxiosのデフォルトヘッダーを設定
         if (state?.token) {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+          AuthService.setAuthorizationHeader(state.token);
         }
       },
     }

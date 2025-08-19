@@ -1,9 +1,10 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { vi } from 'vitest';
 import { useOffers, useOfferBoard, useCreateOffer, useUpdateOfferStatus } from '../useOffers';
 import * as offerApi from '../../api/client/offerApi';
 
-jest.mock('../../api/client/offerApi');
+vi.mock('../../api/client/offerApi');
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -20,7 +21,7 @@ const createWrapper = () => {
 
 describe('useOffers', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('useOffers', () => {
