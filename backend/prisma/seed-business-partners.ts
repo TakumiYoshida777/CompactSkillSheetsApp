@@ -62,11 +62,11 @@ async function main() {
       data: {
         companyType: 'CLIENT',
         name: '株式会社ABC商事',
-        emailDomain: 'abc-shoji.co.jp',
+        emailDomain: 'abc-shoji.example.com',
         address: '東京都千代田区丸の内1-1-1',
         phone: '03-1234-5678',
-        websiteUrl: 'https://abc-shoji.co.jp',
-        contactEmail: 'info@abc-shoji.co.jp',
+        websiteUrl: 'https://abc-shoji.example.com',
+        contactEmail: 'info@abc-shoji.example.com',
         isActive: true
       }
     }),
@@ -74,11 +74,11 @@ async function main() {
       data: {
         companyType: 'CLIENT',
         name: 'XYZ株式会社',
-        emailDomain: 'xyz.co.jp',
+        emailDomain: 'xyz.example.com',
         address: '大阪府大阪市北区梅田2-2-2',
         phone: '06-9876-5432',
-        websiteUrl: 'https://xyz.co.jp',
-        contactEmail: 'info@xyz.co.jp',
+        websiteUrl: 'https://xyz.example.com',
+        contactEmail: 'info@xyz.example.com',
         isActive: true
       }
     }),
@@ -86,11 +86,11 @@ async function main() {
       data: {
         companyType: 'CLIENT',
         name: 'テックコーポレーション',
-        emailDomain: 'tech-corp.jp',
+        emailDomain: 'tech-corp.example.com',
         address: '愛知県名古屋市中区栄3-3-3',
         phone: '052-1111-2222',
-        websiteUrl: 'https://tech-corp.jp',
-        contactEmail: 'info@tech-corp.jp',
+        websiteUrl: 'https://tech-corp.example.com',
+        contactEmail: 'info@tech-corp.example.com',
         isActive: true
       }
     }),
@@ -98,10 +98,10 @@ async function main() {
       data: {
         companyType: 'CLIENT',
         name: 'グローバルシステムズ',
-        emailDomain: 'global-sys.com',
+        emailDomain: 'global-sys.example.com',
         address: '福岡県福岡市博多区博多駅前4-4-4',
         phone: '092-3333-4444',
-        contactEmail: 'info@global-sys.com',
+        contactEmail: 'info@global-sys.example.com',
         isActive: false
       }
     })
@@ -123,7 +123,7 @@ async function main() {
       data: {
         companyType: 'SES',
         name: 'テストSES株式会社',
-        emailDomain: 'test-ses.co.jp',
+        emailDomain: 'test-ses.example.com',
         isActive: true
       }
     });
@@ -152,7 +152,7 @@ async function main() {
     adminUser = await prisma.user.create({
       data: {
         companyId: finalSesCompany.id,
-        email: 'admin@test-ses.co.jp',
+        email: 'admin@test-ses.example.com',
         passwordHash: '$2a$10$DUMMY_HASH', // ダミーハッシュ
         name: '管理者',
         isActive: true
