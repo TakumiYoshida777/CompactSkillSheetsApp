@@ -136,7 +136,8 @@ const MainLayout: React.FC = () => {
   ];
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
-    navigate(e.key);
+    // 絶対パスに変換
+    navigate(`/${e.key}`);
     if (isMobile) {
       setMobileMenuOpen(false);
     }
@@ -149,13 +150,13 @@ const MainLayout: React.FC = () => {
       // ログアウト処理
       logout();
       message.success('ログアウトしました');
-      navigate('login');
+      navigate('/login');
     } else if (e.key === 'profile') {
       // プロフィール画面へ遷移
-      navigate('profile');
+      navigate('/profile');
     } else if (e.key === 'settings') {
       // 個人設定画面へ遷移
-      navigate('settings');
+      navigate('/settings');
     }
   };
 

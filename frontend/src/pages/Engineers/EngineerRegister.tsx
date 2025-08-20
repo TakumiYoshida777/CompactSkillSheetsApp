@@ -68,7 +68,7 @@ const EngineerRegister: React.FC = () => {
   useEffect(() => {
     if (user && !canRegisterEngineer(user.roles || user.role)) {
       message.error('この機能にアクセスする権限がありません');
-      navigate('dashboard');
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
@@ -1036,7 +1036,7 @@ const EngineerRegister: React.FC = () => {
           エンジニア登録機能は管理者または営業担当者のみ利用可能です。
         </Text>
         <div style={{ marginTop: 24 }}>
-          <Button type="primary" onClick={() => navigate('dashboard')}>
+          <Button type="primary" onClick={() => navigate('/dashboard')}>
             ダッシュボードに戻る
           </Button>
         </div>

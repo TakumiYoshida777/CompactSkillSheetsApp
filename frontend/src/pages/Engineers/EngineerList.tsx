@@ -34,33 +34,6 @@ const EngineerList: React.FC = () => {
     console.log('Response Meta:', response?.meta);
   }, [filters, isLoading, error, response]);
 
-  // APIレスポンスをコンポーネントの形式に変換
-  const engineers: Engineer[] = React.useMemo(() => {
-    if (!response?.data) {
-      console.log('No response data, returning empty array');
-      return [];
-    }
-    
-    console.log('Transforming engineers data:', response.data);
-    return response.data.map((eng: any) => ({
-      key: eng.id,
-      engineerId: eng.id,
-      name: eng.name,
-      age: eng.age || calculateAge(eng.birthDate),
-      skills: extractSkills(eng.skillSheet),
-      experience: eng.yearsOfExperience || eng.skillSheet?.totalExperienceYears || 0,
-      status: mapStatus(eng.currentStatus),
-      availableDate: eng.availableDate,
-      currentProject: eng.currentProject?.name,
-      projectEndDate: eng.currentProject?.endDate,
-      lastUpdated: eng.updatedAt,
-      email: eng.email,
-      phone: eng.phone,
-    }));
-  }, [response]);
-
-  const totalCount = response?.meta?.pagination?.total || 0;
-
   // 年齢計算ヘルパー
   const calculateAge = (birthDate?: string): number => {
     if (!birthDate) return 0;
@@ -118,6 +91,33 @@ const EngineerList: React.FC = () => {
         return 'available';
     }
   };
+
+  // APIレスポンスをコンポーネントの形式に変換
+  const engineers: Engineer[] = React.useMemo(() => {
+    if (!response?.data) {
+      console.log('No response data, returning empty array');
+      return [];
+    }
+    
+    console.log('Transforming engineers data:', response.data);
+    return response.data.map((eng: any) => ({
+      key: eng.id,
+      engineerId: eng.id,
+      name: eng.name,
+      age: eng.age || calculateAge(eng.birthDate),
+      skills: extractSkills(eng.skillSheet),
+      experience: eng.yearsOfExperience || eng.skillSheet?.totalExperienceYears || 0,
+      status: mapStatus(eng.currentStatus),
+      availableDate: eng.availableDate,
+      currentProject: eng.currentProject?.name,
+      projectEndDate: eng.currentProject?.endDate,
+      lastUpdated: eng.updatedAt,
+      email: eng.email,
+      phone: eng.phone,
+    }));
+  }, [response]);
+
+  const totalCount = response?.meta?.pagination?.total || 0;
 
 
   // エンジニア新規登録
