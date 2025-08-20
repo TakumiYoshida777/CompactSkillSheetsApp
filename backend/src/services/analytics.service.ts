@@ -66,7 +66,7 @@ class AnalyticsService {
     const acceptedApproaches = await prisma.approach.count({
       where: {
         fromCompanyId: companyId,
-        status: 'ACCEPTED'
+        status: 'REPLIED'
       }
     });
 
@@ -137,7 +137,7 @@ class AnalyticsService {
     });
 
     // スキル別エンジニア数
-    const skillDistribution = await prisma.engineerSkill.groupBy({
+    const skillDistribution = await prisma.engineerSkills.groupBy({
       by: ['skillId'],
       where: {
         engineer: {
@@ -193,9 +193,7 @@ class AnalyticsService {
     const statusCounts = await prisma.approach.groupBy({
       by: ['status'],
       where: {
-        engineer: {
-          companyId
-        }
+        fromCompanyId: companyId
       },
       _count: true
     });
@@ -203,9 +201,7 @@ class AnalyticsService {
     // 最近30日間のアプローチ推移
     const recentApproaches = await prisma.approach.findMany({
       where: {
-        engineer: {
-          companyId
-        },
+        fromCompanyId: companyId,
         createdAt: {
           gte: thirtyDaysAgo
         }
@@ -225,7 +221,7 @@ class AnalyticsService {
       }
       const stats = dailyStats.get(dateKey)!;
       stats.total++;
-      if (approach.status === 'ACCEPTED') {
+      if (approach.status === 'REPLIED') {
         stats.accepted++;
       }
     });
@@ -241,34 +237,32 @@ class AnalyticsService {
 
     // 取引先別アプローチ数
     const clientStats = await prisma.approach.groupBy({
-      by: ['clientCompanyId'],
+      by: ['toCompanyId'],
       where: {
-        engineer: {
-          companyId
-        }
+        fromCompanyId: companyId
       },
       _count: true,
       orderBy: {
         _count: {
-          clientCompanyId: 'desc'
+          toCompanyId: 'desc'
         }
       },
       take: 5
     });
 
     // 取引先情報を取得
-    const clientIds = clientStats.map(c => c.clientCompanyId).filter(id => id != null);
+    const clientIds = clientStats.map(c => c.toCompanyId).filter(id => id != null);
     const clients = await prisma.company.findMany({
       where: {
         id: {
-          in: clientIds as string[]
+          in: clientIds as BigInt[]
         }
       }
     });
 
-    const clientMap = new Map(clients.map(c => [c.id, c.name]));
+    const clientMap = new Map(clients.map(c => [c.id.toString(), c.name]));
     const topClients = clientStats.map(c => ({
-      clientName: c.clientCompanyId ? (clientMap.get(c.clientCompanyId) || '不明') : '不明',
+      clientName: c.toCompanyId ? (clientMap.get(c.toCompanyId.toString()) || '不明') : '不明',
       count: c._count
     }));
 
@@ -289,12 +283,10 @@ class AnalyticsService {
     // 最新のアプローチ
     const recentApproaches = await prisma.approach.findMany({
       where: {
-        engineer: {
-          companyId
-        }
+        fromCompanyId: companyId
       },
       include: {
-        engineer: {
+        toCompany: {
           select: {
             name: true
           }
@@ -309,14 +301,14 @@ class AnalyticsService {
     recentApproaches.forEach(approach => {
       activities.push({
         type: 'approach',
-        title: `${approach.engineer.name}へのアプローチ`,
+        title: `${approach.toCompany?.name || 'フリーランス'}へのアプローチ`,
         status: approach.status,
         createdAt: approach.createdAt
       });
     });
 
     // 最新のプロジェクト
-    const recentProjects = await prisma.project.findMany({
+    const recentProjects = await prisma.engineerProject.findMany({
       where: {
         engineer: {
           companyId
@@ -338,7 +330,7 @@ class AnalyticsService {
     recentProjects.forEach(project => {
       activities.push({
         type: 'project',
-        title: `${project.engineer.name}のプロジェクト: ${project.name}`,
+        title: `${project.engineer.name}のプロジェクト: ${project.projectName}`,
         status: 'active',
         createdAt: project.createdAt
       });

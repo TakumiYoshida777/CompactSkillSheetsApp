@@ -116,6 +116,48 @@ export class AuthController {
     }
   }
 
+  async getMe(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user?.userId;
+      if (!userId) {
+        return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+      }
+
+      const user = await prisma.user.findUnique({
+        where: { id: BigInt(userId) },
+        include: {
+          company: true,
+          userRoles: {
+            include: {
+              role: true
+            }
+          }
+        }
+      });
+
+      if (!user) {
+        return res.status(404).json(ApiResponse.error('USER_NOT_FOUND', 'ユーザーが見つかりません'));
+      }
+
+      // ロール情報を抽出
+      const roles = user.userRoles.map(ur => ur.role.name);
+      const userType = user.company?.companyType === 'ses' ? 'ses' : 'client';
+
+      return res.json(ApiResponse.success({
+        id: user.id.toString(),
+        email: user.email,
+        name: user.name,
+        companyId: user.companyId?.toString(),
+        companyName: user.company?.name,
+        roles: roles,
+        userType: userType
+      }));
+    } catch (error) {
+      logger.error('ユーザー情報取得エラー:', error);
+      next(error);
+    }
+  }
+
   async refresh(req: Request, res: Response, next: NextFunction) {
     try {
       const { refreshToken } = req.body;
@@ -133,7 +175,14 @@ export class AuthController {
       // ユーザー情報取得
       const user = await prisma.user.findUnique({
         where: { id: BigInt(decoded.userId) },
-        include: { company: true }
+        include: { 
+          company: true,
+          userRoles: {
+            include: {
+              role: true
+            }
+          }
+        }
       });
 
       if (!user || !user.isActive) {

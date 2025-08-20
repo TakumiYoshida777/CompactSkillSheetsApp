@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { AuthController } from '../../controllers/auth.controller';
 import { validateRequest } from '../../middleware/validateRequest';
+import { authenticateToken } from '../../middleware/auth.middleware';
 import { body } from 'express-validator';
 
 const router = Router();
@@ -17,5 +18,8 @@ router.post('/logout', authController.logout);
 
 // トークンリフレッシュ
 router.post('/refresh', authController.refresh);
+
+// 現在のユーザー情報取得
+router.get('/me', authenticateToken, authController.getMe);
 
 export default router;
