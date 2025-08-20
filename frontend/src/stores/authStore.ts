@@ -30,7 +30,7 @@ const useAuthStore = create<AuthState>()(
             user: authResponse.user,
             token: authResponse.accessToken,
             refreshToken: authResponse.refreshToken,
-            status: 'authenticated',
+            status: 'authenticated',  // ログイン成功時は即座にauthenticatedに
             isLoading: false,
             error: null,
           });
@@ -74,7 +74,7 @@ const useAuthStore = create<AuthState>()(
             user: authResponse.user,
             token: authResponse.accessToken,
             refreshToken: authResponse.refreshToken,
-            status: 'authenticated',
+            status: 'authenticated',  // ログイン成功時は即座にauthenticatedに
             isLoading: false,
             error: null,
           });
@@ -298,16 +298,24 @@ const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      // isAuthenticatedは永続化しない（導出値として扱う）
+      // statusも永続化してログイン状態を保持
       partialize: (state) => ({
         user: state.user,
         token: state.token,
         refreshToken: state.refreshToken,
+        status: state.status,
       }),
       onRehydrateStorage: () => (state) => {
-        // ストレージから状態を復元した後、トークンがある場合はAxiosのデフォルトヘッダーを設定
-        if (state?.token) {
+        // ストレージから状態を復元した後の処理
+        if (state?.token && state?.user) {
+          // トークンとユーザーが存在する場合はauthenticatedに
+          if (state.status !== 'authenticated') {
+            state.status = 'authenticated';
+          }
           AuthService.setAuthorizationHeader(state.token);
+        } else if (!state?.token) {
+          // トークンがない場合はunauthenticatedに
+          state.status = 'unauthenticated';
         }
       },
     }
