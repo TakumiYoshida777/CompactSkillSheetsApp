@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Spin } from 'antd';
-import { useAuthStore, useIsAuthenticated, useStoreHydrated } from '../../stores/authStore';
+import { useAuthStore } from '../../stores/authStore';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -21,10 +21,9 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requirePermissions = [],
   redirectTo = 'login',
 }) => {
-  const hydrated = useStoreHydrated();
-  const isAuthenticated = useIsAuthenticated();
   const { 
-    status,
+    isAuthenticated, 
+    isLoading, 
     user,
     token,
     checkAuth,
@@ -33,47 +32,22 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   } = useAuthStore();
   
   const location = useLocation();
+  const [isInitialized, setIsInitialized] = React.useState(false);
 
   useEffect(() => {
-    // ハイドレーション完了後のみcheckAuthを実行
-    if (!hydrated) {
-      console.log('[AuthGuard] Waiting for hydration...');
-      return;
+    // 初回マウント時に認証状態をチェック
+    // トークンが存在し、まだ認証されていない場合のみチェック
+    if (!isInitialized) {
+      if (requireAuth && token && !isAuthenticated) {
+        checkAuth().finally(() => setIsInitialized(true));
+      } else {
+        setIsInitialized(true);
+      }
     }
-    
-    console.log('[AuthGuard] Hydrated - Status:', status, 'isAuthenticated:', isAuthenticated, 'Token:', !!token);
-    
-    // 既に認証済みの場合は何もしない
-    if (status === 'authenticated') {
-      console.log('[AuthGuard] Already authenticated, no need to check');
-      return;
-    }
-    
-    // トークンが存在し、まだ認証チェックが済んでいない場合のみ
-    if (requireAuth && token && status === 'idle') {
-      console.log('[AuthGuard] Checking auth status...');
-      checkAuth();
-    }
-  }, [hydrated, requireAuth, token, status, checkAuth]);
+  }, [requireAuth, token, isAuthenticated, checkAuth, isInitialized]);
 
-  // ハイドレーション待機中
-  if (!hydrated) {
-    console.log('[AuthGuard] Not hydrated yet, showing spinner');
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-      }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  // 認証チェック中
-  if (status === 'checking') {
-    console.log('[AuthGuard] Checking authentication, showing spinner');
+  // ローディング中または初期化中
+  if (isLoading || !isInitialized) {
     return (
       <div style={{
         display: 'flex',
@@ -88,7 +62,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // 認証が必要な場合
   if (requireAuth && !isAuthenticated) {
-    console.log('[AuthGuard] Not authenticated, redirecting to:', redirectTo);
     return (
       <Navigate 
         to={redirectTo} 

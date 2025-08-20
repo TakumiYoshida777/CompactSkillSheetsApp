@@ -34,21 +34,9 @@ export class AuthCheckService {
     const userTypeFromToken = getUserTypeFromToken(token);
     console.log('[checkAuth] UserType from token:', userTypeFromToken);
     
-    // ユーザーのロールからタイプを判定
-    let userType = userTypeFromToken || user?.userType;
-    
-    // userTypeが取れない場合はロールから判定
-    if (!userType && user?.roles) {
-      if (user.roles.includes('client_admin') || user.roles.includes('client_user')) {
-        userType = 'client';
-      } else {
-        userType = 'ses';
-      }
-    }
-    
-    // APIエンドポイントのパス（/api/は不要 - axiosのbaseURLに含まれている）
+    const userType = userTypeFromToken || user?.userType;
     const endpoint = userType === 'client' ? 'client/auth/me' : 'auth/me';
-    console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', userType, 'Roles:', user?.roles);
+    console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', userType);
     
     return endpoint;
   }
@@ -91,7 +79,7 @@ export class AuthCheckService {
         return { success: false };
       }
       
-      const endpoint = this.determineEndpoint(newToken, null);
+      const endpoint = this.determineEndpoint(newToken);
       console.log('[checkAuth] After refresh, using endpoint:', endpoint);
       
       const userData = await AuthService.fetchUserInfo(endpoint);

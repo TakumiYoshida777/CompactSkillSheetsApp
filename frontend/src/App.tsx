@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, Spin } from 'antd';
 import jaJP from 'antd/locale/ja_JP';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import './App.css';
 
 // レイアウトコンポーネント（常に必要なので通常インポート）
@@ -16,6 +16,7 @@ import CompanyGuard from './components/guards/CompanyGuard';
 import ClientPrivateRoute from './components/auth/ClientPrivateRoute';
 
 // 認証ストア
+import { useAuthStore } from './stores/authStore';
 
 // Axios設定
 import axios from 'axios';
@@ -65,8 +66,19 @@ const PageLoader = () => (
 );
 
 function App() {
-  // 認証チェックはAuthGuardで行うため、ここでは不要
-  
+  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+
+  useEffect(() => {
+    // アプリケーション起動時に認証状態をチェック
+    // Zustandのpersistがロード完了後、トークンがある場合のみチェック
+    // ユーザー情報もロードされていることを確認（userTypeの判定のため）
+    if (token) {
+      checkAuth();
+    }
+  }, [token, checkAuth]);
+
   return (
     <ConfigProvider locale={jaJP}>
       <Router>
