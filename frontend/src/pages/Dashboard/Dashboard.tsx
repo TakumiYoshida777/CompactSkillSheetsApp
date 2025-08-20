@@ -255,7 +255,7 @@ const Dashboard: React.FC = () => {
                 type="primary" 
                 icon={<UserOutlined />} 
                 size="large"
-                onClick={() => navigate('engineers/new')}
+                onClick={() => navigate('engineers/register')}
               >
                 エンジニア登録
               </Button>

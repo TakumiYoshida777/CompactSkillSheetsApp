@@ -156,13 +156,18 @@ function App() {
                     <EngineerDetail />
                   </Suspense>
                 } />
-                {/* ENG003 - エンジニア登録・編集 */}
-                <Route path="new" element={
+                {/* ENG003 - エンジニア登録 */}
+                <Route path="register" element={
                   <Suspense fallback={<PageLoader />}>
                     <EngineerRegister />
                   </Suspense>
                 } />
-                <Route path="edit/:id" element={<div>エンジニア編集（開発中）</div>} />
+                {/* ENG004 - エンジニア編集 */}
+                <Route path="edit/:id" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <EngineerRegister />
+                  </Suspense>
+                } />
               </Route>
               
               {/* スキルシート管理 */}

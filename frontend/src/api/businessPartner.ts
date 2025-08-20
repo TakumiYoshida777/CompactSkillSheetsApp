@@ -19,6 +19,31 @@ export interface ApproachHistory {
   engineerCount?: number;
   status: 'sent' | 'replied' | 'pending' | 'accepted' | 'rejected';
   note?: string;
+  attachments?: string[];
+  responseDate?: string;
+  responseNote?: string;
+}
+
+export interface ProposedEngineer {
+  id: string;
+  name: string;
+  skills: string[];
+  experience: number;
+  unitPrice: number;
+  status: 'proposed' | 'accepted' | 'rejected' | 'pending';
+  proposedDate: string;
+  projectName?: string;
+}
+
+export interface Project {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate?: string;
+  engineerCount: number;
+  totalRevenue: number;
+  status: 'active' | 'completed' | 'paused';
+  engineers: string[];
 }
 
 export interface BusinessPartner {
@@ -36,6 +61,8 @@ export interface BusinessPartner {
   budgetMin?: number;
   budgetMax?: number;
   preferredSkills?: string[];
+  preferredIndustries?: string[];
+  requirements?: string;
   status: 'active' | 'inactive' | 'prospective';
   registeredDate: string;
   lastContactDate?: string;
@@ -43,9 +70,16 @@ export interface BusinessPartner {
   acceptedProposals: number;
   currentEngineers: number;
   monthlyRevenue?: number;
+  totalRevenue?: number;
   rating?: number;
   tags?: string[];
+  paymentTerms?: string;
+  autoEmailEnabled?: boolean;
+  followUpEnabled?: boolean;
+  notes?: string;
   approaches?: ApproachHistory[];
+  proposedEngineers?: ProposedEngineer[];
+  projects?: Project[];
 }
 
 export const businessPartnerApi = {

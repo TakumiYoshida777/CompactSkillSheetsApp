@@ -43,7 +43,7 @@ const MainLayout: React.FC = () => {
           label: 'エンジニア一覧', // ENG001
         },
         {
-          key: 'engineers/new',
+          key: 'engineers/register',
           label: 'エンジニア登録', // ENG003
         },
       ],

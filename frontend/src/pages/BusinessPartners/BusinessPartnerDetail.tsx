@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { businessPartnerApi, BusinessPartner as BusinessPartnerType, ProposedEngineer, Project, ApproachHistory, ContactPerson } from '@/api/businessPartner';
 import {
   Card,
   Row,
@@ -53,107 +55,35 @@ const { TabPane } = Tabs;
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface ContactPerson {
-  id: string;
-  name: string;
-  department: string;
-  position: string;
-  email: string;
-  phone: string;
-  isPrimary: boolean;
-}
-
-interface ProposedEngineer {
-  id: string;
-  name: string;
-  skills: string[];
-  experience: number;
-  unitPrice: number;
-  status: 'proposed' | 'accepted' | 'rejected' | 'pending';
-  proposedDate: string;
-  projectName?: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  startDate: string;
-  endDate?: string;
-  engineerCount: number;
-  totalRevenue: number;
-  status: 'active' | 'completed' | 'paused';
-  engineers: string[];
-}
-
-interface ApproachHistory {
-  id: string;
-  date: string;
-  type: 'email' | 'phone' | 'meeting' | 'proposal';
-  subject: string;
-  engineerCount?: number;
-  status: 'sent' | 'replied' | 'pending' | 'accepted' | 'rejected';
-  note?: string;
-  attachments?: string[];
-  responseDate?: string;
-  responseNote?: string;
-}
-
-interface BusinessPartnerDetail {
-  id: string;
-  companyName: string;
-  companyNameKana: string;
-  industry: string;
-  employeeSize: string;
-  website?: string;
-  phone: string;
-  address: string;
-  businessDescription?: string;
-  contacts: ContactPerson[];
-  contractTypes: string[];
-  budgetMin?: number;
-  budgetMax?: number;
-  preferredSkills?: string[];
-  preferredIndustries?: string[];
-  requirements?: string;
-  status: 'active' | 'inactive' | 'prospective';
-  registeredDate: string;
-  lastContactDate?: string;
-  totalProposals: number;
-  acceptedProposals: number;
-  currentEngineers: number;
-  monthlyRevenue?: number;
-  totalRevenue?: number;
-  rating?: number;
-  tags?: string[];
-  approaches: ApproachHistory[];
-  proposedEngineers: ProposedEngineer[];
-  projects: Project[];
-  notes?: string;
-  paymentTerms?: string;
-  autoEmailEnabled?: boolean;
-  followUpEnabled?: boolean;
-}
+// Types are imported from businessPartner.ts
+type BusinessPartnerDetail = BusinessPartnerType;
 
 const BusinessPartnerDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [partner, setPartner] = useState<BusinessPartnerDetail | null>(null);
-  const [loading, setLoading] = useState(true);
   const [proposalModalVisible, setProposalModalVisible] = useState(false);
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [form] = Form.useForm();
   const [noteForm] = Form.useForm();
 
+  // APIからデータ取得
+  const { data: partnerData, isLoading, error } = useQuery({
+    queryKey: ['businessPartner', id],
+    queryFn: () => businessPartnerApi.getById(id || ''),
+    enabled: !!id,
+  });
+
   useEffect(() => {
-    loadPartnerDetail();
-  }, [id]);
+    if (partnerData) {
+      setPartner(partnerData);
+    }
+  }, [partnerData]);
 
   const loadPartnerDetail = () => {
-    setLoading(true);
-    // モックデータの生成
-    setTimeout(() => {
-      const mockData: BusinessPartnerDetail = {
+    // APIからのデータ取得に置き換え済み
+    const mockData: BusinessPartnerDetail = {
         id: id || '1',
         companyName: '株式会社ABC商事',
         companyNameKana: 'カブシキガイシャエービーシーショウジ',
@@ -306,10 +236,7 @@ const BusinessPartnerDetail: React.FC = () => {
           },
         ],
       };
-      setPartner(mockData);
-      setLoading(false);
-    }, 1000);
-  };
+      // モックデータは使用しない
 
   const handleProposal = () => {
     setProposalModalVisible(true);
@@ -473,9 +400,9 @@ const BusinessPartnerDetail: React.FC = () => {
     },
   ];
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <Card loading={loading}>
+      <Card loading={isLoading}>
         <div style={{ height: 400 }} />
       </Card>
     );

@@ -122,7 +122,7 @@ const EngineerList: React.FC = () => {
 
   // エンジニア新規登録
   const handleAddEngineer = () => {
-    navigate('/engineers/new');
+    navigate('/engineers/register');
   };
 
   // エンジニア詳細表示  
