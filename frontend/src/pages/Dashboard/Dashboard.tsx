@@ -38,7 +38,8 @@ const Dashboard: React.FC = () => {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
-        <Spin size="large" tip="データを読み込み中..." />
+        <Spin size="large" />
+        <div style={{ marginTop: '16px' }}>データを読み込み中...</div>
       </div>
     );
   }
