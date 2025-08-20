@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { businessPartnerApi, BusinessPartner } from '@/api/businessPartner';
 import {
   Card,
   Table,
@@ -54,57 +56,12 @@ const { Option } = Select;
 const { Search } = Input;
 const { TabPane } = Tabs;
 
-interface ContactPerson {
-  id: string;
-  name: string;
-  department: string;
-  position: string;
-  email: string;
-  phone: string;
-  isPrimary: boolean;
-}
-
-interface ApproachHistory {
-  id: string;
-  date: string;
-  type: 'email' | 'phone' | 'meeting' | 'proposal';
-  subject: string;
-  engineerCount?: number;
-  status: 'sent' | 'replied' | 'pending' | 'accepted' | 'rejected';
-  note?: string;
-}
-
-interface BusinessPartner {
-  id: string;
-  companyName: string;
-  companyNameKana: string;
-  industry: string;
-  employeeSize: string;
-  website?: string;
-  phone: string;
-  address: string;
-  businessDescription?: string;
-  contacts: ContactPerson[];
-  contractTypes: string[];
-  budgetMin?: number;
-  budgetMax?: number;
-  preferredSkills?: string[];
-  status: 'active' | 'inactive' | 'prospective';
-  registeredDate: string;
-  lastContactDate?: string;
-  totalProposals: number;
-  acceptedProposals: number;
-  currentEngineers: number;
-  monthlyRevenue?: number;
-  rating?: number;
-  tags?: string[];
-  approaches?: ApproachHistory[];
-}
+// Types are imported from businessPartner.ts
 
 const BusinessPartnerList: React.FC = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [partners, setPartners] = useState<BusinessPartner[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedPartner, setSelectedPartner] = useState<BusinessPartner | null>(null);
   const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -114,10 +71,20 @@ const BusinessPartnerList: React.FC = () => {
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  // モックデータの生成
-  useEffect(() => {
-    generateMockData();
-  }, []);
+  // APIからデータ取得
+  const { data: partnersData, isLoading, refetch } = useQuery({
+    queryKey: ['businessPartners', searchText, selectedStatus, selectedIndustries, currentPage, pageSize],
+    queryFn: () => businessPartnerApi.getList({
+      search: searchText || undefined,
+      status: selectedStatus !== 'all' ? selectedStatus : undefined,
+      industry: selectedIndustries.length > 0 ? selectedIndustries[0] : undefined,
+      page: currentPage,
+      limit: pageSize,
+    }),
+  });
+
+  const partners = partnersData?.data || [];
+  const total = partnersData?.total || 0;
 
   const generateMockData = () => {
     const mockData: BusinessPartner[] = [
@@ -283,7 +250,8 @@ const BusinessPartnerList: React.FC = () => {
         tags: ['休止中'],
       },
     ];
-    setPartners(mockData);
+    // モックデータ生成は不要になりました
+    refetch();
   };
 
   const handleBulkEmail = () => {
@@ -576,12 +544,8 @@ const BusinessPartnerList: React.FC = () => {
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => {
-                  setLoading(true);
-                  setTimeout(() => {
-                    generateMockData();
-                    setLoading(false);
-                    message.success('データを更新しました');
-                  }, 1000);
+                  refetch();
+                  message.success('データを更新しました');
                 }}
               >
                 更新
@@ -700,12 +664,18 @@ const BusinessPartnerList: React.FC = () => {
           columns={columns}
           dataSource={filteredPartners}
           rowKey="id"
-          loading={loading}
+          loading={isLoading}
           scroll={{ x: 1500 }}
           pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
             showSizeChanger: true,
             showTotal: (total) => `全 ${total} 件`,
-            defaultPageSize: 10,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              if (size !== pageSize) setPageSize(size);
+            },
           }}
         />
       </Card>
