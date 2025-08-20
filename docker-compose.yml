@@ -37,7 +37,7 @@ services:
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - JWT_SECRET=dev-jwt-secret-change-in-production
       - JWT_EXPIRES_IN=7d
-      - CORS_ORIGIN=http://localhost:3000
+      - CORS_ORIGIN=http://localhost:3000,http://localhost:3001
       - LOG_LEVEL=debug
       - PORT=8000
     depends_on:

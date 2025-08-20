@@ -30,12 +30,24 @@ const PORT = process.env.PORT || 8000;
 // ミドルウェアの設定
 app.use(helmet());
 
-// CORS設定（環境変数を優先）
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
-logger.info('CORS Origin:', { corsOrigin });
+// CORS設定（環境変数を優先、複数オリジンに対応）
+const corsOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',') 
+  : ['http://localhost:3000', 'http://localhost:3001'];
+logger.info('CORS Origins:', { corsOrigins });
 
 app.use(cors({
-  origin: corsOrigin,
+  origin: (origin, callback) => {
+    // originがundefinedの場合（同一オリジンからのリクエスト）は許可
+    if (!origin) return callback(null, true);
+    
+    // 許可されたオリジンのリストに含まれているかチェック
+    if (corsOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
