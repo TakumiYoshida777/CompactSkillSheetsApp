@@ -22,12 +22,21 @@ export class EngineerService {
     this.prisma = new PrismaClient();
   }
   
-  async checkEmailExists(email: string, companyId: number): Promise<boolean> {
+  async checkEmailExists(email: string, companyId: number | string): Promise<boolean> {
     try {
+      // companyIdを数値に変換
+      let numericCompanyId: number;
+      if (typeof companyId === 'string') {
+        const match = companyId.match(/\d+/);
+        numericCompanyId = match ? parseInt(match[0], 10) : 1;
+      } else {
+        numericCompanyId = companyId;
+      }
+      
       const count = await this.prisma.engineer.count({
         where: {
           email: email.toLowerCase(),
-          companyId: BigInt(companyId)
+          companyId: BigInt(numericCompanyId)
         }
       });
       return count > 0;
@@ -37,10 +46,20 @@ export class EngineerService {
     }
   }
   
-  async findAll(companyId: number, pagination: PaginationOptions, filters: any) {
+  async findAll(companyId: number | string, pagination: PaginationOptions, filters: any) {
     try {
+      // companyIdを数値に変換（"company-1"のような文字列の場合は1を抽出）
+      let numericCompanyId: number;
+      if (typeof companyId === 'string') {
+        // "company-1" から数値部分を抽出
+        const match = companyId.match(/\d+/);
+        numericCompanyId = match ? parseInt(match[0], 10) : 1;
+      } else {
+        numericCompanyId = companyId;
+      }
+      
       const where: Prisma.EngineerWhereInput = {
-        companyId: BigInt(companyId)
+        companyId: BigInt(numericCompanyId)
       };
       
       if (filters.status) {
@@ -75,10 +94,20 @@ export class EngineerService {
     }
   }
   
-  async count(companyId: number, filters: any) {
+  async count(companyId: number | string, filters: any) {
     try {
+      // companyIdを数値に変換（"company-1"のような文字列の場合は1を抽出）
+      let numericCompanyId: number;
+      if (typeof companyId === 'string') {
+        // "company-1" から数値部分を抽出
+        const match = companyId.match(/\d+/);
+        numericCompanyId = match ? parseInt(match[0], 10) : 1;
+      } else {
+        numericCompanyId = companyId;
+      }
+      
       const where: Prisma.EngineerWhereInput = {
-        companyId: BigInt(companyId)
+        companyId: BigInt(numericCompanyId)
       };
       
       if (filters.status) {
@@ -98,12 +127,21 @@ export class EngineerService {
     }
   }
   
-  async findById(id: number, companyId: number) {
+  async findById(id: number, companyId: number | string) {
     try {
+      // companyIdを数値に変換
+      let numericCompanyId: number;
+      if (typeof companyId === 'string') {
+        const match = companyId.match(/\d+/);
+        numericCompanyId = match ? parseInt(match[0], 10) : 1;
+      } else {
+        numericCompanyId = companyId;
+      }
+      
       const engineer = await this.prisma.engineer.findFirst({
         where: {
           id: BigInt(id),
-          companyId: BigInt(companyId)
+          companyId: BigInt(numericCompanyId)
         },
         include: {
           skillSheet: true,
@@ -122,13 +160,13 @@ export class EngineerService {
     }
   }
   
-  async create(data: any, companyId: number) {
+  async create(data: any, companyId: number | string) {
     try {
       const engineer = await this.prisma.$transaction(async (prisma) => {
         // エンジニア作成
         const newEngineer = await prisma.engineer.create({
           data: {
-            companyId: BigInt(companyId),
+            companyId: BigInt(typeof companyId === 'string' ? parseInt(companyId.match(/\d+/)?.[0] || '1', 10) : companyId),
             name: data.name,
             nameKana: data.nameKana,
             email: data.email,
@@ -164,7 +202,7 @@ export class EngineerService {
     }
   }
   
-  async update(id: number, data: any, companyId: number) {
+  async update(id: number, data: any, companyId: number | string) {
     try {
       const updateData: Prisma.EngineerUpdateInput = {};
       
@@ -195,7 +233,7 @@ export class EngineerService {
     }
   }
   
-  async delete(id: number, companyId: number) {
+  async delete(id: number, companyId: number | string) {
     try {
       await this.prisma.$transaction(async (prisma) => {
         // スキルシート削除
@@ -223,7 +261,7 @@ export class EngineerService {
     }
   }
   
-  async updateStatus(id: number, status: string, companyId: number) {
+  async updateStatus(id: number, status: string, companyId: number | string) {
     const validStatuses = ['WAITING', 'ASSIGNED', 'UPCOMING', 'INACTIVE'];
     const statusUpper = status.toUpperCase();
     
@@ -248,7 +286,7 @@ export class EngineerService {
     }
   }
   
-  async updateAvailability(id: number, availableDate: string, companyId: number) {
+  async updateAvailability(id: number, availableDate: string, companyId: number | string) {
     try {
       const engineer = await this.prisma.engineer.update({
         where: {
@@ -266,7 +304,7 @@ export class EngineerService {
     }
   }
   
-  async updatePublicStatus(id: number, isPublic: boolean, companyId: number) {
+  async updatePublicStatus(id: number, isPublic: boolean, companyId: number | string) {
     try {
       const engineer = await this.prisma.engineer.update({
         where: {
@@ -443,7 +481,7 @@ export class EngineerService {
     }
   }
   
-  async updateSkillSheet(engineerId: number, data: any, companyId: number) {
+  async updateSkillSheet(engineerId: number, data: any, companyId: number | string) {
     try {
       // エンジニアの存在確認
       const engineer = await this.prisma.engineer.findFirst({

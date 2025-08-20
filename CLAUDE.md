@@ -14,6 +14,7 @@
    - 行動前に`CompactSkillSheetsApp/_Knowledge`ディレクトリも読み込むこと。
    - `CompactSkillSheetsApp/README.md`の環境構造を理解すること。
    - 不具合を修正する際は`Project/Dev2_CompactSkillSheetsApp/Dev2_CompactSkillSheetsApp/backend/Logs`ディレクトリの最新情報を読み込んで、ログ出力されているか確認し、修正を行うこと。
+   - 「理解して」と言われたら、_Documents,_Knowledge,README.md,を改めて読み直し完全に理解すること
 
 3. **実装ポリシー**
    - Kent Beck氏のテスト駆動開発（TDD）を実践。
