@@ -41,8 +41,15 @@ instance.interceptors.response.use(
       
       try {
         const refreshToken = useAuthStore.getState().refreshToken;
+        const token = useAuthStore.getState().token;
+        const user = useAuthStore.getState().user;
+        
         if (refreshToken) {
-          const response = await instance.post('auth/refresh', {
+          // ユーザータイプに基づいてエンドポイントを決定
+          const userType = user?.userType || 'ses';
+          const endpoint = userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
+          
+          const response = await instance.post(endpoint, {
             refreshToken: refreshToken,
           });
           
@@ -60,9 +67,16 @@ instance.interceptors.response.use(
           return instance(originalRequest);
         }
       } catch (refreshError) {
+        console.error('[Axios Interceptor] Refresh token failed:', refreshError);
         // リフレッシュ失敗時はログアウト
         useAuthStore.getState().logout();
-        window.location.href = '/login';
+        // 現在のパスに応じて適切なログインページにリダイレクト
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/client')) {
+          window.location.href = '/client/login';
+        } else {
+          window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

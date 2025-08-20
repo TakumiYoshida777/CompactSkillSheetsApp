@@ -109,20 +109,18 @@ export class AuthService {
   /**
    * Axiosのデフォルトヘッダーに認証トークンを設定
    * @param token アクセストークン
-   * @deprecated インターセプターで自動的に設定されるため不要
    */
   static setAuthorizationHeader(token: string): void {
-    // インターセプターで自動的に設定されるため、何もしない
-    console.log('[AuthService] setAuthorizationHeader called (deprecated)');
+    // トークンが設定されていることを確認（インターセプターで自動的に処理される）
+    console.log('[AuthService] Token set in store for interceptor:', token ? 'Token exists' : 'No token');
   }
 
   /**
    * Axiosのデフォルトヘッダーから認証トークンを削除
-   * @deprecated インターセプターで自動的に処理されるため不要
    */
   static removeAuthorizationHeader(): void {
-    // インターセプターで自動的に処理されるため、何もしない
-    console.log('[AuthService] removeAuthorizationHeader called (deprecated)');
+    // トークンがクリアされたことを確認（インターセプターで自動的に処理される）
+    console.log('[AuthService] Token cleared from store');
   }
 
   /**

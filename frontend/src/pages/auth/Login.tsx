@@ -38,11 +38,11 @@ const Login: React.FC = () => {
       // ユーザーのロールに応じてリダイレクト
       const user = useAuthStore.getState().user;
       if (user?.roles.includes('engineer')) {
-        navigate('engineer/dashboard');
+        navigate('/engineer/dashboard');
       } else if (user?.roles.includes('admin')) {
-        navigate('dashboard');
+        navigate('/dashboard');
       } else {
-        navigate('/');
+        navigate('/dashboard');
       }
       
       message.success('ログインに成功しました');

@@ -1,4 +1,4 @@
-import { Project, Assignment, UtilizationData } from '../api/projects/projectApi';
+import type { Project, Assignment, UtilizationData } from '../api/projects/projectApi';
 import { differenceInDays, addDays, format, parseISO, isWithinInterval, isBefore, isAfter } from 'date-fns';
 
 /**
