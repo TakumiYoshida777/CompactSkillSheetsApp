@@ -35,7 +35,8 @@ export class AuthCheckService {
     console.log('[checkAuth] UserType from token:', userTypeFromToken);
     
     const userType = userTypeFromToken || user?.userType;
-    const endpoint = userType === 'client' ? 'client/auth/me' : 'auth/me';
+    // APIエンドポイントのパスを修正（/api/を追加）
+    const endpoint = userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
     console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', userType);
     
     return endpoint;
@@ -79,7 +80,7 @@ export class AuthCheckService {
         return { success: false };
       }
       
-      const endpoint = this.determineEndpoint(newToken);
+      const endpoint = this.determineEndpoint(newToken, null);
       console.log('[checkAuth] After refresh, using endpoint:', endpoint);
       
       const userData = await AuthService.fetchUserInfo(endpoint);

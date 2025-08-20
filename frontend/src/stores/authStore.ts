@@ -179,33 +179,50 @@ const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
-        const { token, user } = get();
-        console.log('[checkAuth] Starting - Token exists:', !!token, 'User:', user);
+        const { token, user, isAuthenticated } = get();
+        console.log('[checkAuth] Starting - Token exists:', !!token, 'User:', user, 'isAuthenticated:', isAuthenticated);
+        
+        // すでに認証済みの場合はスキップ
+        if (isAuthenticated && user && token) {
+          console.log('[checkAuth] Already authenticated, skipping API call');
+          return;
+        }
         
         // トークンの初期検証
         if (!AuthCheckService.validateToken({ token, user })) {
+          console.log('[checkAuth] Token validation failed');
           set({ isAuthenticated: false });
           return;
         }
 
         set({ isLoading: true });
         
-        // 認証チェックを実行
-        const result = await AuthCheckService.performAuthCheck(
-          { token, user },
-          () => get().refreshAccessToken(),
-          () => get().token
-        );
-        
-        // 結果に基づいて状態を更新
-        if (result.success && result.user) {
-          set({
-            user: result.user,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-        } else {
-          // 認証失敗時はログアウト
+        try {
+          // 認証チェックを実行
+          const result = await AuthCheckService.performAuthCheck(
+            { token, user },
+            () => get().refreshAccessToken(),
+            () => get().token
+          );
+          
+          console.log('[checkAuth] Result:', result);
+          
+          // 結果に基づいて状態を更新
+          if (result.success && result.user) {
+            console.log('[checkAuth] Auth check successful, updating state');
+            set({
+              user: result.user,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+          } else {
+            console.log('[checkAuth] Auth check failed, logging out');
+            // 認証失敗時はログアウト
+            get().logout();
+            set({ isLoading: false });
+          }
+        } catch (error) {
+          console.error('[checkAuth] Unexpected error:', error);
           get().logout();
           set({ isLoading: false });
         }

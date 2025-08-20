@@ -36,11 +36,23 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   useEffect(() => {
     // 初回マウント時に認証状態をチェック
-    // トークンが存在し、まだ認証されていない場合のみチェック
+    console.log('[AuthGuard] Effect running - isInitialized:', isInitialized, 'token:', !!token, 'isAuthenticated:', isAuthenticated);
+    
     if (!isInitialized) {
-      if (requireAuth && token && !isAuthenticated) {
-        checkAuth().finally(() => setIsInitialized(true));
+      // すでに認証済みの場合はチェックをスキップ
+      if (isAuthenticated) {
+        console.log('[AuthGuard] Already authenticated, skipping check');
+        setIsInitialized(true);
+      }
+      // トークンが存在し、認証されていない場合のみチェック
+      else if (requireAuth && token && !isAuthenticated) {
+        console.log('[AuthGuard] Checking auth status...');
+        checkAuth().finally(() => {
+          console.log('[AuthGuard] Auth check completed');
+          setIsInitialized(true);
+        });
       } else {
+        console.log('[AuthGuard] No token or auth not required, skipping check');
         setIsInitialized(true);
       }
     }
