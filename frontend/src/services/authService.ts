@@ -16,11 +16,13 @@ interface AuthResponse {
 }
 
 interface ApiLoginResponse {
-  data?: AuthResponse;
+  success?: boolean;
+  data?: AuthResponse | any;
   user?: any;
   accessToken?: string;
   refreshToken?: string;
   message?: string;
+  meta?: any;
 }
 
 /**
@@ -87,11 +89,24 @@ export class AuthService {
    * @returns 正規化された認証レスポンス
    */
   private static normalizeAuthResponse(data: ApiLoginResponse): AuthResponse {
+    console.log('[AuthService] Normalizing auth response:', data);
+    
+    // バックエンドの標準レスポンス形式（success: true, data: {...}）
+    if (data.success && data.data) {
+      const authData = data.data;
+      return {
+        user: authData.user,
+        accessToken: authData.accessToken || authData.token,
+        refreshToken: authData.refreshToken,
+        message: data.message,
+      };
+    }
+    
     // /api/auth/login のレスポンス形式（data オブジェクト内にネスト）
     if (data.data) {
       return {
         user: data.data.user,
-        accessToken: data.data.accessToken,
+        accessToken: data.data.accessToken || data.data.token,
         refreshToken: data.data.refreshToken,
         message: data.message,
       };
@@ -100,7 +115,7 @@ export class AuthService {
     // /api/client/auth/login のレスポンス形式（フラット）
     return {
       user: data.user!,
-      accessToken: data.accessToken!,
+      accessToken: data.accessToken || (data as any).token!,
       refreshToken: data.refreshToken!,
       message: data.message,
     };
@@ -167,6 +182,12 @@ export class AuthService {
       console.log('[AuthService] Fetching user info from:', endpoint);
       console.log('[AuthService] Current Authorization header:', axiosInstance.defaults.headers.common['Authorization']);
       const response = await axiosInstance.get(endpoint);
+      console.log('[AuthService] User info response:', response.data);
+      
+      // APIレスポンスの形式に応じて適切にデータを返す
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
       return response.data;
     } catch (error) {
       throw this.handleAuthError(error);

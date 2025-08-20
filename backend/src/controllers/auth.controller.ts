@@ -86,10 +86,10 @@ export class AuthController {
 
       // ロール情報を抽出
       const roles = user.userRoles.map(ur => ur.role.name);
-      const userType = user.company?.companyType === 'ses' ? 'ses' : 'client';
+      const userType = user.company?.companyType?.toLowerCase() === 'ses' ? 'ses' : 'client';
 
       return res.json(ApiResponse.success({
-        token,
+        accessToken: token,
         refreshToken,
         user: {
           id: user.id.toString(),
@@ -141,7 +141,7 @@ export class AuthController {
 
       // ロール情報を抽出
       const roles = user.userRoles.map(ur => ur.role.name);
-      const userType = user.company?.companyType === 'ses' ? 'ses' : 'client';
+      const userType = user.company?.companyType?.toLowerCase() === 'ses' ? 'ses' : 'client';
 
       return res.json(ApiResponse.success({
         id: user.id.toString(),
