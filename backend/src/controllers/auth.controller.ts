@@ -47,12 +47,16 @@ export class AuthController {
       }
 
       // JWTトークン生成
+      const tokenPayload: any = {
+        userId: user.id.toString(),
+        email: user.email
+      };
+      if (user.companyId) {
+        tokenPayload.companyId = user.companyId.toString();
+      }
+      
       const token = jwt.sign(
-        {
-          userId: user.id.toString(),
-          email: user.email,
-          companyId: user.companyId?.toString()
-        },
+        tokenPayload,
         config.jwt.secret,
         { expiresIn: config.jwt.expiresIn }
       );
@@ -126,12 +130,16 @@ export class AuthController {
       }
 
       // 新しいアクセストークン生成
+      const newTokenPayload: any = {
+        userId: user.id.toString(),
+        email: user.email
+      };
+      if (user.companyId) {
+        newTokenPayload.companyId = user.companyId.toString();
+      }
+      
       const newToken = jwt.sign(
-        {
-          userId: user.id.toString(),
-          email: user.email,
-          companyId: user.companyId?.toString()
-        },
+        newTokenPayload,
         config.jwt.secret,
         { expiresIn: config.jwt.expiresIn }
       );
