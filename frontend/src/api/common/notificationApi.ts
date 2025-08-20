@@ -1,48 +1,21 @@
-import axios from 'axios';
+import axiosInstance from '../../lib/axios';
 import type { Notification, SystemAnnouncement } from '../../stores/notificationStore';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_V1_PATH = '/v1';
 
-// Axiosインスタンスの作成
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
-});
-
-// リクエストインターセプター
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// レスポンスインターセプター
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('accessToken');
-      window.location.href = 'login';
-    }
-    return Promise.reject(error);
-  }
-);
+// 共通のAxiosインスタンスを使用
+const apiClient = {
+  get: (path: string, config?: any) => axiosInstance.get(`${API_V1_PATH}${path}`, config),
+  post: (path: string, data?: any) => axiosInstance.post(`${API_V1_PATH}${path}`, data),
+  put: (path: string, data?: any) => axiosInstance.put(`${API_V1_PATH}${path}`, data),
+  delete: (path: string) => axiosInstance.delete(`${API_V1_PATH}${path}`),
+};
 
 export const notificationAPI = {
   // 通知一覧取得
   getNotifications: async (page = 1, limit = 20, unreadOnly = false) => {
     try {
-      const response = await apiClient.get('notifications', {
+      const response = await apiClient.get('/notifications', {
         params: { page, limit, unreadOnly }
       });
       return response.data.data;
@@ -84,7 +57,7 @@ export const notificationAPI = {
   // 未読数取得
   getUnreadCount: async (): Promise<number> => {
     try {
-      const response = await apiClient.get('notifications/unread-count');
+      const response = await apiClient.get('/notifications/unread-count');
       return response.data.data.count;
     } catch (error) {
       console.error('未読数取得エラー:', error);
@@ -95,7 +68,7 @@ export const notificationAPI = {
   // 通知を既読にする
   markAsRead: async (notificationIds: string[]): Promise<void> => {
     try {
-      await apiClient.post('notifications/mark-read', {
+      await apiClient.post('/notifications/mark-read', {
         notificationIds
       });
     } catch (error) {
@@ -107,7 +80,7 @@ export const notificationAPI = {
   // すべての通知を既読にする
   markAllAsRead: async (): Promise<void> => {
     try {
-      await apiClient.post('notifications/mark-all-read');
+      await apiClient.post('/notifications/mark-all-read');
     } catch (error) {
       console.error('すべて既読処理エラー:', error);
       throw error;
@@ -117,7 +90,7 @@ export const notificationAPI = {
   // システムアナウンス取得
   getAnnouncements: async (): Promise<SystemAnnouncement[]> => {
     try {
-      const response = await apiClient.get('notifications/announcements');
+      const response = await apiClient.get('/notifications/announcements');
       return response.data.data;
     } catch (error) {
       console.error('アナウンス取得エラー:', error);

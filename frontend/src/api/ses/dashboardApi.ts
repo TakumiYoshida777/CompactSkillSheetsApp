@@ -1,53 +1,25 @@
-import axios from 'axios';
+import axiosInstance from '../../lib/axios';
 import type { 
   DashboardData, 
   EngineerStatistics, 
   ApproachStatistics 
 } from '../../types/dashboard';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_V1_PATH = '/v1';
 
-// Axiosインスタンスの作成
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
-});
-
-// リクエストインターセプター（認証トークンの追加）
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// レスポンスインターセプター（エラーハンドリング）
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      // トークンの期限切れ処理
-      localStorage.removeItem('accessToken');
-      window.location.href = 'login';
-    }
-    return Promise.reject(error);
-  }
-);
+// 共通のAxiosインスタンスを使用
+const apiClient = {
+  get: (path: string) => axiosInstance.get(`${API_V1_PATH}${path}`),
+  post: (path: string, data?: any) => axiosInstance.post(`${API_V1_PATH}${path}`, data),
+  put: (path: string, data?: any) => axiosInstance.put(`${API_V1_PATH}${path}`, data),
+  delete: (path: string) => axiosInstance.delete(`${API_V1_PATH}${path}`),
+};
 
 export const dashboardAPI = {
   // ダッシュボードデータ取得
   getDashboardData: async (): Promise<DashboardData> => {
     try {
-      const response = await apiClient.get('analytics/dashboard');
+      const response = await apiClient.get('/analytics/dashboard');
       return response.data.data;
     } catch (error) {
       console.error('ダッシュボードデータ取得エラー:', error);
@@ -86,7 +58,7 @@ export const dashboardAPI = {
   // エンジニア統計取得
   getEngineerStatistics: async (): Promise<EngineerStatistics> => {
     try {
-      const response = await apiClient.get('analytics/engineers/statistics');
+      const response = await apiClient.get('/analytics/engineers/statistics');
       return response.data.data;
     } catch (error) {
       console.error('エンジニア統計取得エラー:', error);
@@ -124,7 +96,7 @@ export const dashboardAPI = {
   // アプローチ統計取得
   getApproachStatistics: async (): Promise<ApproachStatistics> => {
     try {
-      const response = await apiClient.get('analytics/approaches/statistics');
+      const response = await apiClient.get('/analytics/approaches/statistics');
       return response.data.data;
     } catch (error) {
       console.error('アプローチ統計取得エラー:', error);
