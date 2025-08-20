@@ -55,7 +55,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
         alignItems: 'center',
         minHeight: '100vh',
       }}>
-        <Spin size="large" tip="認証情報を確認中..." />
+        <Spin size="large" />
       </div>
     );
   }

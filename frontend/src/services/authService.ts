@@ -111,6 +111,7 @@ export class AuthService {
    * @param token アクセストークン
    */
   static setAuthorizationHeader(token: string): void {
+    console.log('[AuthService] Setting Authorization header with token:', token ? 'Token exists' : 'No token');
     axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   }
 
@@ -162,6 +163,8 @@ export class AuthService {
    */
   static async fetchUserInfo(endpoint: string): Promise<any> {
     try {
+      console.log('[AuthService] Fetching user info from:', endpoint);
+      console.log('[AuthService] Current Authorization header:', axiosInstance.defaults.headers.common['Authorization']);
       const response = await axiosInstance.get(endpoint);
       return response.data;
     } catch (error) {

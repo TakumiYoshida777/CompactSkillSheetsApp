@@ -19,6 +19,9 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+  console.log('[Auth Middleware] Authorization header:', authHeader);
+  console.log('[Auth Middleware] Extracted token:', token ? 'Token exists' : 'No token');
+
   if (!token) {
     return res.status(401).json({
       success: false,

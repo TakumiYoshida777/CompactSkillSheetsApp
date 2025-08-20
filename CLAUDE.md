@@ -12,6 +12,7 @@
 2. **事前理解**
    - 作業前に必ず`CompactSkillSheetsApp/_Documents`ディレクトリ内の全ファイルを理解すること。
    - 行動前に`CompactSkillSheetsApp/_Knowledge`ディレクトリも読み込むこと。
+   - `CompactSkillSheetsApp/README.md`の環境構造を理解すること。
 
 3. **実装ポリシー**
    - Kent Beck氏のテスト駆動開発（TDD）を実践。
