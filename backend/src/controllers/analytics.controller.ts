@@ -4,7 +4,7 @@ import { handleError } from '../utils/error.handler';
 
 class AnalyticsController {
   // ダッシュボードデータ取得
-  async getDashboardData(req: Request, res: Response) {
+  async getDashboardData(req: Request, res: Response): Promise<Response | void> {
     try {
       const companyId = req.user?.companyId;
       if (!companyId) {
@@ -26,7 +26,7 @@ class AnalyticsController {
   }
 
   // エンジニア統計取得
-  async getEngineerStatistics(req: Request, res: Response) {
+  async getEngineerStatistics(req: Request, res: Response): Promise<Response | void> {
     try {
       const companyId = req.user?.companyId;
       if (!companyId) {
@@ -48,7 +48,7 @@ class AnalyticsController {
   }
 
   // アプローチ統計取得
-  async getApproachStatistics(req: Request, res: Response) {
+  async getApproachStatistics(req: Request, res: Response): Promise<Response | void> {
     try {
       const companyId = req.user?.companyId;
       if (!companyId) {

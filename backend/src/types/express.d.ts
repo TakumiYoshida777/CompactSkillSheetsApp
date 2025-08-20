@@ -1,13 +1,15 @@
-import { User } from '../models/User';
+import { JWTPayload } from './auth';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string;
-        companyId: string;
-        role: string;
-        email: string;
+      user?: JWTPayload;
+      companyId?: string;
+      userId?: string;
+      pagination?: {
+        page: number;
+        limit: number;
+        offset: number;
       };
     }
   }

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../stores/authStore';
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
@@ -11,10 +12,13 @@ const instance = axios.create({
 // リクエストインターセプター
 instance.interceptors.request.use(
   (config) => {
-    // 認証トークンの追加
-    const token = localStorage.getItem('access_token');
+    // Zustandストアから認証トークンを取得
+    const token = useAuthStore.getState().token;
+    console.log('[Axios Interceptor] Adding token to request:', token ? 'Token exists' : 'No token');
     if (token) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('[Axios Interceptor] Authorization header set:', config.headers.Authorization);
     }
     return config;
   },
@@ -36,24 +40,29 @@ instance.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = useAuthStore.getState().refreshToken;
         if (refreshToken) {
           const response = await instance.post('auth/refresh', {
-            refresh_token: refreshToken,
+            refreshToken: refreshToken,
           });
           
-          const { access_token } = response.data;
-          localStorage.setItem('access_token', access_token);
+          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          
+          // Zustandストアを更新
+          useAuthStore.getState().setAuthTokens(
+            useAuthStore.getState().user,
+            accessToken,
+            newRefreshToken
+          );
           
           // 元のリクエストを再実行
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return instance(originalRequest);
         }
       } catch (refreshError) {
-        // リフレッシュ失敗時はログイン画面へ
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = 'login';
+        // リフレッシュ失敗時はログアウト
+        useAuthStore.getState().logout();
+        window.location.href = '/login';
         return Promise.reject(refreshError);
       }
     }

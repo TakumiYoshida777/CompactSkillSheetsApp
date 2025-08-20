@@ -1,6 +1,7 @@
 // 認証関連の型定義
 
 export interface JWTPayload {
+  id: string;  // userIdと同じ値（互換性のため）
   userId: string;
   companyId: string;
   email: string;

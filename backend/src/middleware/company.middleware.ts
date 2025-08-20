@@ -1,16 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiResponse } from '../utils/response.util';
 
-// Request型を拡張
-declare global {
-  namespace Express {
-    interface Request {
-      companyId?: string;
-      userId?: string;
-    }
-  }
-}
-
 /**
  * 企業IDミドルウェア
  * X-Company-IDヘッダーから企業IDを取得し、リクエストオブジェクトに設定

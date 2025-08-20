@@ -16,7 +16,7 @@ export class ApproachController {
       const { page, limit, offset } = req.pagination!;
       
       const result = await this.service.findAll(
-        req.companyId!,
+        parseInt(req.companyId!),
         { page, limit, offset },
         { 
           status: status as string, 
@@ -38,11 +38,11 @@ export class ApproachController {
     }
   };
 
-  getById = async (req: Request, res: Response, next: NextFunction) => {
+  getById = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const approach = await this.service.findById(
         parseInt(req.params.id),
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       if (!approach) {
@@ -60,7 +60,7 @@ export class ApproachController {
   
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const approach = await this.service.create(req.body, req.companyId!, req.user?.id);
+      const approach = await this.service.create(req.body, parseInt(req.companyId!), parseInt(req.user?.id || '0'));
       res.status(201).json(ApiResponse.success(approach));
     } catch (error) {
       logger.error('アプローチ作成エラー:', error);
@@ -68,12 +68,12 @@ export class ApproachController {
     }
   };
 
-  update = async (req: Request, res: Response, next: NextFunction) => {
+  update = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const approach = await this.service.update(
         parseInt(req.params.id),
         req.body,
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       if (!approach) {
@@ -89,11 +89,11 @@ export class ApproachController {
     }
   };
 
-  delete = async (req: Request, res: Response, next: NextFunction) => {
+  delete = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const result = await this.service.delete(
         parseInt(req.params.id),
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       if (!result) {
@@ -111,7 +111,7 @@ export class ApproachController {
   
   send = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await this.service.sendApproach(req.body, req.companyId!);
+      const result = await this.service.sendApproach(req.body, parseInt(req.companyId!));
       res.json(ApiResponse.success(result));
     } catch (error) {
       logger.error('アプローチ送信エラー:', error);
@@ -130,7 +130,7 @@ export class ApproachController {
           templateId,
           customMessage
         },
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       res.json(ApiResponse.success({
@@ -148,7 +148,7 @@ export class ApproachController {
     try {
       const result = await this.service.resendApproach(
         parseInt(req.params.id),
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       res.json(ApiResponse.success(result));
@@ -160,7 +160,7 @@ export class ApproachController {
   
   getTemplates = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const templates = await this.service.getTemplates(req.companyId!);
+      const templates = await this.service.getTemplates(parseInt(req.companyId!));
       res.json(ApiResponse.success(templates));
     } catch (error) {
       logger.error('テンプレート一覧取得エラー:', error);
@@ -168,11 +168,11 @@ export class ApproachController {
     }
   };
 
-  getTemplateById = async (req: Request, res: Response, next: NextFunction) => {
+  getTemplateById = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const template = await this.service.getTemplateById(
         parseInt(req.params.id),
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       if (!template) {
@@ -190,7 +190,7 @@ export class ApproachController {
   
   createTemplate = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const template = await this.service.createTemplate(req.body, req.companyId!, req.user?.id);
+      const template = await this.service.createTemplate(req.body, parseInt(req.companyId!), parseInt(req.user?.id || '0'));
       res.status(201).json(ApiResponse.success(template));
     } catch (error) {
       logger.error('テンプレート作成エラー:', error);
@@ -198,12 +198,12 @@ export class ApproachController {
     }
   };
 
-  updateTemplate = async (req: Request, res: Response, next: NextFunction) => {
+  updateTemplate = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const template = await this.service.updateTemplate(
         parseInt(req.params.id),
         req.body,
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       if (!template) {
@@ -219,11 +219,11 @@ export class ApproachController {
     }
   };
 
-  deleteTemplate = async (req: Request, res: Response, next: NextFunction) => {
+  deleteTemplate = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const result = await this.service.deleteTemplate(
         parseInt(req.params.id),
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       if (!result) {
@@ -241,7 +241,7 @@ export class ApproachController {
 
   getPeriodicApproaches = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const periodicApproaches = await this.service.getPeriodicApproaches(req.companyId!);
+      const periodicApproaches = await this.service.getPeriodicApproaches(parseInt(req.companyId!));
       res.json(ApiResponse.success(periodicApproaches));
     } catch (error) {
       logger.error('定期アプローチ取得エラー:', error);
@@ -253,8 +253,8 @@ export class ApproachController {
     try {
       const periodicApproach = await this.service.createPeriodicApproach(
         req.body,
-        req.companyId!,
-        req.user?.id
+        parseInt(req.companyId!),
+        parseInt(req.user?.id || '0')
       );
       res.status(201).json(ApiResponse.success(periodicApproach));
     } catch (error) {
@@ -263,12 +263,12 @@ export class ApproachController {
     }
   };
 
-  updatePeriodicApproach = async (req: Request, res: Response, next: NextFunction) => {
+  updatePeriodicApproach = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const periodicApproach = await this.service.updatePeriodicApproach(
         parseInt(req.params.id),
         req.body,
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       if (!periodicApproach) {
@@ -288,7 +288,7 @@ export class ApproachController {
     try {
       const result = await this.service.pausePeriodicApproach(
         parseInt(req.params.id),
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       res.json(ApiResponse.success(result));
@@ -302,7 +302,7 @@ export class ApproachController {
     try {
       const result = await this.service.resumePeriodicApproach(
         parseInt(req.params.id),
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       res.json(ApiResponse.success(result));
@@ -312,11 +312,11 @@ export class ApproachController {
     }
   };
 
-  deletePeriodicApproach = async (req: Request, res: Response, next: NextFunction) => {
+  deletePeriodicApproach = async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
     try {
       const result = await this.service.deletePeriodicApproach(
         parseInt(req.params.id),
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       if (!result) {
@@ -352,7 +352,7 @@ export class ApproachController {
           projectDetails,
           message
         },
-        req.companyId!
+        parseInt(req.companyId!)
       );
       
       res.json(ApiResponse.success(result));
@@ -364,7 +364,7 @@ export class ApproachController {
 
   getFreelanceHistory = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const history = await this.service.getFreelanceHistory(req.companyId!);
+      const history = await this.service.getFreelanceHistory(parseInt(req.companyId!));
       res.json(ApiResponse.success(history));
     } catch (error) {
       logger.error('フリーランスアプローチ履歴取得エラー:', error);
@@ -377,7 +377,7 @@ export class ApproachController {
       const { dateFrom, dateTo } = req.query;
       
       const stats = await this.service.getStatistics(
-        req.companyId!,
+        parseInt(req.companyId!),
         dateFrom as string,
         dateTo as string
       );
@@ -394,7 +394,7 @@ export class ApproachController {
       const { year, month } = req.query;
       
       const stats = await this.service.getMonthlyStatistics(
-        req.companyId!,
+        parseInt(req.companyId!),
         parseInt(year as string),
         parseInt(month as string)
       );
