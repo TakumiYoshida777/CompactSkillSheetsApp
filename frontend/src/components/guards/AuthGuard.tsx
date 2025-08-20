@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Spin } from 'antd';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore, useIsAuthenticated, useStoreHydrated } from '../../stores/authStore';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -21,9 +21,10 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requirePermissions = [],
   redirectTo = 'login',
 }) => {
+  const hydrated = useStoreHydrated();
+  const isAuthenticated = useIsAuthenticated();
   const { 
-    isAuthenticated, 
-    isLoading, 
+    status,
     user,
     token,
     checkAuth,
@@ -32,34 +33,41 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   } = useAuthStore();
   
   const location = useLocation();
-  const [isInitialized, setIsInitialized] = React.useState(false);
 
   useEffect(() => {
-    // 初回マウント時に認証状態をチェック
-    console.log('[AuthGuard] Effect running - isInitialized:', isInitialized, 'token:', !!token, 'isAuthenticated:', isAuthenticated);
-    
-    if (!isInitialized) {
-      // すでに認証済みの場合はチェックをスキップ
-      if (isAuthenticated) {
-        console.log('[AuthGuard] Already authenticated, skipping check');
-        setIsInitialized(true);
-      }
-      // トークンが存在し、認証されていない場合のみチェック
-      else if (requireAuth && token && !isAuthenticated) {
-        console.log('[AuthGuard] Checking auth status...');
-        checkAuth().finally(() => {
-          console.log('[AuthGuard] Auth check completed');
-          setIsInitialized(true);
-        });
-      } else {
-        console.log('[AuthGuard] No token or auth not required, skipping check');
-        setIsInitialized(true);
-      }
+    // ハイドレーション完了後のみcheckAuthを実行
+    if (!hydrated) {
+      console.log('[AuthGuard] Waiting for hydration...');
+      return;
     }
-  }, [requireAuth, token, isAuthenticated, checkAuth, isInitialized]);
+    
+    console.log('[AuthGuard] Hydrated - Status:', status, 'isAuthenticated:', isAuthenticated, 'Token:', !!token);
+    
+    // トークンが存在し、まだ認証チェックが済んでいない場合
+    if (requireAuth && token && status === 'idle') {
+      console.log('[AuthGuard] Checking auth status...');
+      checkAuth();
+    }
+  }, [hydrated, requireAuth, token, status, checkAuth]);
 
-  // ローディング中または初期化中
-  if (isLoading || !isInitialized) {
+  // ハイドレーション待機中
+  if (!hydrated) {
+    console.log('[AuthGuard] Not hydrated yet, showing spinner');
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+      }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  // 認証チェック中
+  if (status === 'checking') {
+    console.log('[AuthGuard] Checking authentication, showing spinner');
     return (
       <div style={{
         display: 'flex',
@@ -74,6 +82,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // 認証が必要な場合
   if (requireAuth && !isAuthenticated) {
+    console.log('[AuthGuard] Not authenticated, redirecting to:', redirectTo);
     return (
       <Navigate 
         to={redirectTo} 

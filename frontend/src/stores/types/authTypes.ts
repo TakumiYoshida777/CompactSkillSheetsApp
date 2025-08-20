@@ -43,7 +43,8 @@ export interface AuthenticationState {
   user: User | null;
   token: string | null;
   refreshToken: string | null;
-  isAuthenticated: boolean;
+  // isAuthenticatedは導出値として扱うためストアから除外
+  status: 'idle' | 'checking' | 'authenticated' | 'unauthenticated';
   isLoading: boolean;
   error: string | null;
 }
@@ -58,6 +59,7 @@ export interface AuthenticationActions {
   register: (data: any) => Promise<void>;
   checkAuth: () => Promise<void>;
   clearError: () => void;
+  isAuthenticated: () => boolean;
 }
 
 /**

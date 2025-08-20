@@ -1,3 +1,4 @@
+import React from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import axios from 'axios';
@@ -12,7 +13,7 @@ const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       refreshToken: null,
-      isAuthenticated: false,
+      status: 'idle' as const,
       isLoading: false,
       error: null,
 
@@ -29,7 +30,7 @@ const useAuthStore = create<AuthState>()(
             user: authResponse.user,
             token: authResponse.accessToken,
             refreshToken: authResponse.refreshToken,
-            isAuthenticated: true,
+            status: 'authenticated',
             isLoading: false,
             error: null,
           });
@@ -51,7 +52,7 @@ const useAuthStore = create<AuthState>()(
           user,
           token: accessToken,
           refreshToken,
-          isAuthenticated: true,
+          status: 'authenticated',
           isLoading: false,
           error: null,
         });
@@ -73,7 +74,7 @@ const useAuthStore = create<AuthState>()(
             user: authResponse.user,
             token: authResponse.accessToken,
             refreshToken: authResponse.refreshToken,
-            isAuthenticated: true,
+            status: 'authenticated',
             isLoading: false,
             error: null,
           });
@@ -99,7 +100,7 @@ const useAuthStore = create<AuthState>()(
           user: null,
           token: null,
           refreshToken: null,
-          isAuthenticated: false,
+          status: 'unauthenticated',
           error: null,
         });
       },
@@ -179,23 +180,16 @@ const useAuthStore = create<AuthState>()(
       },
 
       checkAuth: async () => {
-        const { token, user, isAuthenticated } = get();
-        console.log('[checkAuth] Starting - Token exists:', !!token, 'User:', user, 'isAuthenticated:', isAuthenticated);
+        const { token, user, status } = get();
+        console.log('[checkAuth] Starting - Token:', !!token, 'User:', user, 'Status:', status);
         
-        // すでに認証済みの場合はスキップ
-        if (isAuthenticated && user && token) {
-          console.log('[checkAuth] Already authenticated, skipping API call');
+        // 二重実行防止
+        if (status === 'checking' || !token) {
+          console.log('[checkAuth] Already checking or no token');
           return;
         }
         
-        // トークンの初期検証
-        if (!AuthCheckService.validateToken({ token, user })) {
-          console.log('[checkAuth] Token validation failed');
-          set({ isAuthenticated: false });
-          return;
-        }
-
-        set({ isLoading: true });
+        set({ status: 'checking', isLoading: true });
         
         try {
           // 認証チェックを実行
@@ -209,22 +203,38 @@ const useAuthStore = create<AuthState>()(
           
           // 結果に基づいて状態を更新
           if (result.success && result.user) {
-            console.log('[checkAuth] Auth check successful, updating state');
+            console.log('[checkAuth] Auth check successful');
             set({
               user: result.user,
-              isAuthenticated: true,
+              status: 'authenticated',
               isLoading: false,
             });
           } else {
-            console.log('[checkAuth] Auth check failed, logging out');
-            // 認証失敗時はログアウト
-            get().logout();
-            set({ isLoading: false });
+            console.log('[checkAuth] Auth check failed');
+            // 401の場合のみログアウト
+            set({
+              user: null,
+              token: null,
+              refreshToken: null,
+              status: 'unauthenticated',
+              isLoading: false,
+            });
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('[checkAuth] Unexpected error:', error);
-          get().logout();
-          set({ isLoading: false });
+          // ネットワークエラーの場合は一時的に認証状態を保つ
+          if (error?.response?.status === 401) {
+            set({
+              user: null,
+              token: null,
+              refreshToken: null,
+              status: 'unauthenticated',
+              isLoading: false,
+            });
+          } else {
+            // 一時エラーの場合
+            set({ status: 'authenticated', isLoading: false });
+          }
         }
       },
 
@@ -247,6 +257,12 @@ const useAuthStore = create<AuthState>()(
         if (!user) return false;
         // rolesが配列であることを確認
         return Array.isArray(user.roles) && user.roles.includes(role);
+      },
+
+      // 認証状態の導出値を提供
+      isAuthenticated: () => {
+        const { token, user } = get();
+        return Boolean(token && user);
       },
 
       isAdmin: () => {
@@ -276,11 +292,11 @@ const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
+      // isAuthenticatedは永続化しない（導出値として扱う）
       partialize: (state) => ({
         user: state.user,
         token: state.token,
         refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
       }),
       onRehydrateStorage: () => (state) => {
         // ストレージから状態を復元した後、トークンがある場合はAxiosのデフォルトヘッダーを設定
@@ -291,5 +307,25 @@ const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// 導出セレクタ - 認証状態を取得
+export const useIsAuthenticated = () => 
+  useAuthStore((state) => Boolean(state.token && state.user));
+
+// ハイドレーション状態を取得するフック
+export const useStoreHydrated = () => {
+  const [hydrated, setHydrated] = React.useState(
+    useAuthStore.persist.hasHydrated()
+  );
+  
+  React.useEffect(() => {
+    const unsubscribe = useAuthStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
+    return unsubscribe;
+  }, []);
+  
+  return hydrated;
+};
 
 export { useAuthStore };
