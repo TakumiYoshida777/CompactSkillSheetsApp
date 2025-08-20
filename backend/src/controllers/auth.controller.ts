@@ -22,7 +22,7 @@ export class AuthController {
       });
 
       if (!user) {
-        return ApiResponse.error(res, 'メールアドレスまたはパスワードが正しくありません', 401);
+        return res.status(401).json(ApiResponse.error('AUTH_ERROR', 'メールアドレスまたはパスワードが正しくありません'));
       }
 
       // パスワード検証
@@ -33,17 +33,17 @@ export class AuthController {
           where: { id: user.id },
           data: { failedLoginCount: { increment: 1 } }
         });
-        return ApiResponse.error(res, 'メールアドレスまたはパスワードが正しくありません', 401);
+        return res.status(401).json(ApiResponse.error('AUTH_ERROR', 'メールアドレスまたはパスワードが正しくありません'));
       }
 
       // アカウントロック確認
       if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
-        return ApiResponse.error(res, 'アカウントがロックされています', 403);
+        return res.status(403).json(ApiResponse.error('ACCOUNT_LOCKED', 'アカウントがロックされています'));
       }
 
       // アクティブ確認
       if (!user.isActive) {
-        return ApiResponse.error(res, 'アカウントが無効化されています', 403);
+        return res.status(403).json(ApiResponse.error('ACCOUNT_DISABLED', 'アカウントが無効化されています'));
       }
 
       // JWTトークン生成
@@ -75,7 +75,7 @@ export class AuthController {
 
       logger.info(`ユーザーログイン成功: ${user.email}`);
 
-      return ApiResponse.success(res, {
+      return res.json(ApiResponse.success({
         token,
         refreshToken,
         user: {
@@ -85,7 +85,7 @@ export class AuthController {
           companyId: user.companyId?.toString(),
           companyName: user.company?.name
         }
-      });
+      }));
     } catch (error) {
       logger.error('ログインエラー:', error);
       next(error);
@@ -95,7 +95,7 @@ export class AuthController {
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
       // クライアント側でトークンを削除するため、サーバー側では特に処理なし
-      return ApiResponse.success(res, { message: 'ログアウトしました' });
+      return res.json(ApiResponse.success({ message: 'ログアウトしました' }));
     } catch (error) {
       next(error);
     }
@@ -106,7 +106,7 @@ export class AuthController {
       const { refreshToken } = req.body;
 
       if (!refreshToken) {
-        return ApiResponse.error(res, 'リフレッシュトークンが必要です', 401);
+        return res.status(401).json(ApiResponse.error('REFRESH_TOKEN_REQUIRED', 'リフレッシュトークンが必要です'));
       }
 
       // リフレッシュトークン検証
@@ -122,7 +122,7 @@ export class AuthController {
       });
 
       if (!user || !user.isActive) {
-        return ApiResponse.error(res, '無効なリフレッシュトークンです', 401);
+        return res.status(401).json(ApiResponse.error('INVALID_REFRESH_TOKEN', '無効なリフレッシュトークンです'));
       }
 
       // 新しいアクセストークン生成
@@ -136,10 +136,10 @@ export class AuthController {
         { expiresIn: config.jwt.expiresIn }
       );
 
-      return ApiResponse.success(res, { token: newToken });
+      return res.json(ApiResponse.success({ token: newToken }));
     } catch (error) {
       logger.error('トークンリフレッシュエラー:', error);
-      return ApiResponse.error(res, '無効なリフレッシュトークンです', 401);
+      return res.status(401).json(ApiResponse.error('INVALID_REFRESH_TOKEN', '無効なリフレッシュトークンです'));
     }
   }
 }
