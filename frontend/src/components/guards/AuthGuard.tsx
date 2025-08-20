@@ -43,7 +43,13 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     
     console.log('[AuthGuard] Hydrated - Status:', status, 'isAuthenticated:', isAuthenticated, 'Token:', !!token);
     
-    // トークンが存在し、まだ認証チェックが済んでいない場合
+    // 既に認証済みの場合は何もしない
+    if (status === 'authenticated') {
+      console.log('[AuthGuard] Already authenticated, no need to check');
+      return;
+    }
+    
+    // トークンが存在し、まだ認証チェックが済んでいない場合のみ
     if (requireAuth && token && status === 'idle') {
       console.log('[AuthGuard] Checking auth status...');
       checkAuth();

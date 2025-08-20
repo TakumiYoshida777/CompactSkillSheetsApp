@@ -183,6 +183,12 @@ const useAuthStore = create<AuthState>()(
         const { token, user, status } = get();
         console.log('[checkAuth] Starting - Token:', !!token, 'User:', user, 'Status:', status);
         
+        // 既に認証済みの場合はスキップ
+        if (status === 'authenticated') {
+          console.log('[checkAuth] Already authenticated, skipping');
+          return;
+        }
+        
         // 二重実行防止
         if (status === 'checking' || !token) {
           console.log('[checkAuth] Already checking or no token');
