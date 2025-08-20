@@ -21,7 +21,7 @@ class AnalyticsService {
     const activeEngineers = await prisma.engineer.count({
       where: {
         companyId,
-        projects: {
+        engineerProjects: {
           some: {
             endDate: {
               gte: now
@@ -37,9 +37,7 @@ class AnalyticsService {
     // 今月のアプローチ数
     const currentMonthApproaches = await prisma.approach.count({
       where: {
-        engineer: {
-          companyId
-        },
+        fromCompanyId: companyId,
         createdAt: {
           gte: currentMonthStart,
           lte: currentMonthEnd
@@ -50,9 +48,7 @@ class AnalyticsService {
     // 先月のアプローチ数
     const lastMonthApproaches = await prisma.approach.count({
       where: {
-        engineer: {
-          companyId
-        },
+        fromCompanyId: companyId,
         createdAt: {
           gte: lastMonthStart,
           lte: lastMonthEnd
@@ -63,17 +59,13 @@ class AnalyticsService {
     // アプローチ成約率
     const totalApproaches = await prisma.approach.count({
       where: {
-        engineer: {
-          companyId
-        }
+        fromCompanyId: companyId
       }
     });
 
     const acceptedApproaches = await prisma.approach.count({
       where: {
-        engineer: {
-          companyId
-        },
+        fromCompanyId: companyId,
         status: 'ACCEPTED'
       }
     });
@@ -110,7 +102,7 @@ class AnalyticsService {
 
     // ステータス別エンジニア数
     const statusCounts = await prisma.engineer.groupBy({
-      by: ['status'],
+      by: ['currentStatus'],
       where: { companyId },
       _count: true
     });
@@ -119,7 +111,7 @@ class AnalyticsService {
     const upcomingEngineers = await prisma.engineer.findMany({
       where: {
         companyId,
-        projects: {
+        engineerProjects: {
           some: {
             startDate: {
               gte: now,
@@ -129,7 +121,7 @@ class AnalyticsService {
         }
       },
       include: {
-        projects: {
+        engineerProjects: {
           where: {
             startDate: {
               gte: now
@@ -185,8 +177,8 @@ class AnalyticsService {
       upcomingEngineers: upcomingEngineers.map(e => ({
         id: e.id,
         name: e.name,
-        startDate: e.projects[0]?.startDate,
-        projectName: e.projects[0]?.name
+        startDate: e.engineerProjects[0]?.startDate,
+        projectName: e.engineerProjects[0]?.projectName
       })),
       skillDistribution: skillStats
     };

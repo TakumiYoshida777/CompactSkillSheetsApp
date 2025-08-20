@@ -12,6 +12,11 @@ export const companyMiddleware = (req: Request, res: Response, next: NextFunctio
   // JWTトークンから企業IDを取得する場合（認証済みユーザー）
   const tokenCompanyId = (req as any).user?.companyId;
   
+  console.log('[Company Middleware] Headers:', req.headers);
+  console.log('[Company Middleware] User from token:', (req as any).user);
+  console.log('[Company Middleware] Company ID from header:', companyId);
+  console.log('[Company Middleware] Company ID from token:', tokenCompanyId);
+  
   // 企業IDの決定（ヘッダー優先、なければトークンから）
   const finalCompanyId = companyId || tokenCompanyId;
   
@@ -24,6 +29,8 @@ export const companyMiddleware = (req: Request, res: Response, next: NextFunctio
   
   // リクエストオブジェクトに企業IDを設定
   req.companyId = finalCompanyId;
+  (req as any).user = { ...(req as any).user, companyId: finalCompanyId };
+  console.log('[Company Middleware] Final company ID:', finalCompanyId);
   next();
 };
 

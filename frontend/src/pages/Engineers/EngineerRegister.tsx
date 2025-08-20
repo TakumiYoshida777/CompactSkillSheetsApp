@@ -66,7 +66,11 @@ const EngineerRegister: React.FC = () => {
 
   // 権限チェック
   useEffect(() => {
-    if (user && !canRegisterEngineer(user.roles || user.role)) {
+    console.log('EngineerRegister - User:', user);
+    console.log('EngineerRegister - User roles:', user?.roles);
+    console.log('EngineerRegister - Can register:', user ? canRegisterEngineer(user.roles) : false);
+    
+    if (user && !canRegisterEngineer(user.roles)) {
       message.error('この機能にアクセスする権限がありません');
       navigate('/dashboard');
     }
@@ -1027,7 +1031,7 @@ const EngineerRegister: React.FC = () => {
 
 
   // 権限がない場合の表示
-  if (user && !canRegisterEngineer(user.roles || user.role)) {
+  if (user && !canRegisterEngineer(user.roles)) {
     return (
       <Card className="text-center" style={{ maxWidth: 600, margin: '100px auto' }}>
         <LockOutlined style={{ fontSize: 48, color: '#ff4d4f', marginBottom: 24 }} />

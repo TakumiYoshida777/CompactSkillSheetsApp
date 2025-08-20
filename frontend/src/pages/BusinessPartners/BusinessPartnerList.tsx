@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { businessPartnerApi, BusinessPartner } from '@/api/businessPartner';
+import { businessPartnerApi, BusinessPartner } from '../../api/businessPartner';
 import {
   Card,
   Table,

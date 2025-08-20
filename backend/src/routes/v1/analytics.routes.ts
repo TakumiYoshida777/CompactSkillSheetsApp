@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { companyMiddleware } from '../../middleware/company.middleware';
+import { analyticsController } from '../../controllers/analytics.controller';
 import { ApiResponse } from '../../utils/response.util';
 import type { Request, Response, NextFunction } from 'express';
 
@@ -11,86 +12,10 @@ router.use(authMiddleware);
 router.use(companyMiddleware);
 
 // ダッシュボードデータ取得
-router.get('/dashboard', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    // TODO: 実際のデータベースクエリを実装
-    const dashboardData = {
-      engineers: {
-        total: 25,
-        working: 15,
-        waiting: 8,
-        waitingSoon: 2,
-      },
-      projects: {
-        total: 12,
-        active: 8,
-        completed: 3,
-        upcoming: 1,
-      },
-      approaches: {
-        total: 45,
-        thisMonth: 12,
-        pending: 5,
-        responseRate: 68,
-      },
-      revenue: {
-        thisMonth: 12500000,
-        lastMonth: 11800000,
-        growth: 5.9,
-      },
-      utilizationRate: 72,
-      averageSkillScore: 4.2,
-    };
-    
-    res.json(ApiResponse.success(dashboardData));
-  } catch (error) {
-    next(error);
-  }
-});
+router.get('/dashboard', analyticsController.getDashboardData.bind(analyticsController));
 
 // エンジニア統計取得
-router.get('/engineers/statistics', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const statistics = {
-      total: 25,
-      byStatus: {
-        working: 15,
-        waiting: 8,
-        waitingSoon: 2,
-      },
-      byType: {
-        employee: 18,
-        partner: 5,
-        freelance: 2,
-      },
-      skillDistribution: {
-        'JavaScript': 18,
-        'TypeScript': 15,
-        'React': 14,
-        'Python': 10,
-        'Java': 8,
-      },
-      experienceDistribution: {
-        '0-2年': 3,
-        '3-5年': 8,
-        '6-10年': 10,
-        '11年以上': 4,
-      },
-      utilizationTrend: [
-        { month: '2024-01', rate: 68 },
-        { month: '2024-02', rate: 72 },
-        { month: '2024-03', rate: 75 },
-        { month: '2024-04', rate: 70 },
-        { month: '2024-05', rate: 72 },
-        { month: '2024-06', rate: 74 },
-      ],
-    };
-    
-    res.json(ApiResponse.success(statistics));
-  } catch (error) {
-    next(error);
-  }
-});
+router.get('/engineers/statistics', analyticsController.getEngineerStatistics.bind(analyticsController));
 
 // プロジェクト統計取得
 router.get('/projects/statistics', async (req: Request, res: Response, next: NextFunction) => {
@@ -129,41 +54,7 @@ router.get('/projects/statistics', async (req: Request, res: Response, next: Nex
 });
 
 // アプローチ統計取得
-router.get('/approaches/statistics', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const statistics = {
-      total: 245,
-      thisMonth: 28,
-      byStatus: {
-        sent: 180,
-        opened: 150,
-        replied: 65,
-        negotiating: 15,
-        contracted: 25,
-      },
-      responseRate: 36.1,
-      conversionRate: 13.9,
-      averageResponseTime: '2.3日',
-      topPerformingTemplates: [
-        { id: 1, name: 'スキルマッチ提案', responseRate: 42 },
-        { id: 2, name: '即戦力アピール', responseRate: 38 },
-        { id: 3, name: '長期安定提案', responseRate: 35 },
-      ],
-      monthlyTrend: [
-        { month: '2024-01', sent: 35, replied: 12 },
-        { month: '2024-02', sent: 42, replied: 15 },
-        { month: '2024-03', sent: 38, replied: 14 },
-        { month: '2024-04', sent: 45, replied: 18 },
-        { month: '2024-05', sent: 30, replied: 10 },
-        { month: '2024-06', sent: 28, replied: 11 },
-      ],
-    };
-    
-    res.json(ApiResponse.success(statistics));
-  } catch (error) {
-    next(error);
-  }
-});
+router.get('/approaches/statistics', analyticsController.getApproachStatistics.bind(analyticsController));
 
 // 売上分析取得
 router.get('/revenue/analysis', async (req: Request, res: Response, next: NextFunction) => {

@@ -46,12 +46,16 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     
     console.log('[Auth Middleware] JWT verification successful, user:', decoded);
 
-    req.user = decoded as {
-      id: string;
-      email: string;
-      companyId: string;
-      role: string;
-    };
+    // JWTペイロードからreq.userを構築
+    const decodedToken = decoded as any;
+    req.user = {
+      id: decodedToken.userId || decodedToken.id,
+      userId: decodedToken.userId || decodedToken.id,
+      email: decodedToken.email,
+      companyId: decodedToken.companyId,
+      username: decodedToken.username,
+      role: decodedToken.role
+    } as any;
 
     next();
   });

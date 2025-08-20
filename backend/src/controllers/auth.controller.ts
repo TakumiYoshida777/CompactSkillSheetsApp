@@ -17,7 +17,12 @@ export class AuthController {
       const user = await prisma.user.findUnique({
         where: { email },
         include: {
-          company: true
+          company: true,
+          userRoles: {
+            include: {
+              role: true
+            }
+          }
         }
       });
 
@@ -79,6 +84,10 @@ export class AuthController {
 
       logger.info(`ユーザーログイン成功: ${user.email}`);
 
+      // ロール情報を抽出
+      const roles = user.userRoles.map(ur => ur.role.name);
+      const userType = user.company?.companyType === 'ses' ? 'ses' : 'client';
+
       return res.json(ApiResponse.success({
         token,
         refreshToken,
@@ -87,7 +96,9 @@ export class AuthController {
           email: user.email,
           name: user.name,
           companyId: user.companyId?.toString(),
-          companyName: user.company?.name
+          companyName: user.company?.name,
+          roles: roles,
+          userType: userType
         }
       }));
     } catch (error) {
