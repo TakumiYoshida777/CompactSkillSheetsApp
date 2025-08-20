@@ -1,127 +1,130 @@
-import { body, param, query } from 'express-validator';
+/**
+ * プロジェクト管理機能のバリデーションスキーマ
+ * 
+ * プロジェクトの作成・更新・ステータス変更・アサインメント管理などの
+ * 各種操作時の入力値検証を行います
+ * 
+ * @author システム開発チーム
+ * @version 1.0.0
+ * @since 2024-01-01
+ */
+
+import * as yup from 'yup';
 
 export const projectValidation = {
-  create: [
-    body('name')
-      .notEmpty().withMessage('プロジェクト名は必須です')
-      .isString().withMessage('プロジェクト名は文字列で入力してください')
-      .isLength({ max: 255 }).withMessage('プロジェクト名は255文字以内で入力してください'),
-    body('clientCompany')
-      .optional()
-      .isString().withMessage('クライアント企業名は文字列で入力してください'),
-    body('startDate')
-      .notEmpty().withMessage('開始日は必須です')
-      .isISO8601().withMessage('開始日は有効な日付形式で入力してください'),
-    body('endDate')
-      .optional()
-      .isISO8601().withMessage('終了日は有効な日付形式で入力してください')
-      .custom((value, { req }) => {
-        if (value && req.body.startDate && new Date(value) < new Date(req.body.startDate)) {
-          throw new Error('終了日は開始日以降の日付を指定してください');
-        }
-        return true;
-      }),
-    body('plannedEndDate')
-      .optional()
-      .isISO8601().withMessage('終了予定日は有効な日付形式で入力してください'),
-    body('projectScale')
-      .optional()
-      .isIn(['small', 'medium', 'large']).withMessage('プロジェクト規模の値が不正です'),
-    body('industry')
-      .optional()
-      .isString().withMessage('業界は文字列で入力してください'),
-    body('businessType')
-      .optional()
-      .isString().withMessage('業務種別は文字列で入力してください'),
-    body('developmentMethodology')
-      .optional()
-      .isString().withMessage('開発手法は文字列で入力してください'),
-    body('teamSize')
-      .optional()
-      .isInt({ min: 1, max: 1000 }).withMessage('チームサイズは1〜1000の整数で入力してください'),
-    body('description')
-      .optional()
-      .isString().withMessage('説明は文字列で入力してください'),
-  ],
+  create: yup.object({
+    body: yup.object({
+      name: yup.string()
+        .max(255, 'プロジェクト名は255文字以内で入力してください')
+        .required('プロジェクト名は必須です'),
+      clientCompany: yup.string()
+        .optional(),
+      startDate: yup.date()
+        .required('開始日は必須です'),
+      endDate: yup.date()
+        .min(yup.ref('startDate'), '終了日は開始日以降の日付を指定してください')
+        .optional(),
+      plannedEndDate: yup.date()
+        .optional(),
+      projectScale: yup.string()
+        .oneOf(['small', 'medium', 'large'], 'プロジェクト規模の値が不正です')
+        .optional(),
+      industry: yup.string()
+        .optional(),
+      businessType: yup.string()
+        .optional(),
+      developmentMethodology: yup.string()
+        .optional(),
+      teamSize: yup.number()
+        .min(1, 'チームサイズは1以上で入力してください')
+        .max(1000, 'チームサイズは1000以下で入力してください')
+        .integer('チームサイズは整数で入力してください')
+        .optional(),
+      description: yup.string()
+        .optional(),
+    })
+  }),
 
-  update: [
-    param('id').isInt().withMessage('プロジェクトIDは整数で指定してください'),
-    body('name')
-      .optional()
-      .isString().withMessage('プロジェクト名は文字列で入力してください')
-      .isLength({ max: 255 }).withMessage('プロジェクト名は255文字以内で入力してください'),
-    body('clientCompany')
-      .optional()
-      .isString().withMessage('クライアント企業名は文字列で入力してください'),
-    body('startDate')
-      .optional()
-      .isISO8601().withMessage('開始日は有効な日付形式で入力してください'),
-    body('endDate')
-      .optional()
-      .isISO8601().withMessage('終了日は有効な日付形式で入力してください')
-      .custom((value, { req }) => {
-        if (value && req.body.startDate && new Date(value) < new Date(req.body.startDate)) {
-          throw new Error('終了日は開始日以降の日付を指定してください');
-        }
-        return true;
-      }),
-    body('plannedEndDate')
-      .optional()
-      .isISO8601().withMessage('終了予定日は有効な日付形式で入力してください'),
-    body('projectScale')
-      .optional()
-      .isIn(['small', 'medium', 'large']).withMessage('プロジェクト規模の値が不正です'),
-    body('teamSize')
-      .optional()
-      .isInt({ min: 1, max: 1000 }).withMessage('チームサイズは1〜1000の整数で入力してください'),
-  ],
+  update: yup.object({
+    params: yup.object({
+      id: yup.number().integer('プロジェクトIDは整数で指定してください').required('プロジェクトIDは必須です')
+    }),
+    body: yup.object({
+      name: yup.string()
+        .max(255, 'プロジェクト名は255文字以内で入力してください')
+        .optional(),
+      clientCompany: yup.string()
+        .optional(),
+      startDate: yup.date()
+        .optional(),
+      endDate: yup.date()
+        .min(yup.ref('startDate'), '終了日は開始日以降の日付を指定してください')
+        .optional(),
+      plannedEndDate: yup.date()
+        .optional(),
+      projectScale: yup.string()
+        .oneOf(['small', 'medium', 'large'], 'プロジェクト規模の値が不正です')
+        .optional(),
+      teamSize: yup.number()
+        .min(1, 'チームサイズは1以上で入力してください')
+        .max(1000, 'チームサイズは1000以下で入力してください')
+        .integer('チームサイズは整数で入力してください')
+        .optional(),
+    })
+  }),
 
-  updateStatus: [
-    param('id').isInt().withMessage('プロジェクトIDは整数で指定してください'),
-    body('status')
-      .notEmpty().withMessage('ステータスは必須です')
-      .isIn(['planning', 'active', 'completed', 'cancelled']).withMessage('ステータスの値が不正です'),
-  ],
+  updateStatus: yup.object({
+    params: yup.object({
+      id: yup.number().integer('プロジェクトIDは整数で指定してください').required('プロジェクトIDは必須です')
+    }),
+    body: yup.object({
+      status: yup.string()
+        .oneOf(['planning', 'active', 'completed', 'cancelled'], 'ステータスの値が不正です')
+        .required('ステータスは必須です'),
+    })
+  }),
 
-  createAssignment: [
-    param('id').isInt().withMessage('プロジェクトIDは整数で指定してください'),
-    body('engineerId')
-      .notEmpty().withMessage('エンジニアIDは必須です')
-      .isInt().withMessage('エンジニアIDは整数で指定してください'),
-    body('role')
-      .notEmpty().withMessage('役割は必須です')
-      .isString().withMessage('役割は文字列で入力してください'),
-    body('startDate')
-      .notEmpty().withMessage('開始日は必須です')
-      .isISO8601().withMessage('開始日は有効な日付形式で入力してください'),
-    body('endDate')
-      .optional()
-      .isISO8601().withMessage('終了日は有効な日付形式で入力してください')
-      .custom((value, { req }) => {
-        if (value && req.body.startDate && new Date(value) < new Date(req.body.startDate)) {
-          throw new Error('終了日は開始日以降の日付を指定してください');
-        }
-        return true;
-      }),
-    body('allocationPercentage')
-      .optional()
-      .isInt({ min: 1, max: 100 }).withMessage('稼働率は1〜100の整数で入力してください'),
-  ],
+  createAssignment: yup.object({
+    params: yup.object({
+      id: yup.number().integer('プロジェクトIDは整数で指定してください').required('プロジェクトIDは必須です')
+    }),
+    body: yup.object({
+      engineerId: yup.number()
+        .integer('エンジニアIDは整数で指定してください')
+        .required('エンジニアIDは必須です'),
+      role: yup.string()
+        .required('役割は必須です'),
+      startDate: yup.date()
+        .required('開始日は必須です'),
+      endDate: yup.date()
+        .min(yup.ref('startDate'), '終了日は開始日以降の日付を指定してください')
+        .optional(),
+      allocationPercentage: yup.number()
+        .min(1, '稼働率は1以上で入力してください')
+        .max(100, '稼働率は100以下で入力してください')
+        .integer('稼働率は整数で入力してください')
+        .optional(),
+    })
+  }),
 
-  updateAssignment: [
-    param('id').isInt().withMessage('プロジェクトIDは整数で指定してください'),
-    param('assignmentId').isInt().withMessage('アサインメントIDは整数で指定してください'),
-    body('role')
-      .optional()
-      .isString().withMessage('役割は文字列で入力してください'),
-    body('startDate')
-      .optional()
-      .isISO8601().withMessage('開始日は有効な日付形式で入力してください'),
-    body('endDate')
-      .optional()
-      .isISO8601().withMessage('終了日は有効な日付形式で入力してください'),
-    body('allocationPercentage')
-      .optional()
-      .isInt({ min: 1, max: 100 }).withMessage('稼働率は1〜100の整数で入力してください'),
-  ],
+  updateAssignment: yup.object({
+    params: yup.object({
+      id: yup.number().integer('プロジェクトIDは整数で指定してください').required('プロジェクトIDは必須です'),
+      assignmentId: yup.number().integer('アサインメントIDは整数で指定してください').required('アサインメントIDは必須です')
+    }),
+    body: yup.object({
+      role: yup.string()
+        .optional(),
+      startDate: yup.date()
+        .optional(),
+      endDate: yup.date()
+        .min(yup.ref('startDate'), '終了日は開始日以降の日付を指定してください')
+        .optional(),
+      allocationPercentage: yup.number()
+        .min(1, '稼働率は1以上で入力してください')
+        .max(100, '稼働率は100以下で入力してください')
+        .integer('稼働率は整数で入力してください')
+        .optional(),
+    })
+  }),
 };

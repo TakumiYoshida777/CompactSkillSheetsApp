@@ -1,132 +1,160 @@
-import { body, param, query } from 'express-validator';
+/**
+ * エンジニア管理機能のバリデーションスキーマ
+ * 
+ * エンジニアの作成・更新・ステータス変更・スキルシート更新などの
+ * 各種操作時の入力値検証を行います
+ * 
+ * @author システム開発チーム
+ * @version 1.0.0
+ * @since 2024-01-01
+ */
+
+import * as yup from 'yup';
 
 export const engineerValidation = {
-  create: [
-    body('name')
-      .notEmpty().withMessage('氏名は必須です')
-      .isString().withMessage('氏名は文字列で入力してください')
-      .isLength({ max: 100 }).withMessage('氏名は100文字以内で入力してください'),
-    body('email')
-      .notEmpty().withMessage('メールアドレスは必須です')
-      .isEmail().withMessage('有効なメールアドレスを入力してください'),
-    body('phone')
-      .optional()
-      .matches(/^[0-9-]+$/).withMessage('電話番号は数字とハイフンのみ入力可能です'),
-    body('birthDate')
-      .optional()
-      .isISO8601().withMessage('生年月日は有効な日付形式で入力してください'),
-    body('gender')
-      .optional()
-      .isIn(['male', 'female', 'other']).withMessage('性別の値が不正です'),
-    body('nearestStation')
-      .optional()
-      .isString().withMessage('最寄り駅は文字列で入力してください'),
-    body('engineerType')
-      .optional()
-      .isIn(['employee', 'freelance']).withMessage('エンジニア種別の値が不正です'),
-    body('status')
-      .optional()
-      .isIn(['waiting', 'assigned', 'upcoming', 'inactive']).withMessage('ステータスの値が不正です'),
-  ],
+  create: yup.object({
+    body: yup.object({
+      name: yup.string()
+        .required('氏名は必須です')
+        .max(100, '氏名は100文字以内で入力してください'),
+      email: yup.string()
+        .email('有効なメールアドレスを入力してください')
+        .required('メールアドレスは必須です'),
+      phone: yup.string()
+        .matches(/^[0-9-]+$/, '電話番号は数字とハイフンのみ入力可能です')
+        .optional(),
+      birthDate: yup.date()
+        .optional(),
+      gender: yup.string()
+        .oneOf(['male', 'female', 'other'], '性別の値が不正です')
+        .optional(),
+      nearestStation: yup.string()
+        .optional(),
+      engineerType: yup.string()
+        .oneOf(['employee', 'freelance'], 'エンジニア種別の値が不正です')
+        .optional(),
+      status: yup.string()
+        .oneOf(['waiting', 'assigned', 'upcoming', 'inactive'], 'ステータスの値が不正です')
+        .optional(),
+    })
+  }),
 
-  update: [
-    param('id').isInt().withMessage('エンジニアIDは整数で指定してください'),
-    body('name')
-      .optional()
-      .isString().withMessage('氏名は文字列で入力してください')
-      .isLength({ max: 100 }).withMessage('氏名は100文字以内で入力してください'),
-    body('email')
-      .optional()
-      .isEmail().withMessage('有効なメールアドレスを入力してください'),
-    body('phone')
-      .optional()
-      .matches(/^[0-9-]+$/).withMessage('電話番号は数字とハイフンのみ入力可能です'),
-    body('birthDate')
-      .optional()
-      .isISO8601().withMessage('生年月日は有効な日付形式で入力してください'),
-    body('gender')
-      .optional()
-      .isIn(['male', 'female', 'other']).withMessage('性別の値が不正です'),
-    body('nearestStation')
-      .optional()
-      .isString().withMessage('最寄り駅は文字列で入力してください'),
-  ],
+  update: yup.object({
+    params: yup.object({
+      id: yup.number().integer('エンジニアIDは整数で指定してください').required('エンジニアIDは必須です')
+    }),
+    body: yup.object({
+      name: yup.string()
+        .max(100, '氏名は100文字以内で入力してください')
+        .optional(),
+      email: yup.string()
+        .email('有効なメールアドレスを入力してください')
+        .optional(),
+      phone: yup.string()
+        .matches(/^[0-9-]+$/, '電話番号は数字とハイフンのみ入力可能です')
+        .optional(),
+      birthDate: yup.date()
+        .optional(),
+      gender: yup.string()
+        .oneOf(['male', 'female', 'other'], '性別の値が不正です')
+        .optional(),
+      nearestStation: yup.string()
+        .optional(),
+    })
+  }),
 
-  updateStatus: [
-    param('id').isInt().withMessage('エンジニアIDは整数で指定してください'),
-    body('status')
-      .notEmpty().withMessage('ステータスは必須です')
-      .isIn(['waiting', 'assigned', 'upcoming', 'inactive']).withMessage('ステータスの値が不正です'),
-  ],
+  updateStatus: yup.object({
+    params: yup.object({
+      id: yup.number().integer('エンジニアIDは整数で指定してください').required('エンジニアIDは必須です')
+    }),
+    body: yup.object({
+      status: yup.string()
+        .oneOf(['waiting', 'assigned', 'upcoming', 'inactive'], 'ステータスの値が不正です')
+        .required('ステータスは必須です'),
+    })
+  }),
 
-  updateAvailability: [
-    param('id').isInt().withMessage('エンジニアIDは整数で指定してください'),
-    body('availableDate')
-      .notEmpty().withMessage('稼働可能日は必須です')
-      .isISO8601().withMessage('稼働可能日は有効な日付形式で入力してください'),
-  ],
+  updateAvailability: yup.object({
+    params: yup.object({
+      id: yup.number().integer('エンジニアIDは整数で指定してください').required('エンジニアIDは必須です')
+    }),
+    body: yup.object({
+      availableDate: yup.date()
+        .required('稼働可能日は必須です'),
+    })
+  }),
 
-  updatePublicStatus: [
-    param('id').isInt().withMessage('エンジニアIDは整数で指定してください'),
-    body('isPublic')
-      .notEmpty().withMessage('公開状態は必須です')
-      .isBoolean().withMessage('公開状態は真偽値で指定してください'),
-  ],
+  updatePublicStatus: yup.object({
+    params: yup.object({
+      id: yup.number().integer('エンジニアIDは整数で指定してください').required('エンジニアIDは必須です')
+    }),
+    body: yup.object({
+      isPublic: yup.boolean()
+        .required('公開状態は必須です'),
+    })
+  }),
 
-  skillSheet: [
-    param('id').isInt().withMessage('エンジニアIDは整数で指定してください'),
-    body('summary')
-      .optional()
-      .isString().withMessage('概要は文字列で入力してください')
-      .isLength({ max: 2000 }).withMessage('概要は2000文字以内で入力してください'),
-    body('totalExperienceYears')
-      .optional()
-      .isInt({ min: 0, max: 50 }).withMessage('総経験年数は0〜50の整数で入力してください'),
-    body('programmingLanguages')
-      .optional()
-      .isArray().withMessage('プログラミング言語は配列で指定してください'),
-    body('frameworks')
-      .optional()
-      .isArray().withMessage('フレームワークは配列で指定してください'),
-    body('databases')
-      .optional()
-      .isArray().withMessage('データベースは配列で指定してください'),
-    body('cloudServices')
-      .optional()
-      .isArray().withMessage('クラウドサービスは配列で指定してください'),
-    body('tools')
-      .optional()
-      .isArray().withMessage('開発ツールは配列で指定してください'),
-    body('certifications')
-      .optional()
-      .isArray().withMessage('資格・認定は配列で指定してください'),
-    body('possibleRoles')
-      .optional()
-      .isArray().withMessage('対応可能ロールは配列で指定してください'),
-    body('possiblePhases')
-      .optional()
-      .isArray().withMessage('対応可能フェーズは配列で指定してください'),
-  ],
+  skillSheet: yup.object({
+    params: yup.object({
+      id: yup.number().integer('エンジニアIDは整数で指定してください').required('エンジニアIDは必須です')
+    }),
+    body: yup.object({
+      summary: yup.string()
+        .max(2000, '概要は2000文字以内で入力してください')
+        .optional(),
+      totalExperienceYears: yup.number()
+        .min(0, '総経験年数は0以上で入力してください')
+        .max(50, '総経験年数は50年以下で入力してください')
+        .integer('総経験年数は整数で入力してください')
+        .optional(),
+      programmingLanguages: yup.array()
+        .of(yup.string())
+        .optional(),
+      frameworks: yup.array()
+        .of(yup.string())
+        .optional(),
+      databases: yup.array()
+        .of(yup.string())
+        .optional(),
+      cloudServices: yup.array()
+        .of(yup.string())
+        .optional(),
+      tools: yup.array()
+        .of(yup.string())
+        .optional(),
+      certifications: yup.array()
+        .of(yup.string())
+        .optional(),
+      possibleRoles: yup.array()
+        .of(yup.string())
+        .optional(),
+      possiblePhases: yup.array()
+        .of(yup.string())
+        .optional(),
+    })
+  }),
 
-  bulkUpdateStatus: [
-    body('engineerIds')
-      .notEmpty().withMessage('エンジニアIDリストは必須です')
-      .isArray().withMessage('エンジニアIDリストは配列で指定してください')
-      .custom((value) => value.every((id: any) => Number.isInteger(id)))
-      .withMessage('エンジニアIDは整数の配列で指定してください'),
-    body('status')
-      .notEmpty().withMessage('ステータスは必須です')
-      .isIn(['waiting', 'assigned', 'upcoming', 'inactive']).withMessage('ステータスの値が不正です'),
-  ],
+  bulkUpdateStatus: yup.object({
+    body: yup.object({
+      engineerIds: yup.array()
+        .of(yup.number().integer('エンジニアIDは整数で指定してください'))
+        .min(1, 'エンジニアIDは1つ以上指定してください')
+        .required('エンジニアIDリストは必須です'),
+      status: yup.string()
+        .oneOf(['waiting', 'assigned', 'upcoming', 'inactive'], 'ステータスの値が不正です')
+        .required('ステータスは必須です'),
+    })
+  }),
 
-  bulkExport: [
-    body('engineerIds')
-      .notEmpty().withMessage('エンジニアIDリストは必須です')
-      .isArray().withMessage('エンジニアIDリストは配列で指定してください')
-      .custom((value) => value.every((id: any) => Number.isInteger(id)))
-      .withMessage('エンジニアIDは整数の配列で指定してください'),
-    body('format')
-      .optional()
-      .isIn(['csv', 'excel', 'pdf']).withMessage('エクスポート形式の値が不正です'),
-  ],
+  bulkExport: yup.object({
+    body: yup.object({
+      engineerIds: yup.array()
+        .of(yup.number().integer('エンジニアIDは整数で指定してください'))
+        .min(1, 'エンジニアIDは1つ以上指定してください')
+        .required('エンジニアIDリストは必須です'),
+      format: yup.string()
+        .oneOf(['csv', 'excel', 'pdf'], 'エクスポート形式の値が不正です')
+        .optional(),
+    })
+  }),
 };

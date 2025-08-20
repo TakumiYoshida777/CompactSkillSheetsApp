@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { ApproachController } from '../../controllers/approach.controller';
 import { validateRequest } from '../../middleware/validateRequest';
-import { approachValidation } from '../../validations/approach.validation';
+import { approachValidation } from '../../validators/approach.validator';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { companyMiddleware } from '../../middleware/company.middleware';
 import { paginationMiddleware } from '../../middleware/pagination.middleware';

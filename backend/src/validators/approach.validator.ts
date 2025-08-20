@@ -1,3 +1,14 @@
+/**
+ * アプローチ管理機能のバリデーションスキーマ
+ * 
+ * 企業・フリーランスへのアプローチ作成・更新・送信・テンプレート管理などの
+ * 各種操作時の入力値検証を行います
+ * 
+ * @author システム開発チーム
+ * @version 1.0.0
+ * @since 2024-01-01
+ */
+
 import * as yup from 'yup';
 
 export const approachValidation = {

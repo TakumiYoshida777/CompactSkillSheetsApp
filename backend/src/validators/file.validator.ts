@@ -1,46 +1,40 @@
-import { body, param, query } from 'express-validator';
+import * as yup from 'yup';
 
 export const fileValidation = {
-  upload: [
-    body('filename').optional().isString().withMessage('ファイル名は文字列である必要があります'),
-    body('description').optional().isString().withMessage('説明は文字列である必要があります'),
-    body('tags').optional().isArray().withMessage('タグは配列である必要があります'),
-  ],
+  upload: yup.object({
+    filename: yup.string().optional(),
+    description: yup.string().optional(),
+    tags: yup.array().of(yup.string()).optional()
+  }),
 
-  uploadMultiple: [
-    body('files').optional().isArray().withMessage('ファイルは配列である必要があります'),
-    body('descriptions').optional().isArray().withMessage('説明は配列である必要があります'),
-  ],
+  uploadMultiple: yup.object({
+    files: yup.array().optional(),
+    descriptions: yup.array().of(yup.string()).optional()
+  }),
 
-  update: [
-    param('id').isInt().withMessage('IDは整数である必要があります'),
-    body('filename').optional().isString().withMessage('ファイル名は文字列である必要があります'),
-    body('description').optional().isString().withMessage('説明は文字列である必要があります'),
-    body('tags').optional().isArray().withMessage('タグは配列である必要があります'),
-  ],
+  update: yup.object({
+    filename: yup.string().optional(),
+    description: yup.string().optional(),
+    tags: yup.array().of(yup.string()).optional()
+  }),
 
-  bulkDelete: [
-    body('ids').isArray().withMessage('IDは配列である必要があります'),
-    body('ids.*').isInt().withMessage('各IDは整数である必要があります'),
-  ],
+  bulkDelete: yup.object({
+    ids: yup.array().of(yup.number()).required('IDは必須です')
+  }),
 
-  resize: [
-    param('id').isInt().withMessage('IDは整数である必要があります'),
-    body('width').isInt({ min: 1, max: 5000 }).withMessage('幅は1〜5000の整数である必要があります'),
-    body('height').isInt({ min: 1, max: 5000 }).withMessage('高さは1〜5000の整数である必要があります'),
-    body('quality').optional().isInt({ min: 1, max: 100 }).withMessage('品質は1〜100の整数である必要があります'),
-  ],
+  resize: yup.object({
+    width: yup.number().min(1).max(5000).required('幅は必須です'),
+    height: yup.number().min(1).max(5000).required('高さは必須です'),
+    quality: yup.number().min(1).max(100).optional()
+  }),
 
-  addTags: [
-    param('id').isInt().withMessage('IDは整数である必要があります'),
-    body('tags').isArray().withMessage('タグは配列である必要があります'),
-    body('tags.*').isString().withMessage('各タグは文字列である必要があります'),
-  ],
+  addTags: yup.object({
+    tags: yup.array().of(yup.string()).required('タグは必須です')
+  }),
 
-  share: [
-    param('id').isInt().withMessage('IDは整数である必要があります'),
-    body('expiresAt').optional().isISO8601().withMessage('有効期限は有効な日時である必要があります'),
-    body('maxDownloads').optional().isInt({ min: 1 }).withMessage('最大ダウンロード数は1以上の整数である必要があります'),
-    body('password').optional().isString().withMessage('パスワードは文字列である必要があります'),
-  ],
+  share: yup.object({
+    expiresAt: yup.date().optional(),
+    maxDownloads: yup.number().min(1).optional(),
+    password: yup.string().optional()
+  })
 };

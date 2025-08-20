@@ -1,3 +1,14 @@
+/**
+ * 取引先管理機能のバリデーションスキーマ
+ * 
+ * 取引先企業の作成・更新・権限管理・エンジニア表示設定などの
+ * 各種操作時の入力値検証を行います
+ * 
+ * @author システム開発チーム
+ * @version 1.0.0
+ * @since 2024-01-01
+ */
+
 import * as yup from 'yup';
 
 export const partnerValidation = {
