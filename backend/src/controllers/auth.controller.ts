@@ -60,7 +60,7 @@ export class AuthController {
       // リフレッシュトークン生成
       const refreshToken = jwt.sign(
         { userId: user.id.toString() },
-        config.jwt.refreshSecret || config.jwt.secret,
+        config.jwt.refreshSecret,
         { expiresIn: '30d' }
       );
 
@@ -112,7 +112,7 @@ export class AuthController {
       // リフレッシュトークン検証
       const decoded = jwt.verify(
         refreshToken,
-        config.jwt.refreshSecret || config.jwt.secret
+        config.jwt.refreshSecret
       ) as any;
 
       // ユーザー情報取得
