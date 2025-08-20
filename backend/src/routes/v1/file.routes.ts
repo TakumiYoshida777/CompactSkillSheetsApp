@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { FileController } from '../../controllers/file.controller';
-import { validateRequest } from '../../middleware/validateRequest';
 import { fileValidation } from '../../validators/file.validator';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { companyMiddleware } from '../../middleware/company.middleware';
