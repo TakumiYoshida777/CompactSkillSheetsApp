@@ -14,54 +14,54 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // 認証（認証担当者が実装）
   AUTH: {
-    LOGIN: '/auth/login',
-    LOGOUT: '/auth/logout',
-    REFRESH: '/auth/refresh',
-    ME: '/auth/me',
+    LOGIN: 'auth/login',
+    LOGOUT: 'auth/logout',
+    REFRESH: 'auth/refresh',
+    ME: 'auth/me',
   },
 
   // 通知
   NOTIFICATIONS: {
-    LIST: '/notifications',
-    MARK_READ: '/notifications/mark-read',
-    MARK_ALL_READ: '/notifications/mark-all-read',
+    LIST: 'notifications',
+    MARK_READ: 'notifications/mark-read',
+    MARK_ALL_READ: 'notifications/mark-all-read',
     DELETE: (id: string) => `/notifications/${id}`,
-    SUBSCRIBE: '/notifications/subscribe',
+    SUBSCRIBE: 'notifications/subscribe',
   },
 
   // ファイル
   FILES: {
-    UPLOAD: '/files/upload',
+    UPLOAD: 'files/upload',
     GET: (id: string) => `/files/${id}`,
     DELETE: (id: string) => `/files/${id}`,
-    VALIDATE: '/files/validate',
+    VALIDATE: 'files/validate',
   },
 
   // エクスポート
   EXPORT: {
-    CSV: '/export/csv',
-    EXCEL: '/export/excel',
-    PDF: '/export/pdf',
+    CSV: 'export/csv',
+    EXCEL: 'export/excel',
+    PDF: 'export/pdf',
     STATUS: (jobId: string) => `/export/status/${jobId}`,
     DOWNLOAD: (jobId: string) => `/export/download/${jobId}`,
   },
 
   // エンジニア
   ENGINEERS: {
-    LIST: '/engineers',
+    LIST: 'engineers',
     GET: (id: string) => `/engineers/${id}`,
-    CREATE: '/engineers',
+    CREATE: 'engineers',
     UPDATE: (id: string) => `/engineers/${id}`,
     DELETE: (id: string) => `/engineers/${id}`,
     SKILLS: (id: string) => `/engineers/${id}/skills`,
-    SEARCH: '/engineers/search',
+    SEARCH: 'engineers/search',
   },
 
   // スキルシート
   SKILL_SHEETS: {
-    LIST: '/skill-sheets',
+    LIST: 'skill-sheets',
     GET: (id: string) => `/skill-sheets/${id}`,
-    CREATE: '/skill-sheets',
+    CREATE: 'skill-sheets',
     UPDATE: (id: string) => `/skill-sheets/${id}`,
     DELETE: (id: string) => `/skill-sheets/${id}`,
     PUBLISH: (id: string) => `/skill-sheets/${id}/publish`,
@@ -70,9 +70,9 @@ export const API_ENDPOINTS = {
 
   // プロジェクト
   PROJECTS: {
-    LIST: '/projects',
+    LIST: 'projects',
     GET: (id: string) => `/projects/${id}`,
-    CREATE: '/projects',
+    CREATE: 'projects',
     UPDATE: (id: string) => `/projects/${id}`,
     DELETE: (id: string) => `/projects/${id}`,
     ASSIGN: (id: string) => `/projects/${id}/assign`,
@@ -81,51 +81,51 @@ export const API_ENDPOINTS = {
 
   // 取引先
   CLIENTS: {
-    LIST: '/clients',
+    LIST: 'clients',
     GET: (id: string) => `/clients/${id}`,
-    CREATE: '/clients',
+    CREATE: 'clients',
     UPDATE: (id: string) => `/clients/${id}`,
     DELETE: (id: string) => `/clients/${id}`,
   },
 
   // オファー
   OFFERS: {
-    LIST: '/offers',
+    LIST: 'offers',
     GET: (id: string) => `/offers/${id}`,
-    CREATE: '/offers',
+    CREATE: 'offers',
     UPDATE: (id: string) => `/offers/${id}`,
     DELETE: (id: string) => `/offers/${id}`,
-    SEND: '/offers/send',
-    BATCH_SEND: '/offers/batch-send',
-    STATISTICS: '/offers/statistics',
+    SEND: 'offers/send',
+    BATCH_SEND: 'offers/batch-send',
+    STATISTICS: 'offers/statistics',
   },
 
   // アプローチ
   APPROACHES: {
-    LIST: '/approaches',
+    LIST: 'approaches',
     GET: (id: string) => `/approaches/${id}`,
-    CREATE: '/approaches',
+    CREATE: 'approaches',
     UPDATE: (id: string) => `/approaches/${id}`,
     DELETE: (id: string) => `/approaches/${id}`,
-    SEND: '/approaches/send',
-    TEMPLATES: '/approaches/templates',
-    SCHEDULE: '/approaches/schedule',
+    SEND: 'approaches/send',
+    TEMPLATES: 'approaches/templates',
+    SCHEDULE: 'approaches/schedule',
   },
 
   // ダッシュボード
   DASHBOARD: {
-    KPI: '/dashboard/kpi',
-    STATISTICS: '/dashboard/statistics',
-    RECENT_ACTIVITIES: '/dashboard/recent-activities',
-    NOTIFICATIONS: '/dashboard/notifications',
+    KPI: 'dashboard/kpi',
+    STATISTICS: 'dashboard/statistics',
+    RECENT_ACTIVITIES: 'dashboard/recent-activities',
+    NOTIFICATIONS: 'dashboard/notifications',
   },
 
   // システム
   SYSTEM: {
-    HEALTH: '/system/health',
-    METRICS: '/system/metrics',
-    LOGS: '/system/logs',
-    SETTINGS: '/system/settings',
+    HEALTH: 'system/health',
+    METRICS: 'system/metrics',
+    LOGS: 'system/logs',
+    SETTINGS: 'system/settings',
   },
 }
 

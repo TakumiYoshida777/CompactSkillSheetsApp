@@ -75,6 +75,7 @@ interface EngineerSearchTableProps {
   description?: string;
   customActions?: React.ReactNode; // SES企業用のカスタムアクション
   onRowClick?: (engineer: Engineer) => void; // 行クリック時の処理
+  onFilterChange?: (filters: any) => void; // フィルター変更時の処理
 }
 
 export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
@@ -86,6 +87,7 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
   description = '登録されているエンジニアの管理',
   customActions,
   onRowClick,
+  onFilterChange,
 }) => {
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<React.Key[]>([]);
   const [searchText, setSearchText] = React.useState('');

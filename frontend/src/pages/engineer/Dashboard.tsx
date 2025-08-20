@@ -180,7 +180,7 @@ const EngineerDashboard: React.FC = () => {
           <Button
             type="primary"
             icon={<EditOutlined />}
-            onClick={() => navigate('/engineer/skill-sheet')}
+            onClick={() => navigate('engineer/skill-sheet')}
           >
             スキルシート編集
           </Button>
@@ -202,7 +202,7 @@ const EngineerDashboard: React.FC = () => {
           showIcon
           icon={<WarningOutlined />}
           action={
-            <Button size="small" type="primary" onClick={() => navigate('/engineer/skill-sheet')}>
+            <Button size="small" type="primary" onClick={() => navigate('engineer/skill-sheet')}>
               入力を続ける
             </Button>
           }
@@ -247,7 +247,7 @@ const EngineerDashboard: React.FC = () => {
         <Col xs={24} lg={8}>
           <Card
             title="スキルサマリー"
-            extra={<Button type="link" onClick={() => navigate('/engineer/skill-sheet')}>詳細</Button>}
+            extra={<Button type="link" onClick={() => navigate('engineer/skill-sheet')}>詳細</Button>}
             loading={isLoading}
           >
             <List
@@ -368,7 +368,7 @@ const EngineerDashboard: React.FC = () => {
               block
               size="large"
               icon={<FileTextOutlined />}
-              onClick={() => navigate('/engineer/skill-sheet')}
+              onClick={() => navigate('engineer/skill-sheet')}
             >
               スキルシート編集
             </Button>
@@ -378,7 +378,7 @@ const EngineerDashboard: React.FC = () => {
               block
               size="large"
               icon={<ProjectOutlined />}
-              onClick={() => navigate('/engineer/projects')}
+              onClick={() => navigate('engineer/projects')}
             >
               プロジェクト管理
             </Button>
@@ -388,7 +388,7 @@ const EngineerDashboard: React.FC = () => {
               block
               size="large"
               icon={<UserOutlined />}
-              onClick={() => navigate('/engineer/profile')}
+              onClick={() => navigate('engineer/profile')}
             >
               プロフィール更新
             </Button>

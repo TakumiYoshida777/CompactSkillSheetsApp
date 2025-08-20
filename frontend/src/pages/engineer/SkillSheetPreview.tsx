@@ -54,7 +54,7 @@ const SkillSheetPreview: React.FC = () => {
   };
 
   const handleEdit = () => {
-    navigate('/engineer/skill-sheet');
+    navigate('engineer/skill-sheet');
   };
 
   const handleDownload = () => {
@@ -93,7 +93,7 @@ const SkillSheetPreview: React.FC = () => {
         <Space>
           <Button
             icon={<ArrowLeftOutlined />}
-            onClick={() => navigate('/engineer/skill-sheet')}
+            onClick={() => navigate('engineer/skill-sheet')}
           >
             編集に戻る
           </Button>

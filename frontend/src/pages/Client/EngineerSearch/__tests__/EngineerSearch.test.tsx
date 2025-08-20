@@ -123,7 +123,7 @@ describe('ClientEngineerSearch', () => {
       // メッセージ表示と画面遷移を確認
       await waitFor(() => {
         expect(message.success).toHaveBeenCalledWith('1名のエンジニアにオファーを送信しました');
-        expect(mockNavigate).toHaveBeenCalledWith('/client/offer-board');
+        expect(mockNavigate).toHaveBeenCalledWith('client/offer-board');
       }, { timeout: 2000 });
     });
 
@@ -149,7 +149,7 @@ describe('ClientEngineerSearch', () => {
       // メッセージ表示と画面遷移を確認
       await waitFor(() => {
         expect(message.success).toHaveBeenCalledWith('3名のエンジニアにオファーを送信しました');
-        expect(mockNavigate).toHaveBeenCalledWith('/client/offer-board');
+        expect(mockNavigate).toHaveBeenCalledWith('client/offer-board');
       }, { timeout: 2000 });
     });
   });

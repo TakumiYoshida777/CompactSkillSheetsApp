@@ -176,7 +176,7 @@ export function formatErrorForDisplay(error: ApiError): {
     actions.push({
       label: 'ログイン画面へ',
       action: () => {
-        window.location.href = '/login';
+        window.location.href = 'login';
       },
     });
   } else if (error.statusCode === 403) {

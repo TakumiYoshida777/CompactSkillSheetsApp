@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
       // トークンリフレッシュ処理
       // TODO: リフレッシュトークンを使用した再認証実装
       localStorage.removeItem('access_token')
-      window.location.href = '/login'
+      window.location.href = 'login'
     }
     return Promise.reject(error)
   }
@@ -59,7 +59,7 @@ export const partnerApi = {
         }
       })
     }
-    const response = await apiClient.get('/business-partners', { params })
+    const response = await apiClient.get('business-partners', { params })
     return response.data.data
   },
 
@@ -69,7 +69,7 @@ export const partnerApi = {
   },
 
   createPartner: async (partner: Omit<BusinessPartner, 'id' | 'createdAt' | 'updatedAt'>): Promise<BusinessPartner> => {
-    const response = await apiClient.post('/business-partners', partner)
+    const response = await apiClient.post('business-partners', partner)
     return response.data.data
   },
 
@@ -154,13 +154,13 @@ export const partnerApi = {
   },
 
   fetchStatistics: async (): Promise<PartnerStatistics> => {
-    const response = await apiClient.get('/business-partners/statistics')
+    const response = await apiClient.get('business-partners/statistics')
     return response.data.data
   },
 
   // エクスポート
   exportPartners: async (format: 'csv' | 'excel'): Promise<Blob> => {
-    const response = await apiClient.get('/business-partners/export', {
+    const response = await apiClient.get('business-partners/export', {
       params: { format },
       responseType: 'blob'
     })

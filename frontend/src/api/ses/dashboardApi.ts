@@ -37,7 +37,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       // トークンの期限切れ処理
       localStorage.removeItem('accessToken');
-      window.location.href = '/login';
+      window.location.href = 'login';
     }
     return Promise.reject(error);
   }
@@ -47,7 +47,7 @@ export const dashboardAPI = {
   // ダッシュボードデータ取得
   getDashboardData: async (): Promise<DashboardData> => {
     try {
-      const response = await apiClient.get('/analytics/dashboard');
+      const response = await apiClient.get('analytics/dashboard');
       return response.data.data;
     } catch (error) {
       console.error('ダッシュボードデータ取得エラー:', error);
@@ -86,7 +86,7 @@ export const dashboardAPI = {
   // エンジニア統計取得
   getEngineerStatistics: async (): Promise<EngineerStatistics> => {
     try {
-      const response = await apiClient.get('/analytics/engineers/statistics');
+      const response = await apiClient.get('analytics/engineers/statistics');
       return response.data.data;
     } catch (error) {
       console.error('エンジニア統計取得エラー:', error);
@@ -124,7 +124,7 @@ export const dashboardAPI = {
   // アプローチ統計取得
   getApproachStatistics: async (): Promise<ApproachStatistics> => {
     try {
-      const response = await apiClient.get('/analytics/approaches/statistics');
+      const response = await apiClient.get('analytics/approaches/statistics');
       return response.data.data;
     } catch (error) {
       console.error('アプローチ統計取得エラー:', error);

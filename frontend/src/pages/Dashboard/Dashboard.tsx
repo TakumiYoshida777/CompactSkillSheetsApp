@@ -254,21 +254,21 @@ const Dashboard: React.FC = () => {
                 type="primary" 
                 icon={<UserOutlined />} 
                 size="large"
-                onClick={() => navigate('/engineers/new')}
+                onClick={() => navigate('engineers/new')}
               >
                 エンジニア登録
               </Button>
               <Button 
                 icon={<SendOutlined />} 
                 size="large"
-                onClick={() => navigate('/approaches/create')}
+                onClick={() => navigate('approaches/create')}
               >
                 アプローチ作成
               </Button>
               <Button 
                 icon={<TeamOutlined />} 
                 size="large"
-                onClick={() => navigate('/engineers')}
+                onClick={() => navigate('engineers')}
               >
                 エンジニア一覧
               </Button>

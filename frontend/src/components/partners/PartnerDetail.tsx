@@ -205,7 +205,7 @@ const PartnerDetail: React.FC = () => {
         <div className="mb-4">
           <Button 
             icon={<ArrowLeftOutlined />} 
-            onClick={() => navigate('/company/partners')}
+            onClick={() => navigate('company/partners')}
             className="mb-4"
           >
             取引先一覧に戻る

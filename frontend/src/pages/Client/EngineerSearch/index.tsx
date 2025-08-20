@@ -272,7 +272,7 @@ const ClientEngineerSearch: React.FC = () => {
       setIsLoading(false);
       
       // オファーボード画面に遷移
-      navigate('/client/offer-board');
+      navigate('client/offer-board');
     }, 1000);
   };
 

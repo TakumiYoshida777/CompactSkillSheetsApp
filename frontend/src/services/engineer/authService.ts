@@ -61,7 +61,7 @@ export interface ProfileResponse {
 }
 
 class EngineerAuthService {
-  private apiUrl = '/api/engineer/auth';
+  private apiUrl = 'engineer/auth';
 
   /**
    * エンジニアログイン

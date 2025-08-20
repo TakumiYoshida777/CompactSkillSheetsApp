@@ -21,7 +21,7 @@ const ApiTest: React.FC = () => {
       console.log('API Base URL:', axios.defaults.baseURL);
       console.log('Full URL:', `${axios.defaults.baseURL}/api/client/auth/login`);
       
-      const response = await axios.post('/api/client/auth/login', {
+      const response = await axios.post('client/auth/login', {
         email,
         password
       });

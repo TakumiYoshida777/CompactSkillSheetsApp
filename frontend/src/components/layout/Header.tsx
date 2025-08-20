@@ -44,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, onMobileMenuClick }
   const handleLogout = () => {
     // TODO: 認証担当者が実装
     console.log('Logout')
-    navigate('/login')
+    navigate('login')
   }
 
   return (
@@ -152,21 +152,21 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, onMobileMenuClick }
                 </div>
                 <div className="py-2">
                   <button
-                    onClick={() => navigate('/profile')}
+                    onClick={() => navigate('profile')}
                     className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                   >
                     <User className="w-4 h-4" />
                     <span>プロフィール</span>
                   </button>
                   <button
-                    onClick={() => navigate('/settings')}
+                    onClick={() => navigate('settings')}
                     className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                   >
                     <Settings className="w-4 h-4" />
                     <span>設定</span>
                   </button>
                   <button
-                    onClick={() => navigate('/help')}
+                    onClick={() => navigate('help')}
                     className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
                   >
                     <HelpCircle className="w-4 h-4" />

@@ -29,7 +29,7 @@ describe('AuthService', () => {
 
       mockAxios.post = vi.fn().mockResolvedValue(mockResponse);
 
-      const result = await AuthService.performLogin('/api/auth/login', {
+      const result = await AuthService.performLogin('auth/login', {
         email: 'test@example.com',
         password: 'password123',
         rememberMe: false
@@ -46,7 +46,7 @@ describe('AuthService', () => {
         message: undefined
       });
 
-      expect(mockAxios.post).toHaveBeenCalledWith('/api/auth/login', {
+      expect(mockAxios.post).toHaveBeenCalledWith('auth/login', {
         email: 'test@example.com',
         password: 'password123',
         rememberMe: false
@@ -66,7 +66,7 @@ describe('AuthService', () => {
       });
 
       await expect(
-        AuthService.performLogin('/api/auth/login', {
+        AuthService.performLogin('auth/login', {
           email: 'test@example.com',
           password: 'wrong',
           rememberMe: false
@@ -78,7 +78,7 @@ describe('AuthService', () => {
       mockAxios.post = vi.fn().mockRejectedValue(new Error('Network Error'));
 
       await expect(
-        AuthService.performLogin('/api/auth/login', {
+        AuthService.performLogin('auth/login', {
           email: 'test@example.com',
           password: 'password',
           rememberMe: false

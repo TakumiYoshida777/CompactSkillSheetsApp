@@ -38,7 +38,7 @@ instance.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
-          const response = await axios.post('/api/auth/refresh', {
+          const response = await instance.post('auth/refresh', {
             refresh_token: refreshToken,
           });
           
@@ -53,7 +53,7 @@ instance.interceptors.response.use(
         // リフレッシュ失敗時はログイン画面へ
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
+        window.location.href = 'login';
         return Promise.reject(refreshError);
       }
     }

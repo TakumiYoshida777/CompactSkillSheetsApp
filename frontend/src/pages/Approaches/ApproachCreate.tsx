@@ -347,7 +347,7 @@ ABC人材サービスの〇〇です。
   const uploadProps: UploadProps = {
     name: 'file',
     multiple: true,
-    action: '/api/upload',
+    action: 'upload',
     onChange(info) {
       if (info.file.status === 'done') {
         message.success(`${info.file.name} アップロード完了`);

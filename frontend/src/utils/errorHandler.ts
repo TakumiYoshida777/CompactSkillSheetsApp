@@ -51,7 +51,7 @@ export class ErrorHandler {
         });
         // ログイン画面へリダイレクト
         setTimeout(() => {
-          window.location.href = '/login';
+          window.location.href = 'login';
         }, 2000);
         break;
 

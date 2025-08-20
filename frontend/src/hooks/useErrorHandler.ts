@@ -82,7 +82,7 @@ export const useErrorHandler = () => {
    */
   const handleAuthError = useCallback((error: AppError) => {
     logout();
-    navigate('/login', {
+    navigate('login', {
       state: { 
         from: window.location.pathname,
         message: error.getUserMessage()

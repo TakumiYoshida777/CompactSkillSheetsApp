@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('access_token')
-      window.location.href = '/login'
+      window.location.href = 'login'
     }
     return Promise.reject(error)
   }
@@ -65,7 +65,7 @@ export const offerApi = {
         }
       })
     }
-    const response = await apiClient.get('/offers', { params })
+    const response = await apiClient.get('offers', { params })
     return response.data.data
   },
 
@@ -75,12 +75,12 @@ export const offerApi = {
   },
 
   createOffer: async (offer: CreateOfferDto): Promise<Offer> => {
-    const response = await apiClient.post('/offers', offer)
+    const response = await apiClient.post('offers', offer)
     return response.data.data
   },
 
   bulkCreateOffers: async (offers: CreateOfferDto[]): Promise<Offer[]> => {
-    const response = await apiClient.post('/offers/bulk', { offers })
+    const response = await apiClient.post('offers/bulk', { offers })
     return response.data.data
   },
 
@@ -104,7 +104,7 @@ export const offerApi = {
   // エンジニア管理
   fetchAvailableEngineers: async (partnerId?: string): Promise<Engineer[]> => {
     const params = partnerId ? { partnerId } : undefined
-    const response = await apiClient.get('/offers/available-engineers', { params })
+    const response = await apiClient.get('offers/available-engineers', { params })
     return response.data.data
   },
 
@@ -114,25 +114,25 @@ export const offerApi = {
   },
 
   filterEngineers: async (filters: any): Promise<Engineer[]> => {
-    const response = await apiClient.post('/offers/engineers/filter', filters)
+    const response = await apiClient.post('offers/engineers/filter', filters)
     return response.data.data
   },
 
   // オファーボード
   fetchOfferBoardData: async (partnerId?: string): Promise<OfferBoardData> => {
     const params = partnerId ? { partnerId } : undefined
-    const response = await apiClient.get('/client/offer-board', { params })
+    const response = await apiClient.get('client/offer-board', { params })
     return response.data.data
   },
 
   // テンプレート管理
   fetchOfferTemplates: async (): Promise<any[]> => {
-    const response = await apiClient.get('/offers/templates')
+    const response = await apiClient.get('offers/templates')
     return response.data.data
   },
 
   createTemplate: async (template: any): Promise<any> => {
-    const response = await apiClient.post('/offers/templates', template)
+    const response = await apiClient.post('offers/templates', template)
     return response.data.data
   },
 
@@ -155,28 +155,28 @@ export const offerApi = {
         }
       })
     }
-    const response = await apiClient.get('/offers/statistics', { params })
+    const response = await apiClient.get('offers/statistics', { params })
     return response.data.data
   },
 
   fetchMonthlyStatistics: async (): Promise<any> => {
-    const response = await apiClient.get('/offers/statistics/monthly')
+    const response = await apiClient.get('offers/statistics/monthly')
     return response.data.data
   },
 
   fetchStatisticsByCompany: async (): Promise<any> => {
-    const response = await apiClient.get('/offers/statistics/by-company')
+    const response = await apiClient.get('offers/statistics/by-company')
     return response.data.data
   },
 
   fetchConversionRate: async (): Promise<any> => {
-    const response = await apiClient.get('/offers/conversion-rate')
+    const response = await apiClient.get('offers/conversion-rate')
     return response.data.data
   },
 
   // レポート生成
   generateReport: async (params: { type: string; format: 'pdf' | 'excel'; dateRange?: any }): Promise<any> => {
-    const response = await apiClient.post('/offers/reports/generate', params)
+    const response = await apiClient.post('offers/reports/generate', params)
     return response.data.data
   },
 
@@ -196,12 +196,12 @@ export const offerApi = {
   // オファー履歴
   fetchOfferHistory: async (engineerId?: string): Promise<Offer[]> => {
     const params = engineerId ? { engineerId } : undefined
-    const response = await apiClient.get('/client/offer-history', { params })
+    const response = await apiClient.get('client/offer-history', { params })
     return response.data.data
   },
 
   exportOfferHistory: async (format: 'csv' | 'excel'): Promise<Blob> => {
-    const response = await apiClient.get('/client/offer-history/export', {
+    const response = await apiClient.get('client/offer-history/export', {
       params: { format },
       responseType: 'blob'
     })
@@ -209,7 +209,7 @@ export const offerApi = {
   },
 
   searchOfferHistory: async (searchParams: any): Promise<Offer[]> => {
-    const response = await apiClient.post('/client/offer-history/search', searchParams)
+    const response = await apiClient.post('client/offer-history/search', searchParams)
     return response.data.data
   }
 }

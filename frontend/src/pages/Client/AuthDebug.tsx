@@ -31,7 +31,7 @@ const AuthDebug: React.FC = () => {
 
   const testClientMeEndpoint = async () => {
     try {
-      const response = await axios.get('/api/client/auth/me');
+      const response = await axios.get('client/auth/me');
       alert('Client /me endpoint success: ' + JSON.stringify(response.data));
     } catch (error: any) {
       alert('Client /me endpoint failed: ' + error.response?.status + ' ' + error.response?.data?.error);
@@ -40,7 +40,7 @@ const AuthDebug: React.FC = () => {
 
   const testAuthMeEndpoint = async () => {
     try {
-      const response = await axios.get('/api/auth/me');
+      const response = await axios.get('auth/me');
       alert('Auth /me endpoint success: ' + JSON.stringify(response.data));
     } catch (error: any) {
       alert('Auth /me endpoint failed: ' + error.response?.status + ' ' + error.response?.data?.error);

@@ -1,15 +1,116 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Space, message } from 'antd';
-import { UserAddOutlined, DownloadOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Space, message, Spin, Alert } from 'antd';
+import { UserAddOutlined, DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
 import EngineerSearchTable from '../../components/EngineerSearch/EngineerSearchTable';
 import type { Engineer } from '../../components/EngineerSearch/EngineerSearchTable';
+import { engineerApi } from '../../api/engineers/engineerApi';
+import { useAuthStore } from '../../stores/authStore';
+import type { EngineerFilterParams } from '../../types/engineer';
 
 const EngineerList: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const [engineers, setEngineers] = useState<Engineer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<EngineerFilterParams>({
+    page: 1,
+    limit: 20,
+    sortBy: 'updatedAt',
+    sortOrder: 'desc',
+  });
+  const [totalCount, setTotalCount] = useState(0);
 
-  // ダミーデータ（SES企業内のエンジニア）
-  const mockEngineers: Engineer[] = [
+  // API からエンジニアデータを取得
+  const fetchEngineers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await engineerApi.fetchList(filters);
+      
+      // APIレスポンスをコンポーネントの形式に変換
+      const transformedEngineers: Engineer[] = response.data.map((eng: any) => ({
+        key: eng.id,
+        engineerId: eng.id,
+        name: eng.name,
+        age: eng.age || calculateAge(eng.birthDate),
+        skills: extractSkills(eng.skillSheet),
+        experience: eng.yearsOfExperience || 0,
+        status: mapStatus(eng.currentStatus),
+        availableDate: eng.availableDate,
+        currentProject: eng.currentProject?.name,
+        projectEndDate: eng.currentProject?.endDate,
+        lastUpdated: eng.updatedAt,
+        email: eng.email,
+        phone: eng.phone,
+      }));
+      
+      setEngineers(transformedEngineers);
+      setTotalCount(response.meta?.pagination?.total || 0);
+    } catch (err: any) {
+      console.error('Failed to fetch engineers:', err);
+      setError(err.response?.data?.message || 'エンジニアデータの取得に失敗しました');
+      
+      // エラー時はフォールバックデータを表示（デバッグ用）
+      if (process.env.NODE_ENV === 'development') {
+        setEngineers(getMockEngineers());
+        message.warning('エラーのためモックデータを表示しています');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  // 初回ロード時にデータ取得
+  useEffect(() => {
+    fetchEngineers();
+  }, [fetchEngineers]);
+
+  // 年齢計算ヘルパー
+  const calculateAge = (birthDate?: string): number => {
+    if (!birthDate) return 0;
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // スキル抽出ヘルパー
+  const extractSkills = (skillSheet?: any): string[] => {
+    if (!skillSheet) return [];
+    const skills: string[] = [];
+    
+    if (skillSheet.programmingLanguages) {
+      skills.push(...skillSheet.programmingLanguages.map((s: any) => s.name || s));
+    }
+    if (skillSheet.frameworks) {
+      skills.push(...skillSheet.frameworks.map((s: any) => s.name || s));
+    }
+    if (skillSheet.databases) {
+      skills.push(...skillSheet.databases.map((s: any) => s.name || s));
+    }
+    
+    return skills.slice(0, 5); // 最大5つまで表示
+  };
+
+  // ステータスマッピング
+  const mapStatus = (status?: string): string => {
+    const statusMap: Record<string, string> = {
+      'working': 'assigned',
+      'waiting': 'waiting',
+      'waiting_soon': 'waiting_scheduled',
+      'leaving': 'unavailable',
+    };
+    return statusMap[status || ''] || 'available';
+  };
+
+  // モックデータ（フォールバック用）
+  const getMockEngineers = (): Engineer[] => [
     {
       key: '1',
       engineerId: 'ENG001',
@@ -50,53 +151,11 @@ const EngineerList: React.FC = () => {
       email: 'suzuki@example.com',
       phone: '090-3456-7890',
     },
-    {
-      key: '4',
-      engineerId: 'ENG004',
-      name: '山田次郎',
-      age: 30,
-      skills: ['C#', '.NET Core', 'Azure', 'SQL Server'],
-      experience: 7,
-      status: 'assigned',
-      currentProject: '在庫管理システム',
-      projectEndDate: '2024/06/30',
-      lastUpdated: '2024/01/12',
-      email: 'yamada@example.com',
-      phone: '090-4567-8901',
-    },
-    {
-      key: '5',
-      engineerId: 'ENG005',
-      name: '伊藤美咲',
-      age: 26,
-      skills: ['Vue.js', 'Nuxt.js', 'Firebase', 'GraphQL'],
-      experience: 4,
-      status: 'available',
-      availableDate: '2024/01/20',
-      lastUpdated: '2024/01/09',
-      email: 'ito@example.com',
-      phone: '090-5678-9012',
-    },
-    {
-      key: '6',
-      engineerId: 'ENG006',
-      name: '高橋健一',
-      age: 33,
-      skills: ['Go', 'Kubernetes', 'gRPC', 'Redis'],
-      experience: 9,
-      status: 'waiting_scheduled',
-      currentProject: 'マイクロサービス基盤',
-      projectEndDate: '2024/03/15',
-      availableDate: '2024/03/16',
-      lastUpdated: '2024/01/11',
-      email: 'takahashi@example.com',
-      phone: '090-6789-0123',
-    },
   ];
 
   // エンジニア新規登録
   const handleAddEngineer = () => {
-    navigate('/engineers/new');
+    navigate('engineers/new');
   };
 
   // エンジニア詳細表示
@@ -111,12 +170,44 @@ const EngineerList: React.FC = () => {
   };
 
   // エクスポート処理
-  const handleExport = (engineerIds?: string[]) => {
-    if (engineerIds && engineerIds.length > 0) {
-      message.success(`${engineerIds.length}名のエンジニアデータをエクスポートしました`);
-    } else {
-      message.success('すべてのエンジニアデータをエクスポートしました');
+  const handleExport = async (engineerIds?: string[]) => {
+    try {
+      const blob = await engineerApi.export('excel', {
+        ...filters,
+        // engineerIdsが指定されている場合は、それらのみエクスポート
+        ...(engineerIds && { ids: engineerIds }),
+      });
+      
+      // ファイルダウンロード
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `engineers_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      if (engineerIds && engineerIds.length > 0) {
+        message.success(`${engineerIds.length}名のエンジニアデータをエクスポートしました`);
+      } else {
+        message.success('すべてのエンジニアデータをエクスポートしました');
+      }
+    } catch (error: any) {
+      console.error('Export failed:', error);
+      message.error('エクスポートに失敗しました');
     }
+  };
+
+  // フィルター変更ハンドラ
+  const handleFilterChange = (newFilters: Partial<EngineerFilterParams>) => {
+    setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
+  };
+
+  // リフレッシュ処理
+  const handleRefresh = () => {
+    fetchEngineers();
+    message.info('データを更新しました');
   };
 
   // カスタムアクションコンポーネント
@@ -134,23 +225,54 @@ const EngineerList: React.FC = () => {
         icon={<DownloadOutlined />}
         size="large"
         onClick={() => handleExport()}
+        loading={loading}
       >
         エクスポート
+      </Button>
+      <Button
+        icon={<ReloadOutlined />}
+        size="large"
+        onClick={handleRefresh}
+        loading={loading}
+      >
+        更新
       </Button>
     </Space>
   );
 
+  // エラー表示
+  if (error && process.env.NODE_ENV !== 'development') {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <Alert
+          message="データ取得エラー"
+          description={error}
+          type="error"
+          showIcon
+          action={
+            <Button size="small" onClick={handleRefresh}>
+              再読み込み
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
-      <EngineerSearchTable
-        engineers={mockEngineers}
-        showActions={false}
-        showCompanyColumn={false}
-        title="エンジニア一覧"
-        description="登録されているエンジニアの管理"
-        customActions={<CustomActions />}
-        onRowClick={handleEngineerClick}
-      />
+      <Spin spinning={loading} tip="データを読み込んでいます...">
+        <EngineerSearchTable
+          engineers={engineers}
+          showActions={false}
+          showCompanyColumn={false}
+          title="エンジニア一覧"
+          description={`登録されているエンジニアの管理（全${totalCount}名）`}
+          customActions={<CustomActions />}
+          onRowClick={handleEngineerClick}
+          onFilterChange={handleFilterChange}
+        />
+      </Spin>
     </div>
   );
 };

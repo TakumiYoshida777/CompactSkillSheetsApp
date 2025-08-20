@@ -51,7 +51,7 @@ const EngineerLogin: React.FC = () => {
         );
 
         message.success('ログインに成功しました');
-        navigate('/engineer/skill-sheet');
+        navigate('engineer/skill-sheet');
       }
     } catch (error: any) {
       console.error('Login error:', error);

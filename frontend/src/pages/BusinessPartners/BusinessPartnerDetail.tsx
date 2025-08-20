@@ -499,7 +499,7 @@ const BusinessPartnerDetail: React.FC = () => {
               <Button
                 type="text"
                 icon={<ArrowLeftOutlined />}
-                onClick={() => navigate('/business-partners/list')}
+                onClick={() => navigate('business-partners/list')}
                 style={{ marginLeft: -8 }}
               >
                 一覧に戻る

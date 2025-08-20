@@ -19,7 +19,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requireAuth = true,
   requireRoles = [],
   requirePermissions = [],
-  redirectTo = '/login',
+  redirectTo = 'login',
 }) => {
   const { 
     isAuthenticated, 

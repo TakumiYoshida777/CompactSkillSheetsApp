@@ -16,7 +16,7 @@ import type {
   ExportFormat
 } from '../../types/engineer';
 
-const API_BASE = '/api/v1/engineers';
+const API_BASE = 'v1/engineers';
 
 /**
  * エンジニアAPI
@@ -170,7 +170,7 @@ export const engineerApi = {
    * エクスポート（CSV/Excel）
    */
   async export(format: ExportFormat, params?: EngineerFilterParams): Promise<Blob> {
-    const endpoint = format === 'csv' ? '/export/csv' : '/export/excel';
+    const endpoint = format === 'csv' ? 'export/csv' : 'export/excel';
     const response = await axios.get(`${API_BASE}${endpoint}`, {
       params,
       responseType: 'blob',
@@ -213,7 +213,7 @@ export const engineerSearchApi = {
    * 高度な検索
    */
   async search(params: any) {
-    const response = await axios.post('/api/v1/search/engineers', params);
+    const response = await axios.post('v1/search/engineers', params);
     return response.data;
   },
 
@@ -221,7 +221,7 @@ export const engineerSearchApi = {
    * 待機中エンジニア取得
    */
   async fetchWaiting() {
-    const response = await axios.get('/api/v1/engineers/waiting');
+    const response = await axios.get('v1/engineers/waiting');
     return response.data;
   },
 
@@ -229,7 +229,7 @@ export const engineerSearchApi = {
    * 稼働可能エンジニア取得
    */
   async fetchAvailable() {
-    const response = await axios.get('/api/v1/engineers/available');
+    const response = await axios.get('v1/engineers/available');
     return response.data;
   },
 
@@ -245,7 +245,7 @@ export const engineerSearchApi = {
    * 検索条件保存
    */
   async saveSearch(name: string, params: any) {
-    const response = await axios.post('/api/v1/search/saved', {
+    const response = await axios.post('v1/search/saved', {
       name,
       type: 'engineer',
       params,
@@ -257,7 +257,7 @@ export const engineerSearchApi = {
    * 保存済み検索一覧取得
    */
   async fetchSavedSearches() {
-    const response = await axios.get('/api/v1/search/saved');
+    const response = await axios.get('v1/search/saved');
     return response.data;
   },
 
@@ -280,7 +280,7 @@ export const engineerSearchApi = {
    * 検索候補取得
    */
   async fetchSuggestions(query: string) {
-    const response = await axios.get('/api/v1/search/suggestions', {
+    const response = await axios.get('v1/search/suggestions', {
       params: { q: query },
     });
     return response.data;
@@ -290,7 +290,7 @@ export const engineerSearchApi = {
    * オートコンプリート
    */
   async autocomplete(field: string, query: string) {
-    const response = await axios.get('/api/v1/search/autocomplete', {
+    const response = await axios.get('v1/search/autocomplete', {
       params: { field, q: query },
     });
     return response.data;

@@ -589,7 +589,7 @@ const BusinessPartnerList: React.FC = () => {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={() => navigate('/business-partners/new')}
+                onClick={() => navigate('business-partners/new')}
               >
                 新規登録
               </Button>

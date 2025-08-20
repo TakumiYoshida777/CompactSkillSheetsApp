@@ -29,84 +29,84 @@ const MainLayout: React.FC = () => {
   // サイドバーメニュー項目（設計書準拠）
   const menuItems: MenuProps['items'] = [
     {
-      key: '/dashboard',
+      key: 'dashboard',
       icon: <DashboardOutlined />,
       label: 'ダッシュボード', // DASH001
     },
     {
-      key: '/engineers',
+      key: 'engineers',
       icon: <TeamOutlined />,
       label: 'エンジニア管理',
       children: [
         {
-          key: '/engineers/list',
+          key: 'engineers/list',
           label: 'エンジニア一覧', // ENG001
         },
         {
-          key: '/engineers/new',
+          key: 'engineers/new',
           label: 'エンジニア登録', // ENG003
         },
       ],
     },
     {
-      key: '/skillsheets',
+      key: 'skillsheets',
       icon: <FileTextOutlined />,
       label: 'スキルシート管理',
       children: [
         {
-          key: '/skillsheets/list',
+          key: 'skillsheets/list',
           label: 'スキルシート一覧', // SKL001
         },
       ],
     },
     // プロジェクト管理（一時的にコメントアウト）
     // {
-    //   key: '/projects',
+    //   key: 'projects',
     //   icon: <ProjectOutlined />,
     //   label: 'プロジェクト管理',
     //   children: [
     //     {
-    //       key: '/projects/list',
+    //       key: 'projects/list',
     //       label: 'プロジェクト一覧', // PRJ001
     //     },
     //     {
-    //       key: '/projects/new',
+    //       key: 'projects/new',
     //       label: 'プロジェクト登録', // PRJ003
     //     },
     //   ],
     // },
     {
-      key: '/approaches',
+      key: 'approaches',
       icon: <SendOutlined />,
       label: 'アプローチ管理',
       children: [
         {
-          key: '/approaches/history',
+          key: 'approaches/history',
           label: 'アプローチ履歴', // APP001
         },
         {
-          key: '/approaches/create',
+          key: 'approaches/create',
           label: 'アプローチ作成', // APP002
         },
       ],
     },
     {
-      key: '/business-partners',
+      key: 'business-partners',
       icon: <BankOutlined />,
       label: '取引先管理',
       children: [
         {
-          key: '/business-partners/list',
+          key: 'business-partners/list',
           label: '取引先一覧', // BIZ001
         },
         {
-          key: '/business-partners/new',
+          key: 'business-partners/new',
           label: '取引先登録', // BIZ002
         },
       ],
     },
     {
-      key: '/settings',
+      key: 'settings',
       icon: <SettingOutlined />,
       label: '設定', // SET001
     },
@@ -149,13 +149,13 @@ const MainLayout: React.FC = () => {
       // ログアウト処理
       logout();
       message.success('ログアウトしました');
-      navigate('/login');
+      navigate('login');
     } else if (e.key === 'profile') {
       // プロフィール画面へ遷移
-      navigate('/profile');
+      navigate('profile');
     } else if (e.key === 'settings') {
       // 個人設定画面へ遷移
-      navigate('/settings');
+      navigate('settings');
     }
   };
 

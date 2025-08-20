@@ -8,10 +8,12 @@ import projectRoutes from './project.routes';
 import partnerRoutes from './partner.routes';
 import approachRoutes from './approach.routes';
 import skillSheetRoutes from './skillsheet.routes';
-import skillRoutes from './skill.routes';
-import searchRoutes from './search.routes';
-import exportRoutes from './export.routes';
-import fileRoutes from './file.routes';
+import analyticsRoutes from './analytics.routes';
+import notificationRoutes from './notification.routes';
+// import skillRoutes from './skill.routes';
+// import searchRoutes from './search.routes';
+// import exportRoutes from './export.routes';
+// import fileRoutes from './file.routes';
 
 const router = Router();
 
@@ -45,10 +47,16 @@ router.use('/approaches', approachRoutes);
 router.use('/business-partners', partnerRoutes);
 router.use('/skill-sheets', skillSheetRoutes);
 
-// 共通API
-router.use('/skills', skillRoutes);
-router.use('/search', searchRoutes);
-router.use('/export', exportRoutes);
-router.use('/files', fileRoutes);
+// 分析・統計API
+router.use('/analytics', analyticsRoutes);
+
+// 通知API
+router.use('/notifications', notificationRoutes);
+
+// 共通API（一時的に無効化）
+// router.use('/skills', skillRoutes);
+// router.use('/search', searchRoutes);
+// router.use('/export', exportRoutes);
+// router.use('/files', fileRoutes);
 
 export default router;

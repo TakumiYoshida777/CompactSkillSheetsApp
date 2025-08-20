@@ -135,7 +135,7 @@ export const skillMasterApi = {
    * プログラミング言語一覧取得
    */
   async fetchProgrammingLanguages(): Promise<SkillMaster[]> {
-    const response = await axios.get<SkillMaster[]>('/api/v1/skills/programming-languages');
+    const response = await axios.get<SkillMaster[]>('v1/skills/programming-languages');
     return response.data;
   },
 
@@ -143,7 +143,7 @@ export const skillMasterApi = {
    * フレームワーク一覧取得
    */
   async fetchFrameworks(): Promise<SkillMaster[]> {
-    const response = await axios.get<SkillMaster[]>('/api/v1/skills/frameworks');
+    const response = await axios.get<SkillMaster[]>('v1/skills/frameworks');
     return response.data;
   },
 
@@ -151,7 +151,7 @@ export const skillMasterApi = {
    * データベース一覧取得
    */
   async fetchDatabases(): Promise<SkillMaster[]> {
-    const response = await axios.get<SkillMaster[]>('/api/v1/skills/databases');
+    const response = await axios.get<SkillMaster[]>('v1/skills/databases');
     return response.data;
   },
 
@@ -159,7 +159,7 @@ export const skillMasterApi = {
    * クラウドサービス一覧取得
    */
   async fetchCloudServices(): Promise<SkillMaster[]> {
-    const response = await axios.get<SkillMaster[]>('/api/v1/skills/cloud-services');
+    const response = await axios.get<SkillMaster[]>('v1/skills/cloud-services');
     return response.data;
   },
 
@@ -191,7 +191,7 @@ export const skillMasterApi = {
    * スキル候補提案
    */
   async suggest(query: string, category?: SkillCategory): Promise<SkillMaster[]> {
-    const response = await axios.post<SkillMaster[]>('/api/v1/skills/suggest', {
+    const response = await axios.post<SkillMaster[]>('v1/skills/suggest', {
       query,
       category,
     });
@@ -206,7 +206,7 @@ export const skillMasterApi = {
     category: SkillCategory;
     description?: string;
   }): Promise<SkillMaster> {
-    const response = await axios.post<SkillMaster>('/api/v1/skills', skill);
+    const response = await axios.post<SkillMaster>('v1/skills', skill);
     return response.data;
   },
 

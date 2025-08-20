@@ -25,36 +25,36 @@ const Unauthorized: React.FC = () => {
     // 1. まずトークンから判定（最も信頼できる）
     if (userTypeFromToken === 'client') {
       console.log('[Unauthorized] Redirecting to client dashboard (token-based)');
-      navigate('/client/offer-board');
+      navigate('client/offer-board');
       return;
     }
     
     // 2. 次にuserオブジェクトから判定
     if (user?.userType === 'client') {
       console.log('[Unauthorized] Redirecting to client dashboard (user-based)');
-      navigate('/client/offer-board');
+      navigate('client/offer-board');
       return;
     }
     
     // 3. 認証済みのSES企業ユーザーの場合
     if (isAuthenticated && user && userTypeFromToken !== 'client') {
       console.log('[Unauthorized] Redirecting to SES dashboard');
-      navigate('/dashboard');
+      navigate('dashboard');
       return;
     }
     
     // 4. 未認証またはユーザータイプ不明の場合は安全にログインページへ
     console.log('[Unauthorized] Redirecting to login (fallback)');
-    navigate('/login');
+    navigate('login');
   };
 
   const handleLogin = () => {
     logout();
     // ユーザータイプに応じて適切なログインページへ
     if (user?.userType === 'client') {
-      navigate('/client/login');
+      navigate('client/login');
     } else {
-      navigate('/login');
+      navigate('login');
     }
   };
 

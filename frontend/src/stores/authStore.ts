@@ -19,7 +19,7 @@ const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
         try {
-          const authResponse = await AuthService.performLogin('/api/auth/login', {
+          const authResponse = await AuthService.performLogin('auth/login', {
             email,
             password,
             rememberMe,
@@ -60,7 +60,7 @@ const useAuthStore = create<AuthState>()(
       clientLogin: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
         try {
-          const authResponse = await AuthService.performLogin('/api/client/auth/login', {
+          const authResponse = await AuthService.performLogin('client/auth/login', {
             email,
             password,
             rememberMe,
@@ -107,7 +107,7 @@ const useAuthStore = create<AuthState>()(
       register: async (data: any) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post('/api/auth/register', data);
+          const response = await axios.post('auth/register', data);
           
           const { user, accessToken, refreshToken } = response.data;
           
@@ -142,7 +142,7 @@ const useAuthStore = create<AuthState>()(
           console.log('[refreshAccessToken] UserType from token:', userType);
           
           // ユーザータイプに応じて適切なエンドポイントを使用
-          const endpoint = userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
+          const endpoint = userType === 'client' ? 'client/auth/refresh' : 'auth/refresh';
           console.log('[refreshAccessToken] Using endpoint:', endpoint);
           
           const tokens = await AuthService.refreshToken(endpoint, refreshToken);
@@ -162,7 +162,7 @@ const useAuthStore = create<AuthState>()(
       updateProfile: async (data: any) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.put('/api/users/profile', data);
+          const response = await axios.put('users/profile', data);
           
           set({
             user: response.data,
