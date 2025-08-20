@@ -16,7 +16,7 @@ import type {
   ExportFormat
 } from '../../types/engineer';
 
-const API_BASE = 'v1/engineers';
+const API_BASE = '/v1/engineers';
 
 /**
  * エンジニアAPI

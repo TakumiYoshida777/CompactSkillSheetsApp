@@ -83,7 +83,8 @@ export class EngineerService {
             include: { project: true },
             orderBy: { startDate: 'desc' },
             take: 5
-          }
+          },
+          user: true
         }
       });
       

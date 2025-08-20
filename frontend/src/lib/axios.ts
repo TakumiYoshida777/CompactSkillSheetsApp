@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -14,6 +14,11 @@ instance.interceptors.request.use(
   (config) => {
     // Zustandストアから認証トークンを取得
     const token = useAuthStore.getState().token;
+    console.log('[Axios Request] URL:', config.url);
+    console.log('[Axios Request] Base URL:', config.baseURL);
+    console.log('[Axios Request] Full URL:', `${config.baseURL}${config.url}`);
+    console.log('[Axios Request] Method:', config.method);
+    console.log('[Axios Request] Params:', config.params);
     console.log('[Axios Interceptor] Adding token to request:', token ? 'Token exists' : 'No token');
     if (token) {
       config.headers = config.headers || {};
@@ -23,6 +28,7 @@ instance.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('[Axios Request Error]:', error);
     return Promise.reject(error);
   }
 );
@@ -30,9 +36,15 @@ instance.interceptors.request.use(
 // レスポンスインターセプター
 instance.interceptors.response.use(
   (response) => {
+    console.log('[Axios Response] URL:', response.config.url);
+    console.log('[Axios Response] Status:', response.status);
+    console.log('[Axios Response] Data:', response.data);
     return response;
   },
   async (error) => {
+    console.error('[Axios Response Error]:', error);
+    console.error('[Axios Response Error] Status:', error.response?.status);
+    console.error('[Axios Response Error] Data:', error.response?.data);
     const originalRequest = error.config;
 
     // 401エラーでリフレッシュトークンを使用

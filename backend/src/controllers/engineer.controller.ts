@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { EngineerService } from '../services/engineer.service';
 import { ApiResponse } from '../utils/response.util';
 import { AppError } from '../utils/error.handler';
+import { serializeBigInt } from '../utils/bigint.serializer';
 
 export class EngineerController {
   private service: EngineerService;
@@ -46,7 +47,9 @@ export class EngineerController {
       
       const total = await this.service.count(req.companyId!, filters);
       
-      res.json(ApiResponse.paginated(engineers, {
+      const serializedEngineers = serializeBigInt(engineers);
+      
+      res.json(ApiResponse.paginated(serializedEngineers, {
         page,
         limit,
         total
