@@ -84,9 +84,9 @@ instance.interceptors.response.use(
       }
       
       try {
-        // ユーザータイプに基づいてエンドポイントを決定
+        // ユーザータイプに基づいてエンドポイントを決定（/api/は不要）
         const userType = user?.userType || 'ses';
-        const endpoint = userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
+        const endpoint = userType === 'client' ? 'client/auth/refresh' : 'auth/refresh';
         console.log('[Axios Interceptor] Refreshing token with endpoint:', endpoint);
         
         const response = await instance.post(endpoint, {
