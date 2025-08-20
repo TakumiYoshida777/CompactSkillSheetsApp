@@ -8,7 +8,7 @@ import {
 import { message } from 'antd';
 import * as offerApi from '../api/client/offerApi';
 import { OfferStatus } from '../stores/offerStore';
-import { queryOptions, suspenseOptions, infiniteQueryOptions } from '../config/queryClient';
+import { queryOptions, infiniteQueryOptions } from '../config/queryClient';
 
 const QUERY_KEYS = {
   offers: 'offers',

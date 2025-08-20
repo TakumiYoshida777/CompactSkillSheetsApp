@@ -27,6 +27,8 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL?.replace(/\/api\/v1$/, '')
 // 認証ページ
 const Login = lazy(() => import('./pages/auth/Login'));
 const ClientLogin = lazy(() => import('./pages/auth/ClientLogin'));
+// テスト用シンプル版
+const ClientLoginSimple = lazy(() => import('./pages/auth/ClientLoginSimple'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const Test = lazy(() => import('./pages/Test'));
 

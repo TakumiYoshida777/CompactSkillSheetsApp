@@ -117,8 +117,7 @@ export const queryOptions = {
 export const suspenseOptions = {
   suspense: true,
   useErrorBoundary: true, // エラーバウンダリーを使用
-  retry: shouldRetry,
-  retryDelay,
+  // デフォルトのリトライ設定を使用（3回、exponential backoff）
 };
 
 /**

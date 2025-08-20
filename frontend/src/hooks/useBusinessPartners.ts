@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-query';
 import { message } from 'antd';
 import axios from 'axios';
-import { queryOptions, suspenseOptions, infiniteQueryOptions } from '../config/queryClient';
+import { queryOptions, infiniteQueryOptions } from '../config/queryClient';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
