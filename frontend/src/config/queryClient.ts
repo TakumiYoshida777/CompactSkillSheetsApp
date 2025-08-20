@@ -2,31 +2,6 @@ import { QueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 
 /**
- * API呼び出しのリトライ設定
- * ステータスコードに応じてリトライするかを判定
- */
-const shouldRetry = (failureCount: number, error: any) => {
-  // 最大3回までリトライ
-  if (failureCount >= 3) return false;
-  
-  // ネットワークエラーまたは5xx系エラーの場合はリトライ
-  if (!error.response) return true; // ネットワークエラー
-  
-  const status = error.response?.status;
-  // 5xx系エラー、429（レート制限）、408（タイムアウト）はリトライ
-  return status >= 500 || status === 429 || status === 408;
-};
-
-/**
- * リトライの遅延時間を計算
- * 指数バックオフを使用
- */
-const retryDelay = (attemptIndex: number) => {
-  // 0.5秒、1秒、2秒と倍増
-  return Math.min(1000 * Math.pow(2, attemptIndex) / 2, 30000);
-};
-
-/**
  * グローバルエラーハンドラー
  */
 const onError = (error: any) => {
@@ -66,32 +41,28 @@ const onError = (error: any) => {
 
 /**
  * QueryClientの設定
+ * TanStack Queryのデフォルト設定を活用
  */
 export const createQueryClient = () => new QueryClient({
   defaultOptions: {
     queries: {
-      // リトライ設定
-      retry: shouldRetry,
-      retryDelay,
+      // デフォルトで3回リトライ、exponential backoff付き
+      // retry: 3 がデフォルト値
       
       // キャッシュ設定
       staleTime: 5 * 60 * 1000, // 5分間はfreshとみなす
-      gcTime: 10 * 60 * 1000, // 10分間キャッシュを保持（旧cacheTime）
+      gcTime: 10 * 60 * 1000, // 10分間キャッシュを保持
       
       // フォーカス時の再取得を制御
       refetchOnWindowFocus: false,
       refetchOnReconnect: 'always', // ネットワーク再接続時は常に再取得
       
-      // エラーハンドリング
-      throwOnError: false, // エラーバウンダリーを使用する場合はtrue
-      
       // ネットワークモード
       networkMode: 'online', // オフライン時は実行しない
     },
     mutations: {
-      // ミューテーションのリトライ設定
-      retry: 1, // ミューテーションは1回だけリトライ
-      retryDelay,
+      // ミューテーションは通常リトライしない方が良い（副作用があるため）
+      retry: false,
       
       // エラーハンドリング
       onError,
