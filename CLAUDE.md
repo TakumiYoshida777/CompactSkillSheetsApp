@@ -13,6 +13,7 @@
    - 作業前に必ず`CompactSkillSheetsApp/_Documents`ディレクトリ内の全ファイルを理解すること。
    - 行動前に`CompactSkillSheetsApp/_Knowledge`ディレクトリも読み込むこと。
    - `CompactSkillSheetsApp/README.md`の環境構造を理解すること。
+      - 同じPCで複数環境が動いている前提であることを理解すること
    - 不具合を修正する際は`Project/Dev2_CompactSkillSheetsApp/Dev2_CompactSkillSheetsApp/backend/Logs`ディレクトリの最新情報を読み込んで、ログ出力されているか確認し、修正を行うこと。
    - 「理解して」と言われたら、_Documents,_Knowledge,README.md,を改めて読み直し完全に理解すること
    - API通信は必ずTanStack Queryを使用すること（https://tanstack.com/query/latest）
@@ -34,6 +35,7 @@
 
 7. ChatGPTへ質問
    - 「ChatGPTへ質問してください」と言われたら以下を実施すること
+     - README.mdに書かれている複数の環境が同時に同じPCで動作していることを前提として冒頭に記載すること
      - /Users/takumi/workspace/Project/Dev2_CompactSkillSheetsApp/Dev2_CompactSkillSheetsApp/_Features/Bug/Promptディレクトリに質問用のプロンプトをmdファイル形式で記載すること
      - 質問はAIが理解できる粒度で記載すること
      

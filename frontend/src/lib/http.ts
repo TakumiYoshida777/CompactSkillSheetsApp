@@ -1,0 +1,177 @@
+import axios from 'axios';
+import { useAuthStore } from '../stores/authStore';
+
+// 環境変数からAPIのベースURLを取得
+const envUrl = 
+  import.meta.env.VITE_API_BASE_URL || 
+  import.meta.env.VITE_API_URL;
+
+// ポート番号に基づくフォールバックマッピング
+// 複数環境での開発時に正しいAPIエンドポイントを自動選択
+const portMap: Record<string, string> = {
+  "3000": "http://localhost:8000/api/v1", // Dev1環境
+  "3001": "http://localhost:8001/api/v1", // Dev2環境
+  "3002": "http://localhost:8002/api/v1", // Dev3環境
+};
+
+// 現在のポートに基づいてフォールバックURLを決定
+const currentPort = window.location.port || "3001"; // デフォルトはDev2
+const fallbackUrl = portMap[currentPort] ?? "http://localhost:8001/api/v1";
+
+// 最終的なベースURLを決定（末尾のスラッシュを削除）
+const baseURL = (envUrl || fallbackUrl).replace(/\/+$/, "");
+
+// 開発環境でのデバッグ情報出力
+if (import.meta.env.DEV) {
+  console.group('[HTTP Configuration]');
+  console.log('Environment URL:', envUrl || 'Not set');
+  console.log('Current Port:', currentPort);
+  console.log('Fallback URL:', fallbackUrl);
+  console.log('Final Base URL:', baseURL);
+  console.log('Environment:', import.meta.env.VITE_ENV_NAME || 'default');
+  console.table({
+    'VITE_API_URL': import.meta.env.VITE_API_URL,
+    'VITE_API_BASE_URL': import.meta.env.VITE_API_BASE_URL,
+    'VITE_APP_ENV': import.meta.env.VITE_APP_ENV,
+    'VITE_APP_PORT': import.meta.env.VITE_APP_PORT
+  });
+  console.groupEnd();
+}
+
+// Axiosインスタンスの作成
+const instance = axios.create({
+  baseURL,
+  timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: false,
+});
+
+// リクエストインターセプター
+instance.interceptors.request.use(
+  (config) => {
+    // Zustandストアから認証トークンを取得
+    const token = useAuthStore.getState().token;
+    
+    // デバッグログ（開発環境のみ）
+    if (import.meta.env.DEV) {
+      console.log('[Axios Request]', {
+        url: config.url,
+        baseURL: config.baseURL,
+        fullURL: `${config.baseURL}${config.url}`,
+        method: config.method?.toUpperCase(),
+        hasToken: !!token,
+        environment: import.meta.env.VITE_APP_ENV || 'unknown'
+      });
+    }
+    
+    // トークンがある場合はヘッダーに追加
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error) => {
+    console.error('[Axios Request Error]:', error);
+    return Promise.reject(error);
+  }
+);
+
+// レスポンスインターセプター
+instance.interceptors.response.use(
+  (response) => {
+    // デバッグログ（開発環境のみ）
+    if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_MODE === 'true') {
+      console.log('[Axios Response]', {
+        url: response.config.url,
+        status: response.status,
+        dataKeys: response.data ? Object.keys(response.data) : []
+      });
+    }
+    return response;
+  },
+  async (error) => {
+    // エラーログ
+    if (import.meta.env.DEV) {
+      console.error('[Axios Response Error]', {
+        url: error.config?.url,
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message,
+        data: error.response?.data
+      });
+    }
+    
+    const originalRequest = error.config;
+
+    // 401エラーでリフレッシュトークンを使用
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const refreshToken = useAuthStore.getState().refreshToken;
+        const user = useAuthStore.getState().user;
+        
+        if (refreshToken) {
+          // ユーザータイプに基づいてエンドポイントを決定
+          const userType = user?.userType || 'ses';
+          const endpoint = userType === 'client' ? '/client/auth/refresh' : '/auth/refresh';
+          
+          console.log('[Auth] Attempting token refresh...');
+          
+          const response = await instance.post(endpoint, {
+            refreshToken: refreshToken,
+          });
+          
+          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          
+          // Zustandストアを更新
+          useAuthStore.getState().setAuthTokens(
+            useAuthStore.getState().user,
+            accessToken,
+            newRefreshToken
+          );
+          
+          console.log('[Auth] Token refresh successful');
+          
+          // 元のリクエストを再実行
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          return instance(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error('[Auth] Token refresh failed:', refreshError);
+        
+        // リフレッシュ失敗時はログアウト
+        useAuthStore.getState().logout();
+        
+        // 現在のパスに応じて適切なログインページにリダイレクト
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('/client')) {
+          window.location.href = '/client/login';
+        } else {
+          window.location.href = '/login';
+        }
+        
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// 旧axios.tsとの互換性のため、デフォルトエクスポート
+export default instance;
+
+// 名前付きエクスポートも提供
+export { instance as http };
+
+// 環境情報を取得する関数（デバッグ用）
+export const getHttpConfig = () => ({
+  baseURL,
+  environment: import.meta.env.VITE_APP_ENV || 'unknown',
+  port: currentPort,
+  debug: import.meta.env.VITE_DEBUG_MODE === 'true'
+});

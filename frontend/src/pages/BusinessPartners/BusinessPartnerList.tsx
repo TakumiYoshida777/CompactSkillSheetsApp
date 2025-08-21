@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { businessPartnerApi, BusinessPartner } from '../../api/businessPartner';
+import { businessPartnerApi } from '../../api/businessPartner';
+import type { BusinessPartner } from '../../api/businessPartner';
 import {
   Card,
   Table,
@@ -17,7 +18,6 @@ import {
   message,
   Badge,
   Tooltip,
-  DatePicker,
   Drawer,
   Descriptions,
   Timeline,
@@ -64,7 +64,6 @@ const BusinessPartnerList: React.FC = () => {
   const [pageSize, setPageSize] = useState(10);
   const [selectedPartner, setSelectedPartner] = useState<BusinessPartner | null>(null);
   const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [emailModalVisible, setEmailModalVisible] = useState(false);
@@ -86,7 +85,16 @@ const BusinessPartnerList: React.FC = () => {
   const partners = partnersData?.data || [];
   const total = partnersData?.total || 0;
 
-  const generateMockData = () => {
+  const filteredPartners = partners.filter(partner => {
+    const matchesSearch = partner.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
+                         (partner.companyNameKana?.toLowerCase().includes(searchText.toLowerCase()) || false);
+    const matchesStatus = selectedStatus === 'all' || partner.status === selectedStatus;
+    const matchesIndustry = selectedIndustries.length === 0 || (partner.industry && selectedIndustries.includes(partner.industry));
+    
+    return matchesSearch && matchesStatus && matchesIndustry;
+  });
+
+  /* const generateMockData = () => {
     const mockData: BusinessPartner[] = [
       {
         id: '1',
@@ -252,7 +260,7 @@ const BusinessPartnerList: React.FC = () => {
     ];
     // モックデータ生成は不要になりました
     refetch();
-  };
+  }; */
 
   const handleBulkEmail = () => {
     if (selectedRowKeys.length === 0) {
@@ -262,16 +270,20 @@ const BusinessPartnerList: React.FC = () => {
     setEmailModalVisible(true);
   };
 
-  const handleDelete = (partner: BusinessPartner) => {
+  const handleDelete = async (partner: BusinessPartner) => {
     Modal.confirm({
       title: '取引先削除の確認',
       content: `${partner.companyName}を削除してもよろしいですか？`,
       okText: '削除',
       okType: 'danger',
       cancelText: 'キャンセル',
-      onOk: () => {
-        setPartners(partners.filter(p => p.id !== partner.id));
-        message.success('取引先を削除しました');
+      onOk: async () => {
+        try {
+          await businessPartnerApi.delete(partner.id);
+          refetch();
+        } catch {
+          // エラーはAPIで処理済み
+        }
       },
     });
   };
@@ -387,7 +399,7 @@ const BusinessPartnerList: React.FC = () => {
       width: 100,
       render: (status: string) => (
         <Badge
-          status={getStatusColor(status) as any}
+          status={getStatusColor(status) as 'success' | 'processing' | 'default' | 'error' | 'warning'}
           text={getStatusText(status)}
         />
       ),
@@ -520,14 +532,6 @@ const BusinessPartnerList: React.FC = () => {
     },
   };
 
-  const filteredPartners = partners.filter(partner => {
-    const matchesSearch = partner.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
-                         partner.companyNameKana.toLowerCase().includes(searchText.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || partner.status === selectedStatus;
-    const matchesIndustry = selectedIndustries.length === 0 || selectedIndustries.includes(partner.industry);
-    
-    return matchesSearch && matchesStatus && matchesIndustry;
-  });
 
   return (
     <div style={{ padding: '24px' }}>
