@@ -6,7 +6,9 @@ const prisma = new PrismaClient();
 class AnalyticsService {
   // ダッシュボードデータ取得
   async getDashboardData(companyId: string) {
-    const companyIdBigInt = BigInt(companyId);
+    // company-1のような形式から数値部分を抽出
+    const numericId = companyId.includes('-') ? companyId.split('-').pop() : companyId;
+    const companyIdBigInt = BigInt(numericId || '0');
     const now = new Date();
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
@@ -99,7 +101,9 @@ class AnalyticsService {
 
   // エンジニア統計取得
   async getEngineerStatistics(companyId: string) {
-    const companyIdBigInt = BigInt(companyId);
+    // company-1のような形式から数値部分を抽出
+    const numericId = companyId.includes('-') ? companyId.split('-').pop() : companyId;
+    const companyIdBigInt = BigInt(numericId || '0');
     const now = new Date();
 
     // ステータス別エンジニア数
@@ -188,7 +192,9 @@ class AnalyticsService {
 
   // アプローチ統計取得
   async getApproachStatistics(companyId: string) {
-    const companyIdBigInt = BigInt(companyId);
+    // company-1のような形式から数値部分を抽出
+    const numericId = companyId.includes('-') ? companyId.split('-').pop() : companyId;
+    const companyIdBigInt = BigInt(numericId || '0');
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
@@ -280,7 +286,7 @@ class AnalyticsService {
   }
 
   // 最近のアクティビティ取得
-  private async getRecentActivities(companyId: string) {
+  private async getRecentActivities(companyId: bigint) {
     const activities = [];
 
     // 最新のアプローチ

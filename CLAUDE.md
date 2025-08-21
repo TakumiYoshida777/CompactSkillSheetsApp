@@ -18,6 +18,7 @@
    - 「理解して」と言われたら、_Documents,_Knowledge,README.md,を改めて読み直し完全に理解すること
    - API通信は必ずTanStack Queryを使用すること（https://tanstack.com/query/latest）
    - 既存機能を壊さないこと
+   - **必須**開発環境DockerのPort設定は壊さないこと
 
 3. **実装ポリシー**
    - Kent Beck氏のテスト駆動開発（TDD）を実践。
