@@ -2,9 +2,10 @@
  * APIクライアント基盤
  */
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
+import axios from 'axios'
+import type { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios'
 import { API_CONFIG, HTTP_STATUS } from './config'
-import { ApiResponse, ApiError as ApiErrorType } from '@/types/api.types'
+import type { ApiResponse, ApiError } from '../types/api.types'
 import { toast } from 'react-hot-toast'
 
 // カンパニーID取得（認証担当者が実装予定のため暫定）
@@ -16,7 +17,7 @@ const getCompanyId = (): string => {
 // カスタムAxiosインスタンスの作成
 class ApiClient {
   private instance: AxiosInstance
-  private requestQueue: Map<string, Promise<any>> = new Map()
+  private requestQueue: Map<string, Promise<unknown>> = new Map()
 
   constructor() {
     this.instance = axios.create({
@@ -69,7 +70,7 @@ class ApiClient {
         // 成功レスポンスの処理
         return response
       },
-      async (error: AxiosError<ApiErrorType>) => {
+      async (error: AxiosError<ApiError>) => {
         // エラーレスポンスの処理
         return this.handleError(error)
       }
@@ -79,7 +80,7 @@ class ApiClient {
   /**
    * エラーハンドリング
    */
-  private async handleError(error: AxiosError<ApiErrorType>): Promise<never> {
+  private async handleError(error: AxiosError<ApiError>): Promise<never> {
     // ネットワークエラー
     if (!error.response) {
       toast.error('ネットワークエラーが発生しました。接続を確認してください。')
@@ -162,7 +163,7 @@ class ApiClient {
   /**
    * POSTリクエスト
    */
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.instance.post<ApiResponse<T>>(url, data, config)
     return response.data
   }
@@ -170,7 +171,7 @@ class ApiClient {
   /**
    * PUTリクエスト
    */
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.instance.put<ApiResponse<T>>(url, data, config)
     return response.data
   }
@@ -178,7 +179,7 @@ class ApiClient {
   /**
    * PATCHリクエスト
    */
-  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const response = await this.instance.patch<ApiResponse<T>>(url, data, config)
     return response.data
   }
@@ -198,7 +199,7 @@ class ApiClient {
     url: string,
     file: File | Blob,
     onProgress?: (progress: number) => void,
-    additionalData?: Record<string, any>
+    additionalData?: Record<string, unknown>
   ): Promise<ApiResponse<T>> {
     const formData = new FormData()
     formData.append('file', file)
@@ -206,7 +207,12 @@ class ApiClient {
     // 追加データがある場合
     if (additionalData) {
       Object.keys(additionalData).forEach((key) => {
-        formData.append(key, additionalData[key])
+        const value = additionalData[key]
+        if (typeof value === 'string' || value instanceof Blob) {
+          formData.append(key, value)
+        } else if (value !== null && value !== undefined) {
+          formData.append(key, String(value))
+        }
       })
     }
 

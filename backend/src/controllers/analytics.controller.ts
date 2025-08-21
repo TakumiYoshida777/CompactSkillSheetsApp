@@ -6,7 +6,8 @@ class AnalyticsController {
   // ダッシュボードデータ取得
   async getDashboardData(req: Request, res: Response): Promise<Response | void> {
     try {
-      const companyId = req.user?.companyId;
+      // company.middlewareが設定したcompanyIdを使用
+      const companyId = req.companyId || req.user?.companyId;
       if (!companyId) {
         return res.status(403).json({
           success: false,
@@ -28,7 +29,8 @@ class AnalyticsController {
   // エンジニア統計取得
   async getEngineerStatistics(req: Request, res: Response): Promise<Response | void> {
     try {
-      const companyId = req.user?.companyId;
+      // company.middlewareが設定したcompanyIdを使用
+      const companyId = req.companyId || req.user?.companyId;
       if (!companyId) {
         return res.status(403).json({
           success: false,
@@ -50,7 +52,8 @@ class AnalyticsController {
   // アプローチ統計取得
   async getApproachStatistics(req: Request, res: Response): Promise<Response | void> {
     try {
-      const companyId = req.user?.companyId;
+      // company.middlewareが設定したcompanyIdを使用
+      const companyId = req.companyId || req.user?.companyId;
       if (!companyId) {
         return res.status(403).json({
           success: false,

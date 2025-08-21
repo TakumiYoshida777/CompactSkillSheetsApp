@@ -41,6 +41,9 @@ export interface ApiError {
   documentation?: string
 }
 
+// APIエラータイプのエクスポート（互換性のため）
+export type ApiErrorType = ApiError
+
 // リスト取得用のクエリパラメータ
 export interface ListQueryParams {
   page?: number

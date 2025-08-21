@@ -18,7 +18,11 @@ export const authorizeRoles = (allowedRoles: string[]) => {
       return next();
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    // 大文字小文字を区別しないロール比較
+    const userRole = req.user.role.toUpperCase();
+    const normalizedAllowedRoles = allowedRoles.map(r => r.toUpperCase());
+    
+    if (!normalizedAllowedRoles.includes(userRole)) {
       console.log('[RBAC Middleware] Access denied - user role:', req.user.role, 'allowed:', allowedRoles);
       return res.status(403).json({
         success: false,
