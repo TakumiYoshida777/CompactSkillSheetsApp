@@ -12,6 +12,7 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body;
+      console.log('[AuthController.login] Login attempt for:', email);
 
       // ユーザー検索
       const user = await prisma.user.findUnique({
@@ -27,11 +28,15 @@ export class AuthController {
       });
 
       if (!user) {
+        console.log('[AuthController.login] User not found:', email);
         return res.status(401).json(ApiResponse.error('AUTH_ERROR', 'メールアドレスまたはパスワードが正しくありません'));
       }
+      console.log('[AuthController.login] User found:', user.email, 'ID:', user.id.toString());
 
       // パスワード検証
+      console.log('[AuthController.login] Comparing password...');
       const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+      console.log('[AuthController.login] Password valid:', isPasswordValid);
       if (!isPasswordValid) {
         // ログイン失敗回数を増やす
         await prisma.user.update({
