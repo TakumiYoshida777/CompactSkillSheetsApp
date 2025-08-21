@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ instance.interceptors.response.use(
         if (refreshToken) {
           // ユーザータイプに基づいてエンドポイントを決定
           const userType = user?.userType || 'ses';
-          const endpoint = userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
+          const endpoint = userType === 'client' ? '/api/v1/client/auth/refresh' : '/api/v1/auth/refresh';
           
           const response = await instance.post(endpoint, {
             refreshToken: refreshToken,

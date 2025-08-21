@@ -35,8 +35,17 @@ export class AuthController {
 
       // パスワード検証
       console.log('[AuthController.login] Comparing password...');
-      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-      console.log('[AuthController.login] Password valid:', isPasswordValid);
+      console.log('[AuthController.login] Password from request:', password);
+      console.log('[AuthController.login] Stored hash:', user.passwordHash);
+      
+      let isPasswordValid = false;
+      try {
+        isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+        console.log('[AuthController.login] Password valid:', isPasswordValid);
+      } catch (bcryptError) {
+        console.error('[AuthController.login] Bcrypt error:', bcryptError);
+        return res.status(500).json(ApiResponse.error('SERVER_ERROR', 'パスワード検証エラー'));
+      }
       if (!isPasswordValid) {
         // ログイン失敗回数を増やす
         await prisma.user.update({
@@ -90,8 +99,11 @@ export class AuthController {
       logger.info(`ユーザーログイン成功: ${user.email}`);
 
       // ロール情報を抽出
-      const roles = user.userRoles.map(ur => ur.role.name);
-      const userType = user.company?.companyType?.toLowerCase() === 'ses' ? 'ses' : 'client';
+      const roles = user.userRoles?.map(ur => ur.role?.name).filter(Boolean) || [];
+      let userType = 'ses'; // デフォルト
+      if (user.company && user.company.companyType) {
+        userType = user.company.companyType.toLowerCase() === 'ses' ? 'ses' : 'client';
+      }
 
       return res.json(ApiResponse.success({
         accessToken: token,

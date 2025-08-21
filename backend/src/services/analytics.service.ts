@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 class AnalyticsService {
   // ダッシュボードデータ取得
   async getDashboardData(companyId: string) {
+    const companyIdBigInt = BigInt(companyId);
     const now = new Date();
     const currentMonthStart = startOfMonth(now);
     const currentMonthEnd = endOfMonth(now);
@@ -14,13 +15,13 @@ class AnalyticsService {
 
     // エンジニア総数
     const totalEngineers = await prisma.engineer.count({
-      where: { companyId }
+      where: { companyId: companyIdBigInt }
     });
 
     // 稼働中エンジニア数
     const activeEngineers = await prisma.engineer.count({
       where: {
-        companyId,
+        companyId: companyIdBigInt,
         engineerProjects: {
           some: {
             endDate: {
@@ -37,7 +38,7 @@ class AnalyticsService {
     // 今月のアプローチ数
     const currentMonthApproaches = await prisma.approach.count({
       where: {
-        fromCompanyId: companyId,
+        fromCompanyId: companyIdBigInt,
         createdAt: {
           gte: currentMonthStart,
           lte: currentMonthEnd
@@ -48,7 +49,7 @@ class AnalyticsService {
     // 先月のアプローチ数
     const lastMonthApproaches = await prisma.approach.count({
       where: {
-        fromCompanyId: companyId,
+        fromCompanyId: companyIdBigInt,
         createdAt: {
           gte: lastMonthStart,
           lte: lastMonthEnd
@@ -59,13 +60,13 @@ class AnalyticsService {
     // アプローチ成約率
     const totalApproaches = await prisma.approach.count({
       where: {
-        fromCompanyId: companyId
+        fromCompanyId: companyIdBigInt
       }
     });
 
     const acceptedApproaches = await prisma.approach.count({
       where: {
-        fromCompanyId: companyId,
+        fromCompanyId: companyIdBigInt,
         status: 'REPLIED'
       }
     });
@@ -92,25 +93,26 @@ class AnalyticsService {
           ? Math.round(((currentMonthApproaches - lastMonthApproaches) / lastMonthApproaches) * 100)
           : 0
       },
-      recentActivities: await this.getRecentActivities(companyId)
+      recentActivities: await this.getRecentActivities(companyIdBigInt)
     };
   }
 
   // エンジニア統計取得
   async getEngineerStatistics(companyId: string) {
+    const companyIdBigInt = BigInt(companyId);
     const now = new Date();
 
     // ステータス別エンジニア数
     const statusCounts = await prisma.engineer.groupBy({
       by: ['currentStatus'],
-      where: { companyId },
+      where: { companyId: companyIdBigInt },
       _count: true
     });
 
     // 稼働予定エンジニア（次の30日以内）
     const upcomingEngineers = await prisma.engineer.findMany({
       where: {
-        companyId,
+        companyId: companyIdBigInt,
         engineerProjects: {
           some: {
             startDate: {
@@ -141,7 +143,7 @@ class AnalyticsService {
       by: ['skillId'],
       where: {
         engineer: {
-          companyId
+          companyId: companyIdBigInt
         }
       },
       _count: true,
@@ -171,7 +173,7 @@ class AnalyticsService {
 
     return {
       statusDistribution: statusCounts.map(s => ({
-        status: s.status,
+        status: s.currentStatus,
         count: s._count
       })),
       upcomingEngineers: upcomingEngineers.map(e => ({
@@ -186,6 +188,7 @@ class AnalyticsService {
 
   // アプローチ統計取得
   async getApproachStatistics(companyId: string) {
+    const companyIdBigInt = BigInt(companyId);
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
@@ -193,7 +196,7 @@ class AnalyticsService {
     const statusCounts = await prisma.approach.groupBy({
       by: ['status'],
       where: {
-        fromCompanyId: companyId
+        fromCompanyId: companyIdBigInt
       },
       _count: true
     });
@@ -201,7 +204,7 @@ class AnalyticsService {
     // 最近30日間のアプローチ推移
     const recentApproaches = await prisma.approach.findMany({
       where: {
-        fromCompanyId: companyId,
+        fromCompanyId: companyIdBigInt,
         createdAt: {
           gte: thirtyDaysAgo
         }
@@ -239,7 +242,7 @@ class AnalyticsService {
     const clientStats = await prisma.approach.groupBy({
       by: ['toCompanyId'],
       where: {
-        fromCompanyId: companyId
+        fromCompanyId: companyIdBigInt
       },
       _count: true,
       orderBy: {
@@ -311,7 +314,7 @@ class AnalyticsService {
     const recentProjects = await prisma.engineerProject.findMany({
       where: {
         engineer: {
-          companyId
+          companyId: companyId
         }
       },
       include: {
