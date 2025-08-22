@@ -49,17 +49,6 @@ const MainLayout: React.FC = () => {
         },
       ],
     },
-    {
-      key: 'skillsheets',
-      icon: <FileTextOutlined />,
-      label: 'スキルシート管理',
-      children: [
-        {
-          key: 'skillsheets/list',
-          label: 'スキルシート一覧', // SKL001
-        },
-      ],
-    },
     // プロジェクト管理（一時的にコメントアウト）
     // {
     //   key: 'projects',
