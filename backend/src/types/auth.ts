@@ -131,6 +131,16 @@ export const PERMISSIONS = {
   ENGINEER_UPDATE: 'engineer:update',
   ENGINEER_DELETE: 'engineer:delete',
   
+  // スキルシート管理
+  SKILL_SHEET_VIEW: 'skill_sheet:view',
+  SKILL_SHEET_UPDATE: 'skill_sheet:update',
+  
+  // 取引先管理
+  CLIENT_VIEW: 'client:view',
+  CLIENT_CREATE: 'client:create',
+  CLIENT_UPDATE: 'client:update',
+  CLIENT_DELETE: 'client:delete',
+  
   // プロジェクト管理
   PROJECT_VIEW: 'project:view',
   PROJECT_CREATE: 'project:create',

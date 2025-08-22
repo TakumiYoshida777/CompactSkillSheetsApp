@@ -1,7 +1,5 @@
-/**
- * エンジニアリポジトリ（モック実装）
- * TODO: 実際のデータベース接続実装に置き換える
- */
+import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
 export interface Engineer {
   id: string;
@@ -16,116 +14,275 @@ export interface Engineer {
   updatedAt: Date;
 }
 
+export interface EngineerWithOfferStatus extends Engineer {
+  lastOfferDate: Date | null;
+  offerCount: number;
+  offerStatus: string | null;
+}
+
 class EngineerRepository {
-  private engineers: Map<string, Engineer> = new Map();
-
-  constructor() {
-    // サンプルデータを追加
-    this.engineers.set('1', {
-      id: '1',
-      name: '山田太郎',
-      email: 'yamada@example.com',
-      companyId: '100',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      experienceYears: 5,
-      hourlyRate: 5000,
-      status: 'AVAILABLE',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-
-    this.engineers.set('2', {
-      id: '2',
-      name: '佐藤花子',
-      email: 'sato@example.com',
-      companyId: '100',
-      skills: ['Python', 'Django', 'AWS'],
-      experienceYears: 3,
-      hourlyRate: 4500,
-      status: 'AVAILABLE',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-  }
+  constructor(private prisma: PrismaClient) {}
 
   async findById(id: string): Promise<Engineer | null> {
-    return this.engineers.get(id) || null;
+    const engineer = await this.prisma.engineer.findUnique({
+      where: { id: BigInt(id) },
+      include: {
+        skillSheet: {
+          include: {
+            skills: true
+          }
+        }
+      }
+    });
+
+    if (!engineer) return null;
+
+    return {
+      id: engineer.id.toString(),
+      name: engineer.name,
+      email: engineer.email,
+      companyId: engineer.companyId.toString(),
+      skills: engineer.skillSheet?.skills.map(s => s.name) || [],
+      experienceYears: engineer.experienceYears || 0,
+      hourlyRate: engineer.unitPrice || 0,
+      status: engineer.engineerStatus,
+      createdAt: engineer.createdAt,
+      updatedAt: engineer.updatedAt
+    };
   }
 
   async findByIds(ids: string[]): Promise<Engineer[]> {
-    return ids.map(id => this.engineers.get(id)).filter(Boolean) as Engineer[];
+    const engineers = await this.prisma.engineer.findMany({
+      where: {
+        id: { in: ids.map(id => BigInt(id)) }
+      },
+      include: {
+        skillSheet: {
+          include: {
+            skills: true
+          }
+        }
+      }
+    });
+
+    return engineers.map(e => ({
+      id: e.id.toString(),
+      name: e.name,
+      email: e.email,
+      companyId: e.companyId.toString(),
+      skills: e.skillSheet?.skills.map(s => s.name) || [],
+      experienceYears: e.experienceYears || 0,
+      hourlyRate: e.unitPrice || 0,
+      status: e.engineerStatus,
+      createdAt: e.createdAt,
+      updatedAt: e.updatedAt
+    }));
   }
 
   async findByCompanyId(companyId: string): Promise<Engineer[]> {
-    return Array.from(this.engineers.values())
-      .filter(e => e.companyId === companyId);
+    const engineers = await this.prisma.engineer.findMany({
+      where: { companyId: BigInt(companyId) },
+      include: {
+        skillSheet: {
+          include: {
+            skills: true
+          }
+        }
+      }
+    });
+
+    return engineers.map(e => ({
+      id: e.id.toString(),
+      name: e.name,
+      email: e.email,
+      companyId: e.companyId.toString(),
+      skills: e.skillSheet?.skills.map(s => s.name) || [],
+      experienceYears: e.experienceYears || 0,
+      hourlyRate: e.unitPrice || 0,
+      status: e.engineerStatus,
+      createdAt: e.createdAt,
+      updatedAt: e.updatedAt
+    }));
   }
 
   async findAvailable(companyId: string): Promise<Engineer[]> {
-    return Array.from(this.engineers.values())
-      .filter(e => e.companyId === companyId && e.status === 'AVAILABLE');
+    const engineers = await this.prisma.engineer.findMany({
+      where: {
+        companyId: BigInt(companyId),
+        engineerStatus: 'AVAILABLE'
+      },
+      include: {
+        skillSheet: {
+          include: {
+            skills: true
+          }
+        }
+      }
+    });
+
+    return engineers.map(e => ({
+      id: e.id.toString(),
+      name: e.name,
+      email: e.email,
+      companyId: e.companyId.toString(),
+      skills: e.skillSheet?.skills.map(s => s.name) || [],
+      experienceYears: e.experienceYears || 0,
+      hourlyRate: e.unitPrice || 0,
+      status: e.engineerStatus,
+      createdAt: e.createdAt,
+      updatedAt: e.updatedAt
+    }));
   }
 
   async create(data: Partial<Engineer>): Promise<Engineer> {
-    const id = String(Date.now());
-    const engineer: Engineer = {
-      id,
-      name: data.name || '',
-      email: data.email || '',
-      companyId: data.companyId || '',
-      skills: data.skills || [],
-      experienceYears: data.experienceYears || 0,
-      hourlyRate: data.hourlyRate || 0,
-      status: data.status || 'AVAILABLE',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ...data
+    const engineer = await this.prisma.engineer.create({
+      data: {
+        name: data.name || '',
+        email: data.email || '',
+        companyId: BigInt(data.companyId || '1'),
+        engineerStatus: data.status || 'AVAILABLE',
+        unitPrice: data.hourlyRate,
+        experienceYears: data.experienceYears,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      include: {
+        skillSheet: {
+          include: {
+            skills: true
+          }
+        }
+      }
+    });
+
+    return {
+      id: engineer.id.toString(),
+      name: engineer.name,
+      email: engineer.email,
+      companyId: engineer.companyId.toString(),
+      skills: engineer.skillSheet?.skills.map(s => s.name) || [],
+      experienceYears: engineer.experienceYears || 0,
+      hourlyRate: engineer.unitPrice || 0,
+      status: engineer.engineerStatus,
+      createdAt: engineer.createdAt,
+      updatedAt: engineer.updatedAt
     };
-    this.engineers.set(id, engineer);
-    return engineer;
   }
 
   async update(id: string, data: Partial<Engineer>): Promise<Engineer | null> {
-    const engineer = this.engineers.get(id);
-    if (!engineer) return null;
+    try {
+      const engineer = await this.prisma.engineer.update({
+        where: { id: BigInt(id) },
+        data: {
+          name: data.name,
+          email: data.email,
+          engineerStatus: data.status,
+          unitPrice: data.hourlyRate,
+          experienceYears: data.experienceYears,
+          updatedAt: new Date()
+        },
+        include: {
+          skillSheet: {
+            include: {
+              skills: true
+            }
+          }
+        }
+      });
 
-    const updated = {
-      ...engineer,
-      ...data,
-      updatedAt: new Date()
-    };
-    this.engineers.set(id, updated);
-    return updated;
+      return {
+        id: engineer.id.toString(),
+        name: engineer.name,
+        email: engineer.email,
+        companyId: engineer.companyId.toString(),
+        skills: engineer.skillSheet?.skills.map(s => s.name) || [],
+        experienceYears: engineer.experienceYears || 0,
+        hourlyRate: engineer.unitPrice || 0,
+        status: engineer.engineerStatus,
+        createdAt: engineer.createdAt,
+        updatedAt: engineer.updatedAt
+      };
+    } catch (error) {
+      return null;
+    }
   }
 
   async delete(id: string): Promise<boolean> {
-    return this.engineers.delete(id);
+    try {
+      await this.prisma.engineer.delete({
+        where: { id: BigInt(id) }
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   async count(companyId?: string): Promise<number> {
-    if (companyId) {
-      return Array.from(this.engineers.values())
-        .filter(e => e.companyId === companyId).length;
-    }
-    return this.engineers.size;
+    const where = companyId ? { companyId: BigInt(companyId) } : {};
+    return this.prisma.engineer.count({ where });
   }
 
   async countAvailableEngineers(companyId: string): Promise<number> {
-    return Array.from(this.engineers.values())
-      .filter(e => e.companyId === companyId && e.status === 'AVAILABLE').length;
+    return this.prisma.engineer.count({
+      where: {
+        companyId: BigInt(companyId),
+        engineerStatus: 'AVAILABLE'
+      }
+    });
   }
 
-  async findAvailableWithOfferStatus(companyId: string): Promise<any[]> {
-    const engineers = Array.from(this.engineers.values())
-      .filter(e => e.companyId === companyId && e.status === 'AVAILABLE');
-    
-    return engineers.map(e => ({
-      ...e,
-      lastOfferDate: null,
-      offerCount: 0,
-      offerStatus: null
-    }));
+  async findAvailableWithOfferStatus(companyId: string): Promise<EngineerWithOfferStatus[]> {
+    const engineers = await this.prisma.engineer.findMany({
+      where: {
+        companyId: BigInt(companyId),
+        engineerStatus: 'AVAILABLE'
+      },
+      include: {
+        skillSheet: {
+          include: {
+            skills: true
+          }
+        },
+        offerEngineers: {
+          include: {
+            offer: {
+              select: {
+                id: true,
+                status: true,
+                sentAt: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1
+        }
+      }
+    });
+
+    return engineers.map(e => {
+      const latestOffer = e.offerEngineers[0]?.offer;
+      const offerCount = e.offerEngineers.length;
+
+      return {
+        id: e.id.toString(),
+        name: e.name,
+        email: e.email,
+        companyId: e.companyId.toString(),
+        skills: e.skillSheet?.skills.map(s => s.name) || [],
+        experienceYears: e.experienceYears || 0,
+        hourlyRate: e.unitPrice || 0,
+        status: e.engineerStatus,
+        createdAt: e.createdAt,
+        updatedAt: e.updatedAt,
+        lastOfferDate: latestOffer?.sentAt || null,
+        offerCount,
+        offerStatus: latestOffer?.status || null
+      };
+    });
   }
 }
 
-export const engineerRepository = new EngineerRepository();
+export const engineerRepository = new EngineerRepository(prisma);

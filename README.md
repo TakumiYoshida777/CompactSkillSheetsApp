@@ -161,7 +161,7 @@ cd CompactSkillSheetsApp
 docker-compose up -d
 
 # 環境2（Developer2_Docker使用）
-cd CompactSkillSheetsApp
+cd Dev2_CompactSkillSheetsApp
 docker-compose -f Developer2_Docker/docker-compose-dev2.yml up -d
 
 # 環境3（Developer3_Docker使用）

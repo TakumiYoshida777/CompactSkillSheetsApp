@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma, OfferStatus } from '@prisma/client';
+import { prisma } from '../lib/prisma';
 
 export interface CreateOfferInput {
   clientCompanyId: bigint;
@@ -43,15 +44,29 @@ export class OfferRepository {
   }
 
   async findById(id: string, options?: any): Promise<any> {
-    return this.getOfferById(BigInt(id));
+    return this.findOfferById(BigInt(id));
   }
 
   async findByIds(ids: string[]): Promise<any[]> {
-    return this.getOffersByIds(ids.map(id => BigInt(id)));
+    const offers = await this.prisma.offer.findMany({
+      where: {
+        id: { in: ids.map(id => BigInt(id)) }
+      },
+      include: {
+        clientCompany: true,
+        creator: true,
+        offerEngineers: {
+          include: {
+            engineer: true,
+          },
+        },
+      },
+    });
+    return offers;
   }
 
   async findMany(filters: any): Promise<any> {
-    const offers = await this.getOffers(BigInt(filters.companyId), filters);
+    const offers = await this.findOffersByCompany(BigInt(filters.companyId), filters);
     return {
       offers,
       total: offers.length
@@ -59,7 +74,13 @@ export class OfferRepository {
   }
 
   async update(id: string, data: any): Promise<any> {
-    return this.updateOffer(BigInt(id), data);
+    return this.prisma.offer.update({
+      where: { id: BigInt(id) },
+      data: {
+        ...data,
+        updatedAt: new Date()
+      }
+    });
   }
 
   async updateMany(ids: string[], data: any): Promise<void> {
@@ -381,6 +402,4 @@ export class OfferRepository {
   }
 }
 
-// Prismaクライアントのモックインスタンス
-const prismaClient = {} as PrismaClient;
-export const offerRepository = new OfferRepository(prismaClient);
+export const offerRepository = new OfferRepository(prisma);

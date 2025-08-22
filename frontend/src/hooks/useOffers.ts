@@ -1,7 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { 
+  useQuery, 
+  useSuspenseQuery,
+  useInfiniteQuery,
+  useMutation, 
+  useQueryClient 
+} from '@tanstack/react-query';
 import { message } from 'antd';
 import * as offerApi from '../api/client/offerApi';
 import { OfferStatus } from '../stores/offerStore';
+import { queryOptions, infiniteQueryOptions } from '../config/queryClient';
 
 const QUERY_KEYS = {
   offers: 'offers',
@@ -17,7 +24,35 @@ export const useOffers = (filters?: offerApi.OfferFilters) => {
   return useQuery({
     queryKey: [QUERY_KEYS.offers, filters],
     queryFn: () => offerApi.getOffers(filters),
-    staleTime: 30000,
+    ...queryOptions.search, // 改善されたリトライとキャッシュ設定
+  });
+};
+
+/**
+ * オファー一覧を取得（Suspense版）
+ * ローディング状態をSuspenseで管理
+ */
+export const useOffersSuspense = (filters?: offerApi.OfferFilters) => {
+  return useSuspenseQuery({
+    queryKey: [QUERY_KEYS.offers, filters],
+    queryFn: () => offerApi.getOffers(filters),
+    ...queryOptions.search,
+  });
+};
+
+/**
+ * オファー一覧を無限スクロールで取得
+ */
+export const useInfiniteOffers = (filters?: Omit<offerApi.OfferFilters, 'page'>) => {
+  return useInfiniteQuery({
+    queryKey: [QUERY_KEYS.offers, 'infinite', filters],
+    queryFn: ({ pageParam = 1 }) => 
+      offerApi.getOffers({ ...filters, page: pageParam }),
+    ...infiniteQueryOptions,
+    getNextPageParam: (lastPage: any) => {
+      const { page, totalPages } = lastPage.pagination || {};
+      return page < totalPages ? page + 1 : undefined;
+    },
   });
 };
 
@@ -25,7 +60,20 @@ export const useOfferBoard = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.offerBoard],
     queryFn: offerApi.getOfferBoard,
-    staleTime: 60000,
+    ...queryOptions.realtime, // リアルタイム更新が必要なデータ
+    refetchInterval: 30000, // 30秒ごとに自動更新
+  });
+};
+
+/**
+ * オファーボードを取得（Suspense版）
+ */
+export const useOfferBoardSuspense = () => {
+  return useSuspenseQuery({
+    queryKey: [QUERY_KEYS.offerBoard],
+    queryFn: offerApi.getOfferBoard,
+    ...queryOptions.realtime,
+    refetchInterval: 30000,
   });
 };
 
@@ -33,7 +81,18 @@ export const useAvailableEngineers = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.availableEngineers],
     queryFn: offerApi.getAvailableEngineers,
-    staleTime: 60000,
+    ...queryOptions.user, // ユーザー関連データの設定
+  });
+};
+
+/**
+ * 利用可能なエンジニア一覧を取得（Suspense版）
+ */
+export const useAvailableEngineersSuspense = () => {
+  return useSuspenseQuery({
+    queryKey: [QUERY_KEYS.availableEngineers],
+    queryFn: offerApi.getAvailableEngineers,
+    ...queryOptions.user,
   });
 };
 
@@ -42,6 +101,18 @@ export const useEngineerDetails = (engineerId: string) => {
     queryKey: QUERY_KEYS.engineerDetails(engineerId),
     queryFn: () => offerApi.getEngineerDetails(engineerId),
     enabled: !!engineerId,
+    ...queryOptions.user,
+  });
+};
+
+/**
+ * エンジニア詳細を取得（Suspense版）
+ */
+export const useEngineerDetailsSuspense = (engineerId: string) => {
+  return useSuspenseQuery({
+    queryKey: QUERY_KEYS.engineerDetails(engineerId),
+    queryFn: () => offerApi.getEngineerDetails(engineerId),
+    ...queryOptions.user,
   });
 };
 
@@ -65,7 +136,18 @@ export const useOfferStatistics = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.offerStatistics],
     queryFn: offerApi.getOfferStatistics,
-    staleTime: 300000,
+    ...queryOptions.static, // 静的データの設定（長いキャッシュ）
+  });
+};
+
+/**
+ * オファー統計を取得（Suspense版）
+ */
+export const useOfferStatisticsSuspense = () => {
+  return useSuspenseQuery({
+    queryKey: [QUERY_KEYS.offerStatistics],
+    queryFn: offerApi.getOfferStatistics,
+    ...queryOptions.static,
   });
 };
 
@@ -81,7 +163,34 @@ export const useCreateOffer = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.offerStatistics] });
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || 'オファー送信に失敗しました');
+      // エラーハンドリングはグローバル設定でも行われる
+      const errorMessage = error.response?.data?.message || 'オファー送信に失敗しました';
+      message.error(errorMessage);
+    },
+    // 楽観的更新
+    onMutate: async (newOffer) => {
+      // 現在のクエリをキャンセル
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEYS.offers] });
+      
+      // 現在のデータをスナップショット
+      const previousOffers = queryClient.getQueryData([QUERY_KEYS.offers]);
+      
+      // 楽観的に更新
+      queryClient.setQueryData([QUERY_KEYS.offers], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: [newOffer, ...old.data],
+        };
+      });
+      
+      return { previousOffers };
+    },
+    // エラー時はロールバック
+    onError: (err, newOffer, context) => {
+      if (context?.previousOffers) {
+        queryClient.setQueryData([QUERY_KEYS.offers], context.previousOffers);
+      }
     },
   });
 };
