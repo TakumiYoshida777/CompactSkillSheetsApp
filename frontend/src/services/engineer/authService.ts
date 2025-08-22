@@ -61,7 +61,7 @@ export interface ProfileResponse {
 }
 
 class EngineerAuthService {
-  private apiUrl = 'engineer/auth';
+  private apiUrl = '/api/auth';
 
   /**
    * エンジニアログイン
@@ -69,13 +69,28 @@ class EngineerAuthService {
   async login(data: LoginRequest): Promise<AuthResponse> {
     const response = await axios.post(`${this.apiUrl}/login`, data);
     
-    // トークンを保存
-    if (response.data.success && response.data.data.tokens) {
-      localStorage.setItem('accessToken', response.data.data.tokens.accessToken);
-      localStorage.setItem('refreshToken', response.data.data.tokens.refreshToken);
+    // トークンを保存（APIレスポンスの形式に合わせて修正）
+    if (response.data.success && response.data.data) {
+      const { accessToken, refreshToken } = response.data.data;
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
       
       // axios のデフォルトヘッダーに設定
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.tokens.accessToken}`;
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      
+      // レスポンスを期待される形式に変換
+      return {
+        success: response.data.success,
+        message: response.data.message,
+        data: {
+          user: response.data.data.user,
+          tokens: {
+            accessToken: response.data.data.accessToken,
+            refreshToken: response.data.data.refreshToken,
+            expiresIn: response.data.data.expiresIn
+          }
+        }
+      };
     }
     
     return response.data;
@@ -87,13 +102,28 @@ class EngineerAuthService {
   async register(data: RegisterRequest): Promise<AuthResponse> {
     const response = await axios.post(`${this.apiUrl}/register`, data);
     
-    // トークンを保存
-    if (response.data.success && response.data.data.tokens) {
-      localStorage.setItem('accessToken', response.data.data.tokens.accessToken);
-      localStorage.setItem('refreshToken', response.data.data.tokens.refreshToken);
+    // トークンを保存（APIレスポンスの形式に合わせて修正）
+    if (response.data.success && response.data.data) {
+      const { accessToken, refreshToken } = response.data.data;
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
       
       // axios のデフォルトヘッダーに設定
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.tokens.accessToken}`;
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      
+      // レスポンスを期待される形式に変換
+      return {
+        success: response.data.success,
+        message: response.data.message,
+        data: {
+          user: response.data.data.user,
+          tokens: {
+            accessToken: response.data.data.accessToken,
+            refreshToken: response.data.data.refreshToken,
+            expiresIn: response.data.data.expiresIn
+          }
+        }
+      };
     }
     
     return response.data;
@@ -129,13 +159,28 @@ class EngineerAuthService {
     
     const response = await axios.post(`${this.apiUrl}/refresh`, { refreshToken });
     
-    // 新しいトークンを保存
-    if (response.data.success && response.data.data.tokens) {
-      localStorage.setItem('accessToken', response.data.data.tokens.accessToken);
-      localStorage.setItem('refreshToken', response.data.data.tokens.refreshToken);
+    // 新しいトークンを保存（APIレスポンスの形式に合わせて修正）
+    if (response.data.success && response.data.data) {
+      const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', newRefreshToken);
       
       // axios のデフォルトヘッダーに設定
-      axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.tokens.accessToken}`;
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+      
+      // レスポンスを期待される形式に変換
+      return {
+        success: response.data.success,
+        message: response.data.message,
+        data: {
+          user: response.data.data.user || {},
+          tokens: {
+            accessToken: response.data.data.accessToken,
+            refreshToken: response.data.data.refreshToken,
+            expiresIn: response.data.data.expiresIn
+          }
+        }
+      };
     }
     
     return response.data;

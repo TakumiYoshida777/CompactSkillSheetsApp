@@ -22,14 +22,9 @@ const EngineerLogin: React.FC = () => {
   // デモアカウント情報
   const demoAccounts = [
     {
-      email: 'demo-engineer-a@example.com',
-      password: 'DemoPass123!',
-      description: 'エンジニアA: 全クライアント対応可能',
-    },
-    {
-      email: 'demo-engineer-b@example.com',
-      password: 'DemoPass123!',
-      description: 'エンジニアB: 待機中ステータス',
+      email: 'engineer@demo.example.com',
+      password: 'password123',
+      description: 'エンジニア太郎',
     },
   ];
 
@@ -51,7 +46,7 @@ const EngineerLogin: React.FC = () => {
         );
 
         message.success('ログインに成功しました');
-        navigate('engineer/skill-sheet');
+        navigate('/engineer/skill-sheet');
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -161,33 +156,20 @@ const EngineerLogin: React.FC = () => {
         >
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Text strong>デモアカウント:</Text>
-            <Row gutter={8}>
-              <Col span={12}>
-                <Button
-                  size="small"
-                  block
-                  onClick={() => handleDemoLogin(demoAccounts[0])}
-                >
-                  エンジニアA
-                </Button>
-              </Col>
-              <Col span={12}>
-                <Button
-                  size="small"
-                  block
-                  onClick={() => handleDemoLogin(demoAccounts[1])}
-                >
-                  エンジニアB
-                </Button>
-              </Col>
-            </Row>
+            <Button
+              size="small"
+              block
+              onClick={() => handleDemoLogin(demoAccounts[0])}
+            >
+              {demoAccounts[0].description}
+            </Button>
             <div style={{ marginTop: 8 }}>
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                エンジニアA: 全クライアント対応可能
+                メール: {demoAccounts[0].email}
               </Text>
               <br />
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                エンジニアB: 待機中ステータス
+                パスワード: {demoAccounts[0].password}
               </Text>
             </div>
           </Space>
