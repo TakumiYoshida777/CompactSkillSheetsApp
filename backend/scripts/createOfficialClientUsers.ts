@@ -18,7 +18,7 @@ async function createOfficialClientUsers() {
         data: {
           name: '株式会社テストSES',
           companyType: 'SES',
-          emailDomain: 'test-ses.com',
+          emailDomain: 'example-test-ses.local',
           maxEngineers: 100,
           isActive: true
         }
@@ -42,7 +42,7 @@ async function createOfficialClientUsers() {
         data: {
           name: '株式会社クライアントA',
           companyType: 'CLIENT',
-          emailDomain: 'client-a.co.jp',
+          emailDomain: 'example-client-a.local',
           maxEngineers: 0,
           isActive: true
         }
@@ -85,7 +85,7 @@ async function createOfficialClientUsers() {
 
     // クライアントA管理者ユーザーを作成
     const existingAdminA = await prisma.clientUser.findUnique({
-      where: { email: 'admin@client-a.co.jp' }
+      where: { email: 'admin@example-client-a.local' }
     });
 
     if (existingAdminA) {
@@ -98,12 +98,12 @@ async function createOfficialClientUsers() {
           accountLockedUntil: null
         }
       });
-      console.log('Updated existing admin@client-a.co.jp');
+      console.log('Updated existing admin@example-client-a.local');
     } else {
       const adminA = await prisma.clientUser.create({
         data: {
           businessPartnerId: businessPartnerA.id,
-          email: 'admin@client-a.co.jp',
+          email: 'admin@example-client-a.local',
           passwordHash,
           name: 'クライアントA管理者',
           department: '管理部',
@@ -136,7 +136,7 @@ async function createOfficialClientUsers() {
           grantedBy: BigInt(1)
         }
       });
-      console.log('Created admin@client-a.co.jp');
+      console.log('Created admin@example-client-a.local');
     }
 
     // 2. 株式会社クライアントBを作成
@@ -152,7 +152,7 @@ async function createOfficialClientUsers() {
         data: {
           name: '株式会社クライアントB',
           companyType: 'CLIENT',
-          emailDomain: 'client-b.co.jp',
+          emailDomain: 'example-client-b.local',
           maxEngineers: 0,
           isActive: true
         }
@@ -195,7 +195,7 @@ async function createOfficialClientUsers() {
 
     // クライアントB一般ユーザーを作成
     const existingUserB = await prisma.clientUser.findUnique({
-      where: { email: 'user@client-b.co.jp' }
+      where: { email: 'user@example-client-b.local' }
     });
 
     if (existingUserB) {
@@ -208,12 +208,12 @@ async function createOfficialClientUsers() {
           accountLockedUntil: null
         }
       });
-      console.log('Updated existing user@client-b.co.jp');
+      console.log('Updated existing user@example-client-b.local');
     } else {
       const userB = await prisma.clientUser.create({
         data: {
           businessPartnerId: businessPartnerB.id,
-          email: 'user@client-b.co.jp',
+          email: 'user@example-client-b.local',
           passwordHash,
           name: 'クライアントB担当者',
           department: '購買部',
@@ -246,18 +246,18 @@ async function createOfficialClientUsers() {
           grantedBy: BigInt(1)
         }
       });
-      console.log('Created user@client-b.co.jp');
+      console.log('Created user@example-client-b.local');
     }
 
     console.log('\n=====================================');
     console.log('公式取引先企業アカウントを作成しました');
     console.log('=====================================');
     console.log('\n【株式会社クライアントA】');
-    console.log('メール: admin@client-a.co.jp');
+    console.log('メール: admin@example-client-a.local');
     console.log('パスワード: Admin123!');
     console.log('権限: 取引先管理者（全エンジニア閲覧可能）');
     console.log('\n【株式会社クライアントB】');
-    console.log('メール: user@client-b.co.jp');
+    console.log('メール: user@example-client-b.local');
     console.log('パスワード: Admin123!');
     console.log('権限: 取引先ユーザー（待機中エンジニアのみ閲覧可能）');
     console.log('=====================================\n');

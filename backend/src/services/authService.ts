@@ -17,7 +17,6 @@ import {
 // 環境変数から設定を読み込み
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production';
 const JWT_EXPIRY = process.env.JWT_EXPIRY || '8h';
-const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || '30d';
 const BCRYPT_ROUNDS = 10;
 
 // モックデータストア（本番環境ではデータベースを使用）

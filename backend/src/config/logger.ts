@@ -1,8 +1,6 @@
 import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
 import fs from 'fs';
-import moment from 'moment-timezone';
 
 // Logsディレクトリのパス
 const logDir = path.join(__dirname, '../../Logs');
@@ -12,15 +10,14 @@ if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
 }
 
-// 日本時間でのタイムスタンプ生成
-const japanTimestamp = winston.format((info) => {
-  info.timestamp = moment().tz('Asia/Tokyo').format('YYYY-MM-DD HH:mm:ss');
-  return info;
+// タイムスタンプ生成
+const timestamp = winston.format.timestamp({
+  format: 'YYYY-MM-DD HH:mm:ss'
 });
 
 // カスタムフォーマット
 const customFormat = winston.format.combine(
-  japanTimestamp(),
+  timestamp,
   winston.format.errors({ stack: true }),
   winston.format.printf(({ timestamp, level, message, ...metadata }) => {
     let msg = `${timestamp} [${level.toUpperCase()}]: ${message}`;
@@ -49,35 +46,32 @@ const customFormat = winston.format.combine(
   })
 );
 
-// HTTPリクエスト用のトランスポート（日付別）
-const httpTransport = new DailyRotateFile({
-  filename: path.join(logDir, 'http-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '30d',
+// 現在の日付を取得する関数
+const getDateString = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// HTTPリクエスト用のトランスポート
+const httpTransport = new winston.transports.File({
+  filename: path.join(logDir, `http-${getDateString()}.log`),
   level: 'info',
   format: customFormat
 });
 
-// エラー専用のトランスポート（日付別）
-const errorTransport = new DailyRotateFile({
-  filename: path.join(logDir, 'error-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '30d',
+// エラー専用のトランスポート
+const errorTransport = new winston.transports.File({
+  filename: path.join(logDir, `error-${getDateString()}.log`),
   level: 'error',
   format: customFormat
 });
 
-// 全てのログを記録するトランスポート（日付別）
-const combinedTransport = new DailyRotateFile({
-  filename: path.join(logDir, 'combined-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '30d',
+// 全てのログを記録するトランスポート
+const combinedTransport = new winston.transports.File({
+  filename: path.join(logDir, `combined-${getDateString()}.log`),
   format: customFormat
 });
 
