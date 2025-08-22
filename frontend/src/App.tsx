@@ -3,6 +3,7 @@ import { ConfigProvider, Spin } from 'antd';
 import jaJP from 'antd/locale/ja_JP';
 import { lazy, Suspense, useEffect } from 'react';
 import './App.css';
+import { NavigationSetup } from './components/NavigationSetup';
 
 // レイアウトコンポーネント（常に必要なので通常インポート）
 import MainLayout from './layouts/MainLayout';
@@ -89,6 +90,7 @@ function App() {
   return (
     <ConfigProvider locale={jaJP}>
       <Router>
+        <NavigationSetup />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* テストページ */}

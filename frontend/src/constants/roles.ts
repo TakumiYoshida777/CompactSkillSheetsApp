@@ -48,11 +48,21 @@ export const ENGINEER_REGISTER_ROLES: readonly string[] = [
 ];
 
 // 権限チェックヘルパー関数
-export const canRegisterEngineer = (userRole: string | string[]): boolean => {
-  if (Array.isArray(userRole)) {
-    return userRole.some(role => ENGINEER_REGISTER_ROLES.includes(role));
+export const canRegisterEngineer = (userRoles: string | string[] | Array<{name: string}> | undefined): boolean => {
+  if (!userRoles) return false;
+  
+  // オブジェクトの配列の場合（{name: string}[]）
+  if (Array.isArray(userRoles) && userRoles.length > 0 && typeof userRoles[0] === 'object' && 'name' in userRoles[0]) {
+    return userRoles.some((role: any) => ENGINEER_REGISTER_ROLES.includes(role.name));
   }
-  return ENGINEER_REGISTER_ROLES.includes(userRole);
+  
+  // 文字列の配列の場合
+  if (Array.isArray(userRoles)) {
+    return userRoles.some(role => ENGINEER_REGISTER_ROLES.includes(role));
+  }
+  
+  // 単一の文字列の場合
+  return ENGINEER_REGISTER_ROLES.includes(userRoles);
 };
 
 // エンジニア編集権限を持つロール

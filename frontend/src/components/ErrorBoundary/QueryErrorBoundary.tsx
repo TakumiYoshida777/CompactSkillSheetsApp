@@ -7,6 +7,9 @@ import {
   ExclamationCircleOutlined,
   HomeOutlined 
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { getHomePath, getLoginPath } from '../../utils/navigation';
+import { useAuthStore } from '../../stores/authStore';
 
 interface ErrorInfo {
   componentStack: string;
@@ -24,8 +27,26 @@ interface ErrorFallbackProps {
 }
 
 /**
- * エラーフォールバックコンポーネント
+ * エラーフォールバックコンポーネント（React Router対応版）
  * エラーの種類に応じて適切なメッセージを表示
+ */
+const ErrorFallbackWithNavigation: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary }) => {
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  
+  const handleNavigateHome = () => {
+    const homePath = getHomePath(user?.userType);
+    navigate(homePath);
+  };
+  
+  const handleNavigateLogin = () => {
+    const loginPath = getLoginPath(window.location.pathname);
+    navigate(loginPath);
+  };
+
+/**
+ * エラーフォールバックコンポーネント（フォールバック版）
+ * React Routerが使用できない場合のフォールバック
  */
 const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary }) => {
   // ネットワークエラーかどうかを判定
@@ -49,7 +70,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary
             <Button type="primary" icon={<ReloadOutlined />} onClick={resetErrorBoundary}>
               再試行
             </Button>
-            <Button icon={<HomeOutlined />} onClick={() => window.location.href = '/'}>
+            <Button icon={<HomeOutlined />} onClick={handleNavigateHome}>
               ホームへ戻る
             </Button>
           </Space>
@@ -66,7 +87,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary
         subTitle="このページを表示する権限がありません。管理者にお問い合わせください。"
         extra={
           <Space>
-            <Button type="primary" icon={<HomeOutlined />} onClick={() => window.location.href = '/'}>
+            <Button type="primary" icon={<HomeOutlined />} onClick={handleNavigateHome}>
               ホームへ戻る
             </Button>
           </Space>
@@ -82,7 +103,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary
         title="認証が必要です"
         subTitle="セッションの有効期限が切れました。再度ログインしてください。"
         extra={
-          <Button type="primary" onClick={() => window.location.href = '/login'}>
+          <Button type="primary" onClick={handleNavigateLogin}>
             ログインページへ
           </Button>
         }
@@ -121,7 +142,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetErrorBoundary
           <Button type="primary" icon={<ReloadOutlined />} onClick={resetErrorBoundary}>
             再試行
           </Button>
-          <Button icon={<HomeOutlined />} onClick={() => window.location.href = '/'}>
+          <Button icon={<HomeOutlined />} onClick={handleNavigateHome}>
             ホームへ戻る
           </Button>
         </Space>
@@ -179,7 +200,8 @@ class ErrorBoundaryClass extends Component<
 
   render() {
     if (this.state.hasError && this.state.error) {
-      const FallbackComponent = this.props.fallback || ErrorFallback;
+      // React Routerが利用可能かチェック
+      const FallbackComponent = this.props.fallback || ErrorFallbackWithNavigation;
       return (
         <FallbackComponent
           error={this.state.error}
@@ -202,7 +224,7 @@ export const QueryErrorBoundary: React.FC<{ children: ReactNode }> = ({ children
       {({ reset }) => (
         <ErrorBoundaryClass
           fallback={({ error, resetErrorBoundary }) => (
-            <ErrorFallback
+            <ErrorFallbackWithNavigation
               error={error}
               resetErrorBoundary={() => {
                 resetErrorBoundary();

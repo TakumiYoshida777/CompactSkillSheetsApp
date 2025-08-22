@@ -4,6 +4,7 @@ import axios from 'axios';
 import { getUserTypeFromToken } from '../utils/jwtHelper';
 import { AuthService } from '../services/authService';
 import { AuthCheckService } from '../services/authCheckService';
+import { getLoginPath } from '../utils/navigation';
 import type { AuthState, User } from './types/authTypes';
 
 const useAuthStore = create<AuthState>()(
@@ -15,6 +16,7 @@ const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      navigateToLogin: null,  // ナビゲーション関数を保持
 
       login: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
@@ -229,13 +231,26 @@ const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
         // rolesが配列であることを確認
-        return Array.isArray(user.roles) && user.roles.includes(role);
+        if (Array.isArray(user.roles)) {
+          // rolesがオブジェクトの配列の場合
+          if (user.roles.length > 0 && typeof user.roles[0] === 'object' && 'name' in user.roles[0]) {
+            return user.roles.some((r: any) => r.name === role);
+          }
+          // rolesが文字列の配列の場合
+          return user.roles.includes(role);
+        }
+        // 単一のroleプロパティがある場合
+        if (user.role) {
+          return user.role === role;
+        }
+        return false;
       },
 
       isAdmin: () => {
         const { user } = get();
         if (!user) return false;
-        return user.roles.includes('admin');
+        // hasRoleメソッドを使用
+        return get().hasRole('admin');
       },
 
       isClientUser: () => {
@@ -255,6 +270,10 @@ const useAuthStore = create<AuthState>()(
         // userTypeがclientの場合、またはrolesが配列でclient_adminかclient_userを含む場合
         return user.userType === 'client' || 
                (Array.isArray(user.roles) && (user.roles.includes('client_admin') || user.roles.includes('client_user')));
+      },
+
+      setNavigateFunction: (navigate: ((path: string) => void) | null) => {
+        set({ navigateToLogin: navigate });
       },
     }),
     {

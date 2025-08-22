@@ -15,6 +15,7 @@ import {
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import useResponsive from '../hooks/useResponsive';
 import { useAuthStore } from '../stores/authStore';
+import { normalizePath } from '../utils/navigation';
 import type { MenuProps } from 'antd';
 
 const { Header, Sider, Content } = Layout;
@@ -136,8 +137,10 @@ const MainLayout: React.FC = () => {
   ];
 
   const handleMenuClick: MenuProps['onClick'] = (e) => {
-    // 絶対パスに変換
-    navigate(`/${e.key}`);
+    // パスの正規化（スラッシュの重複を防ぐ）
+    const path = e.key.startsWith('/') ? e.key : `/${e.key}`;
+    const normalizedPath = normalizePath(path);
+    navigate(normalizedPath);
     if (isMobile) {
       setMobileMenuOpen(false);
     }

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
+import { getLoginPath } from '../utils/navigation';
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
@@ -82,13 +83,20 @@ instance.interceptors.response.use(
         console.error('[Axios Interceptor] Refresh token failed:', refreshError);
         // リフレッシュ失敗時はログアウト
         useAuthStore.getState().logout();
-        // 現在のパスに応じて適切なログインページにリダイレクト
+        
+        // ナビゲーション関数を使用してリダイレクト
+        const navigateToLogin = useAuthStore.getState().navigateToLogin;
         const currentPath = window.location.pathname;
-        if (currentPath.includes('/client')) {
-          window.location.href = '/client/login';
+        const loginPath = getLoginPath(currentPath);
+        
+        if (navigateToLogin) {
+          // React Routerのnavigateを使用
+          navigateToLogin(loginPath);
         } else {
-          window.location.href = '/login';
+          // フォールバック: window.locationを使用（初期化前などの場合）
+          window.location.href = loginPath;
         }
+        
         return Promise.reject(refreshError);
       }
     }
