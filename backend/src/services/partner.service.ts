@@ -24,7 +24,10 @@ export class PartnerService {
   }
 
   async findAll(companyId: number, pagination: any, filters: any) {
-    return this.partnerRepo.findAll(companyId, pagination, filters);
+    return this.partnerRepo.findAll(companyId, {
+      pagination,
+      filters
+    });
   }
 
   async count(companyId: number, filters: any) {

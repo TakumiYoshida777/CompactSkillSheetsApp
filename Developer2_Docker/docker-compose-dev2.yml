@@ -1,4 +1,6 @@
-version: '3.8'
+# Dev2環境専用のDocker Compose設定
+# プロジェクト名をdev2に設定して完全分離
+name: dev2
 
 services:
   # フロントエンド（React） - 環境2
@@ -11,10 +13,14 @@ services:
       - "3001:3000"  # ホスト3001番ポートを使用
     volumes:
       - ../frontend:/app
-      - /app/node_modules
+      - dev2_front_modules:/app/node_modules
+      - dev2_front_cache:/app/node_modules/.vite
     environment:
       - VITE_API_URL=http://localhost:8001/api
+      - VITE_API_BASE_URL=http://localhost:8001/api/v1
       - VITE_WS_URL=ws://localhost:8001
+      - VITE_APP_PORT=3001
+      - VITE_ENV=dev2
     depends_on:
       - backend-dev2
     networks:
@@ -27,11 +33,12 @@ services:
       dockerfile: Dockerfile.dev
     container_name: skillsheet-backend-dev2
     ports:
-      - "8001:8000"  # ホスト8001番ポートを使用
+      - "8001:8000"  # ホスト8001番ポートを使用（ホスト:コンテナ）
       - "9230:9229"   # デバッガー用（別ポート）
     volumes:
       - ../backend:/app
-      - /app/node_modules
+      - dev2_backend_modules:/app/node_modules
+      - dev2_backend_cache:/app/node_modules/.cache
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://skillsheet:password@postgres-dev2:5432/skillsheet_dev2
@@ -41,7 +48,8 @@ services:
       - JWT_EXPIRES_IN=7d
       - CORS_ORIGIN=http://localhost:3001
       - LOG_LEVEL=debug
-      - PORT=8000
+      - PORT=8000  # コンテナ内ポート
+      - APP_ENV=dev2
     depends_on:
       - postgres-dev2
       - redis-dev2
@@ -60,7 +68,7 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=skillsheet_dev2
     volumes:
-      - postgres_data_dev2:/var/lib/postgresql/data
+      - dev2_postgres_data:/var/lib/postgresql/data
     networks:
       - skillsheet-network-dev2
     healthcheck:
@@ -76,7 +84,7 @@ services:
     ports:
       - "6380:6379"  # ホスト6380番ポートを使用
     volumes:
-      - redis_data_dev2:/data
+      - dev2_redis_data:/data
     networks:
       - skillsheet-network-dev2
     command: redis-server --appendonly yes
@@ -97,8 +105,9 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.name=dev2-cluster
     volumes:
-      - es_data_dev2:/usr/share/elasticsearch/data
+      - dev2_es_data:/usr/share/elasticsearch/data
     networks:
       - skillsheet-network-dev2
     healthcheck:
@@ -107,11 +116,25 @@ services:
       timeout: 10s
       retries: 5
 
+# Dev2専用ネットワーク
 networks:
   skillsheet-network-dev2:
     driver: bridge
+    name: dev2_network
 
+# Dev2専用ボリューム（名前付きで管理）
 volumes:
-  postgres_data_dev2:
-  redis_data_dev2:
-  es_data_dev2:
+  dev2_postgres_data:
+    name: dev2_postgres_data
+  dev2_redis_data:
+    name: dev2_redis_data
+  dev2_es_data:
+    name: dev2_es_data
+  dev2_front_modules:
+    name: dev2_front_modules
+  dev2_front_cache:
+    name: dev2_front_cache
+  dev2_backend_modules:
+    name: dev2_backend_modules
+  dev2_backend_cache:
+    name: dev2_backend_cache
