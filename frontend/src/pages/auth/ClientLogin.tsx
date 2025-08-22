@@ -56,8 +56,8 @@ const ClientLogin: React.FC = () => {
     try {
       await login(values.email, values.password, rememberMe);
       
-      // 取引先企業ユーザーのダッシュボードへリダイレクト
-      navigate('/client/offer-board');
+      // 取引先企業ユーザーのダッシュボードへリダイレクト（絶対パスで指定）
+      navigate('/client/offer-board', { replace: true });
       
       message.success('ログインに成功しました');
     } catch (error: any) {
