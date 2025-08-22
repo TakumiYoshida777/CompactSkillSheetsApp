@@ -143,7 +143,7 @@ class AnalyticsService {
     });
 
     // スキル別エンジニア数
-    const skillDistribution = await prisma.engineerSkills.groupBy({
+    const skillDistribution = await prisma.engineerSkill.groupBy({
       by: ['skillId'],
       where: {
         engineer: {
@@ -161,7 +161,7 @@ class AnalyticsService {
 
     // スキル情報を取得
     const skillIds = skillDistribution.map(s => s.skillId);
-    const skills = await prisma.skillMaster.findMany({
+    const skills = await prisma.skill.findMany({
       where: {
         id: {
           in: skillIds

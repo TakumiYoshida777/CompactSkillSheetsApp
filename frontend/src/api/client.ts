@@ -45,8 +45,21 @@ class ApiClient {
           config.headers['X-Company-ID'] = companyId
         }
 
-        // 認証トークンの追加（認証担当者が実装）
-        // TODO: 認証トークンの追加ロジック
+        // 認証トークンの追加
+        // Zustandストアから認証トークンを取得（動的インポートを回避）
+        const authState = localStorage.getItem('auth-storage')
+        if (authState) {
+          try {
+            const parsedState = JSON.parse(authState)
+            const token = parsedState?.state?.token
+            if (token) {
+              config.headers['Authorization'] = `Bearer ${token}`
+              console.log('[ApiClient] Authorization header set:', config.headers['Authorization'])
+            }
+          } catch (error) {
+            console.error('[ApiClient] Failed to parse auth state:', error)
+          }
+        }
 
         // タイムスタンプの追加（キャッシュ回避）
         if (config.method === 'get') {
