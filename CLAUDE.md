@@ -17,7 +17,7 @@
    - 不具合を修正する際は`Project/Dev2_CompactSkillSheetsApp/Dev2_CompactSkillSheetsApp/backend/Logs`ディレクトリの最新情報を読み込んで、ログ出力されているか確認し、修正を行うこと。
    - 「理解して」と言われたら、_Documents,_Knowledge,README.md,を改めて読み直し完全に理解すること
    - API通信は必ずTanStack Queryを使用すること（https://tanstack.com/query/latest）
-   - 既存機能を壊さないこと
+   - **必須**既存機能を壊さないこと
    - **必須**開発環境DockerのPort設定は壊さないこと
 
 3. **実装ポリシー**
