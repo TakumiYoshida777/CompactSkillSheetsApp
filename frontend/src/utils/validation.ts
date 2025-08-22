@@ -1,549 +1,246 @@
-/**
- * バリデーション ユーティリティ
- */
+import dayjs from 'dayjs';
 
-import type { 
-  EngineerCreateRequest,
-  EngineerUpdateRequest,
-} from '../types/engineer';
-import type {
-  SkillSheetUpdateRequest,
-  Skill,
-  ProjectExperience,
-} from '../types/skillSheet';
-
-/**
- * バリデーションエラー
- */
-export interface ValidationError {
-  field: string;
-  message: string;
-}
-
-/**
- * バリデーション結果
- */
-export interface ValidationResult {
-  isValid: boolean;
-  errors: ValidationError[];
-}
-
-/**
- * メールアドレスのバリデーション
- */
-export function isValidEmail(email: string): boolean {
+// メールアドレスのバリデーション
+export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
-}
+};
 
-/**
- * 電話番号のバリデーション（日本）
- */
-export function isValidPhoneNumber(phone: string): boolean {
-  // ハイフンあり・なし両方に対応
-  const phoneRegex = /^(0[0-9]{1,4}-?[0-9]{1,4}-?[0-9]{4}|0[0-9]{9,10})$/;
-  return phoneRegex.test(phone.replace(/\s/g, ''));
-}
+// 電話番号のバリデーション（日本の電話番号形式）
+export const validatePhoneNumber = (phone: string): boolean => {
+  // 様々な形式に対応（ハイフン有無、市外局番の括弧など）
+  const phoneRegex = /^[\d\-\(\)]+$/;
+  const digitsOnly = phone.replace(/[\-\(\)]/g, '');
+  
+  // 数字のみで10桁または11桁であることを確認
+  return phoneRegex.test(phone) && (digitsOnly.length === 10 || digitsOnly.length === 11);
+};
 
-/**
- * URLのバリデーション
- */
-export function isValidUrl(url: string): boolean {
+// URLのバリデーション
+export const validateUrl = (url: string): boolean => {
   try {
     new URL(url);
     return true;
   } catch {
     return false;
   }
-}
+};
 
-/**
- * 日付のバリデーション
- */
-export function isValidDate(dateString: string): boolean {
-  const date = new Date(dateString);
-  return !isNaN(date.getTime());
-}
+// 企業名（カナ）のバリデーション
+export const validateKatakana = (text: string): boolean => {
+  // カタカナ、長音符、中点、スペースを許可
+  const katakanaRegex = /^[ァ-ヶー・\s]+$/;
+  return katakanaRegex.test(text);
+};
 
-/**
- * 必須フィールドのチェック
- */
-export function checkRequiredFields<T extends Record<string, any>>(
-  data: T,
-  requiredFields: (keyof T)[]
-): ValidationError[] {
-  const errors: ValidationError[] = [];
-  
-  requiredFields.forEach(field => {
-    const value = data[field];
-    if (value === undefined || value === null || value === '') {
-      errors.push({
-        field: String(field),
-        message: `${String(field)}は必須項目です`,
-      });
-    }
-  });
-  
-  return errors;
-}
+// 郵便番号のバリデーション
+export const validatePostalCode = (code: string): boolean => {
+  // 7桁の数字（ハイフン有無どちらも対応）
+  const postalCodeRegex = /^\d{3}-?\d{4}$/;
+  return postalCodeRegex.test(code);
+};
 
-/**
- * エンジニア作成データのバリデーション
- */
-export function validateEngineerCreateRequest(
-  data: EngineerCreateRequest
-): ValidationResult {
-  const errors: ValidationError[] = [];
+// 金額のバリデーション
+export const validateAmount = (amount: number, min?: number, max?: number): boolean => {
+  if (amount < 0) return false;
+  if (min !== undefined && amount < min) return false;
+  if (max !== undefined && amount > max) return false;
+  return true;
+};
+
+// 日付のバリデーション
+export const validateDate = (date: string | dayjs.Dayjs, options?: {
+  minDate?: string | dayjs.Dayjs;
+  maxDate?: string | dayjs.Dayjs;
+  allowFuture?: boolean;
+  allowPast?: boolean;
+}): boolean => {
+  const targetDate = dayjs(date);
   
-  // 必須フィールドチェック
-  errors.push(...checkRequiredFields(data, ['name', 'email', 'engineerType']));
+  if (!targetDate.isValid()) return false;
   
-  // メールアドレスのバリデーション
-  if (data.email && !isValidEmail(data.email)) {
-    errors.push({
-      field: 'email',
-      message: '有効なメールアドレスを入力してください',
-    });
-  }
+  if (options?.minDate && targetDate.isBefore(dayjs(options.minDate))) return false;
+  if (options?.maxDate && targetDate.isAfter(dayjs(options.maxDate))) return false;
+  if (options?.allowFuture === false && targetDate.isAfter(dayjs())) return false;
+  if (options?.allowPast === false && targetDate.isBefore(dayjs())) return false;
   
-  // 電話番号のバリデーション
-  if (data.phone && !isValidPhoneNumber(data.phone)) {
-    errors.push({
-      field: 'phone',
+  return true;
+};
+
+// 必須フィールドのバリデーション
+export const validateRequired = (value: any): boolean => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string' && value.trim() === '') return false;
+  if (Array.isArray(value) && value.length === 0) return false;
+  return true;
+};
+
+// 文字数制限のバリデーション
+export const validateLength = (text: string, options: {
+  min?: number;
+  max?: number;
+  exact?: number;
+}): boolean => {
+  const length = text.length;
+  
+  if (options.exact !== undefined) return length === options.exact;
+  if (options.min !== undefined && length < options.min) return false;
+  if (options.max !== undefined && length > options.max) return false;
+  
+  return true;
+};
+
+// Ant Design Form用のバリデーションルール生成
+export const createValidationRules = {
+  email: [
+    { required: true, message: 'メールアドレスを入力してください' },
+    { type: 'email' as const, message: '有効なメールアドレスを入力してください' },
+  ],
+  
+  phone: [
+    { required: true, message: '電話番号を入力してください' },
+    {
+      pattern: /^[\d\-\(\)]+$/,
       message: '有効な電話番号を入力してください',
-    });
-  }
-  
-  // GitHubURLのバリデーション
-  if (data.githubUrl && !isValidUrl(data.githubUrl)) {
-    errors.push({
-      field: 'githubUrl',
-      message: '有効なURLを入力してください',
-    });
-  }
-  
-  // ポートフォリオURLのバリデーション
-  if (data.portfolioUrl && !isValidUrl(data.portfolioUrl)) {
-    errors.push({
-      field: 'portfolioUrl',
-      message: '有効なURLを入力してください',
-    });
-  }
-  
-  // 生年月日のバリデーション
-  if (data.birthDate && !isValidDate(data.birthDate)) {
-    errors.push({
-      field: 'birthDate',
-      message: '有効な日付を入力してください',
-    });
-  }
-  
-  // 経験年数のバリデーション
-  if (data.yearsOfExperience !== undefined && data.yearsOfExperience < 0) {
-    errors.push({
-      field: 'yearsOfExperience',
-      message: '経験年数は0以上の数値を入力してください',
-    });
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-}
-
-/**
- * スキルのバリデーション
- */
-export function validateSkill(skill: Skill): ValidationResult {
-  const errors: ValidationError[] = [];
-  
-  // 必須フィールドチェック
-  if (!skill.name || skill.name.trim() === '') {
-    errors.push({
-      field: 'name',
-      message: 'スキル名は必須です',
-    });
-  }
-  
-  // レベルのバリデーション
-  if (skill.level < 1 || skill.level > 5) {
-    errors.push({
-      field: 'level',
-      message: 'スキルレベルは1〜5の範囲で入力してください',
-    });
-  }
-  
-  // 経験年数のバリデーション
-  if (skill.experienceYears < 0) {
-    errors.push({
-      field: 'experienceYears',
-      message: '経験年数は0以上の数値を入力してください',
-    });
-  }
-  
-  // 最終使用日のバリデーション
-  if (skill.lastUsedDate && !isValidDate(skill.lastUsedDate)) {
-    errors.push({
-      field: 'lastUsedDate',
-      message: '有効な日付を入力してください',
-    });
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-}
-
-/**
- * プロジェクト経歴のバリデーション
- */
-export function validateProjectExperience(
-  project: ProjectExperience
-): ValidationResult {
-  const errors: ValidationError[] = [];
-  
-  // 必須フィールドチェック
-  errors.push(...checkRequiredFields(project, [
-    'projectName',
-    'startDate',
-    'role',
-    'description',
-  ]));
-  
-  // 日付のバリデーション
-  if (project.startDate && !isValidDate(project.startDate)) {
-    errors.push({
-      field: 'startDate',
-      message: '有効な開始日を入力してください',
-    });
-  }
-  
-  if (project.endDate && !isValidDate(project.endDate)) {
-    errors.push({
-      field: 'endDate',
-      message: '有効な終了日を入力してください',
-    });
-  }
-  
-  // 開始日と終了日の整合性チェック
-  if (project.startDate && project.endDate) {
-    const start = new Date(project.startDate);
-    const end = new Date(project.endDate);
-    if (start > end) {
-      errors.push({
-        field: 'endDate',
-        message: '終了日は開始日より後の日付を入力してください',
-      });
-    }
-  }
-  
-  // チームサイズのバリデーション
-  if (project.teamSize !== undefined && project.teamSize <= 0) {
-    errors.push({
-      field: 'teamSize',
-      message: 'チームサイズは1以上の数値を入力してください',
-    });
-  }
-  
-  // 責任範囲のバリデーション
-  if (project.responsibilities && project.responsibilities.length === 0) {
-    errors.push({
-      field: 'responsibilities',
-      message: '責任範囲を少なくとも1つ入力してください',
-    });
-  }
-  
-  // 使用技術のバリデーション
-  if (project.technologies && project.technologies.length === 0) {
-    errors.push({
-      field: 'technologies',
-      message: '使用技術を少なくとも1つ入力してください',
-    });
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-}
-
-/**
- * スキルシートのバリデーション
- */
-export function validateSkillSheet(
-  data: SkillSheetUpdateRequest
-): ValidationResult {
-  const errors: ValidationError[] = [];
-  
-  // スキルのバリデーション
-  const allSkills = [
-    ...(data.programmingLanguages || []),
-    ...(data.frameworks || []),
-    ...(data.databases || []),
-    ...(data.cloudServices || []),
-    ...(data.tools || []),
-    ...(data.skills || []),
-  ];
-  
-  allSkills.forEach((skill, index) => {
-    const skillValidation = validateSkill(skill);
-    if (!skillValidation.isValid) {
-      skillValidation.errors.forEach(error => {
-        errors.push({
-          field: `skills[${index}].${error.field}`,
-          message: error.message,
-        });
-      });
-    }
-  });
-  
-  // プロジェクト経歴のバリデーション
-  data.projectExperiences?.forEach((project, index) => {
-    const projectValidation = validateProjectExperience(project);
-    if (!projectValidation.isValid) {
-      projectValidation.errors.forEach(error => {
-        errors.push({
-          field: `projectExperiences[${index}].${error.field}`,
-          message: error.message,
-        });
-      });
-    }
-  });
-  
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-}
-
-/**
- * バリデーションエラーをフィールドごとにグループ化
- */
-export function groupErrorsByField(
-  errors: ValidationError[]
-): Record<string, string[]> {
-  const grouped: Record<string, string[]> = {};
-  
-  errors.forEach(error => {
-    if (!grouped[error.field]) {
-      grouped[error.field] = [];
-    }
-    grouped[error.field].push(error.message);
-  });
-  
-  return grouped;
-}
-
-/**
- * 汎用バリデーション関数
- */
-export const validators = {
-  /**
-   * メールアドレスのバリデーション
-   */
-  email: (value: string): boolean | string => {
-    if (!value) return '必須項目です'
-    
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    if (!emailRegex.test(value)) {
-      return '有効なメールアドレスを入力してください'
-    }
-    
-    return true
-  },
-
-  /**
-   * 電話番号のバリデーション（日本）
-   */
-  phone: (value: string): boolean | string => {
-    if (!value) return '必須項目です'
-    
-    const phoneRegex = /^(0[0-9]{1,4}-?[0-9]{1,4}-?[0-9]{3,4}|0[789]0-?[0-9]{4}-?[0-9]{4})$/
-    const cleanValue = value.replace(/[-\s]/g, '')
-    
-    if (!phoneRegex.test(value) && !phoneRegex.test(cleanValue)) {
-      return '有効な電話番号を入力してください'
-    }
-    
-    return true
-  },
-
-  /**
-   * パスワードのバリデーション
-   */
-  password: (value: string, options?: {
-    minLength?: number
-    requireUppercase?: boolean
-    requireLowercase?: boolean
-    requireNumber?: boolean
-    requireSpecial?: boolean
-  }): boolean | string => {
-    const {
-      minLength = 8,
-      requireUppercase = true,
-      requireLowercase = true,
-      requireNumber = true,
-      requireSpecial = false
-    } = options || {}
-    
-    if (!value) return '必須項目です'
-    
-    if (value.length < minLength) {
-      return `パスワードは${minLength}文字以上必要です`
-    }
-    
-    if (requireUppercase && !/[A-Z]/.test(value)) {
-      return 'パスワードには大文字を含める必要があります'
-    }
-    
-    if (requireLowercase && !/[a-z]/.test(value)) {
-      return 'パスワードには小文字を含める必要があります'
-    }
-    
-    if (requireNumber && !/[0-9]/.test(value)) {
-      return 'パスワードには数字を含める必要があります'
-    }
-    
-    if (requireSpecial && !/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
-      return 'パスワードには特殊文字を含める必要があります'
-    }
-    
-    return true
-  },
-
-  /**
-   * URLのバリデーション
-   */
-  url: (value: string): boolean | string => {
-    if (!value) return true // オプショナル
-    
-    try {
-      new URL(value)
-      return true
-    } catch {
-      return '有効なURLを入力してください'
-    }
-  },
-
-  /**
-   * 日本語（ひらがな・カタカナ・漢字）のバリデーション
-   */
-  japanese: (value: string): boolean | string => {
-    if (!value) return '必須項目です'
-    
-    const japaneseRegex = /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3400-\u4DBF\s]+$/
-    if (!japaneseRegex.test(value)) {
-      return '日本語で入力してください'
-    }
-    
-    return true
-  },
-
-  /**
-   * 郵便番号のバリデーション
-   */
-  postalCode: (value: string): boolean | string => {
-    if (!value) return '必須項目です'
-    
-    const postalCodeRegex = /^\d{3}-?\d{4}$/
-    if (!postalCodeRegex.test(value)) {
-      return '有効な郵便番号を入力してください（例：123-4567）'
-    }
-    
-    return true
-  },
-
-  /**
-   * 事業者コード（法人番号）のバリデーション
-   */
-  businessCode: (value: string): boolean | string => {
-    if (!value) return true // オプショナル
-    
-    const cleanValue = value.replace(/[-\s]/g, '')
-    if (cleanValue.length !== 13 || !/^\d+$/.test(cleanValue)) {
-      return '13桁の法人番号を入力してください'
-    }
-    
-    return true
-  },
-
-  /**
-   * 数値範囲のバリデーション
-   */
-  numberRange: (value: string | number, min?: number, max?: number): boolean | string => {
-    const num = typeof value === 'string' ? parseFloat(value) : value
-    
-    if (isNaN(num)) {
-      return '数値を入力してください'
-    }
-    
-    if (min !== undefined && num < min) {
-      return `${min}以上の値を入力してください`
-    }
-    
-    if (max !== undefined && num > max) {
-      return `${max}以下の値を入力してください`
-    }
-    
-    return true
-  },
-
-  /**
-   * 文字数のバリデーション
-   */
-  length: (value: string, min?: number, max?: number): boolean | string => {
-    if (!value && min && min > 0) return '必須項目です'
-    
-    const length = value ? value.length : 0
-    
-    if (min !== undefined && length < min) {
-      return `${min}文字以上入力してください`
-    }
-    
-    if (max !== undefined && length > max) {
-      return `${max}文字以内で入力してください`
-    }
-    
-    return true
-  },
-
-  /**
-   * 必須入力のバリデーション
-   */
-  required: (value: any, message?: string): boolean | string => {
-    if (value === null || value === undefined || value === '' || 
-        (Array.isArray(value) && value.length === 0)) {
-      return message || '必須項目です'
-    }
-    
-    return true
-  },
-
-  /**
-   * 確認用フィールドのバリデーション
-   */
-  confirm: (value: string, confirmValue: string, fieldName?: string): boolean | string => {
-    if (value !== confirmValue) {
-      return fieldName ? `${fieldName}が一致しません` : '入力内容が一致しません'
-    }
-    
-    return true
-  },
-
-  /**
-   * 複数のバリデーションを組み合わせる
-   */
-  compose: (...validators: Array<(value: any) => boolean | string>) => {
-    return (value: any): boolean | string => {
-      for (const validator of validators) {
-        const result = validator(value)
-        if (result !== true) {
-          return result
+    },
+    {
+      validator: (_: any, value: string) => {
+        if (!value) return Promise.resolve();
+        const digitsOnly = value.replace(/[\-\(\)]/g, '');
+        if (digitsOnly.length === 10 || digitsOnly.length === 11) {
+          return Promise.resolve();
         }
-      }
-      return true
-    }
-  },
-}
+        return Promise.reject(new Error('電話番号は10桁または11桁で入力してください'));
+      },
+    },
+  ],
+  
+  url: [
+    {
+      validator: (_: any, value: string) => {
+        if (!value) return Promise.resolve();
+        if (validateUrl(value)) {
+          return Promise.resolve();
+        }
+        return Promise.reject(new Error('有効なURLを入力してください'));
+      },
+    },
+  ],
+  
+  katakana: [
+    { required: true, message: 'カナを入力してください' },
+    {
+      pattern: /^[ァ-ヶー・\s]+$/,
+      message: 'カタカナで入力してください',
+    },
+  ],
+  
+  postalCode: [
+    {
+      pattern: /^\d{3}-?\d{4}$/,
+      message: '有効な郵便番号を入力してください（例: 123-4567）',
+    },
+  ],
+  
+  required: (fieldName: string) => [
+    { required: true, message: `${fieldName}を入力してください` },
+  ],
+  
+  maxLength: (max: number, fieldName: string) => [
+    { max, message: `${fieldName}は${max}文字以内で入力してください` },
+  ],
+  
+  minLength: (min: number, fieldName: string) => [
+    { min, message: `${fieldName}は${min}文字以上で入力してください` },
+  ],
+  
+  amount: (options?: { min?: number; max?: number }) => [
+    { required: true, message: '金額を入力してください' },
+    {
+      validator: (_: any, value: number) => {
+        if (!value && value !== 0) return Promise.resolve();
+        if (value < 0) {
+          return Promise.reject(new Error('金額は0以上で入力してください'));
+        }
+        if (options?.min !== undefined && value < options.min) {
+          return Promise.reject(new Error(`金額は${options.min}円以上で入力してください`));
+        }
+        if (options?.max !== undefined && value > options.max) {
+          return Promise.reject(new Error(`金額は${options.max}円以下で入力してください`));
+        }
+        return Promise.resolve();
+      },
+    },
+  ],
+  
+  dateRange: (options?: { allowFuture?: boolean; allowPast?: boolean }) => [
+    { required: true, message: '日付を選択してください' },
+    {
+      validator: (_: any, value: dayjs.Dayjs) => {
+        if (!value) return Promise.resolve();
+        if (options?.allowFuture === false && value.isAfter(dayjs())) {
+          return Promise.reject(new Error('未来の日付は選択できません'));
+        }
+        if (options?.allowPast === false && value.isBefore(dayjs())) {
+          return Promise.reject(new Error('過去の日付は選択できません'));
+        }
+        return Promise.resolve();
+      },
+    },
+  ],
+};
+
+// 複数フィールドの相関バリデーション
+export const createCrossFieldValidator = {
+  // 開始日と終了日の整合性チェック
+  dateRange: (startFieldName: string, endFieldName: string) => ({
+    validator: ({ getFieldValue }: any) => ({
+      validator(_: any, value: any) {
+        const startDate = getFieldValue(startFieldName);
+        const endDate = getFieldValue(endFieldName);
+        
+        if (!startDate || !endDate) {
+          return Promise.resolve();
+        }
+        
+        if (dayjs(endDate).isBefore(dayjs(startDate))) {
+          return Promise.reject(new Error('終了日は開始日より後の日付を選択してください'));
+        }
+        
+        return Promise.resolve();
+      },
+    }),
+  }),
+  
+  // 最小値と最大値の整合性チェック
+  amountRange: (minFieldName: string, maxFieldName: string) => ({
+    validator: ({ getFieldValue }: any) => ({
+      validator(_: any, value: any) {
+        const minAmount = getFieldValue(minFieldName);
+        const maxAmount = getFieldValue(maxFieldName);
+        
+        if (!minAmount || !maxAmount) {
+          return Promise.resolve();
+        }
+        
+        if (maxAmount < minAmount) {
+          return Promise.reject(new Error('上限は下限より大きい値を入力してください'));
+        }
+        
+        return Promise.resolve();
+      },
+    }),
+  }),
+  
+  // パスワード確認
+  passwordConfirm: (passwordFieldName: string) => ({
+    validator: ({ getFieldValue }: any) => ({
+      validator(_: any, value: any) {
+        if (!value || getFieldValue(passwordFieldName) === value) {
+          return Promise.resolve();
+        }
+        return Promise.reject(new Error('パスワードが一致しません'));
+      },
+    }),
+  }),
+};

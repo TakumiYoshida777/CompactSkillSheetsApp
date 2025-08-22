@@ -33,12 +33,12 @@ const ClientLogin: React.FC = () => {
   // デモアカウント情報
   const demoAccounts = [
     {
-      email: 'admin@client-a.co.jp',
+      email: 'admin@example-client-a.local',
       password: 'Admin123!',
       description: '株式会社クライアントA（全エンジニア閲覧可能）'
     },
     {
-      email: 'user@client-b.co.jp',
+      email: 'user@example-client-b.local',
       password: 'Admin123!',
       description: '株式会社クライアントB（待機中のみ閲覧可能）'
     }

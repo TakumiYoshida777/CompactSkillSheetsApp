@@ -168,6 +168,16 @@ model Engineer {
   offerEngineers   OfferEngineer[]
   clientAccessPermissions ClientAccessPermission[]
   clientViewLogs   ClientViewLog[]
+  engineerPermissions EngineerPermission[]
+  engineerNgLists  EngineerNgList[]
+  lastName         String?        @db.VarChar(50)
+  firstName        String?        @db.VarChar(50)
+  lastNameKana     String?        @db.VarChar(50)
+  firstNameKana    String?        @db.VarChar(50)
+  availability     String?        @db.VarChar(50)
+  currentProject   Json?
+  engineerSkills   EngineerSkill[]
+  isActive         Boolean        @default(true)
 
   @@index([companyId])
   @@index([currentStatus])
@@ -177,36 +187,18 @@ model Engineer {
   @@map("engineers")
 }
 
-// スキルマスター
-model SkillMaster {
-  id          BigInt          @id @default(autoincrement())
-  name        String          @db.VarChar(255)
-  category    String          @db.VarChar(100)
-  description String?         @db.Text
-  isActive    Boolean         @default(true)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-
-  engineerSkills EngineerSkill[]
-
-  @@index([category])
-  @@map("skill_masters")
-}
-
 // エンジニアスキル
 model EngineerSkill {
-  id               BigInt       @id @default(autoincrement())
-  engineerId       BigInt
-  skillId          BigInt
-  level            String       @db.VarChar(50)  // beginner, intermediate, advanced, expert
-  yearsOfExperience Int?
-  lastUsedDate     DateTime?    @db.Date
-  note             String?      @db.Text
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  id          BigInt   @id @default(autoincrement())
+  engineerId  BigInt
+  skillId     BigInt
+  level       Int      @default(1) // 1-5のレベル
+  years       Int?     // 経験年数
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  engineer     Engineer     @relation(fields: [engineerId], references: [id])
-  skillMaster  SkillMaster  @relation(fields: [skillId], references: [id])
+  engineer Engineer @relation(fields: [engineerId], references: [id])
+  skill    Skill    @relation(fields: [skillId], references: [id])
 
   @@unique([engineerId, skillId])
   @@index([engineerId])
@@ -214,6 +206,20 @@ model EngineerSkill {
   @@map("engineer_skills")
 }
 
+// スキルマスタ
+model Skill {
+  id             BigInt   @id @default(autoincrement())
+  name           String   @unique @db.VarChar(100)
+  category       String   @db.VarChar(50)
+  description    String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  engineerSkills EngineerSkill[]
+
+  @@index([category])
+  @@map("skills")
+}
 // スキルシート
 model SkillSheet {
   id                    BigInt    @id @default(autoincrement())
@@ -359,6 +365,10 @@ model BusinessPartner {
   clientCompany          Company                @relation("ClientCompany", fields: [clientCompanyId], references: [id])
   clientUsers            ClientUser[]
   accessPermissions      ClientAccessPermission[]
+  engineerPermissions    EngineerPermission[]
+  engineerNgLists        EngineerNgList[]
+  setting                BusinessPartnerSetting?
+  deletedAt              DateTime?
 
   @@map("business_partners")
 }
@@ -422,6 +432,56 @@ model ClientAccessPermission {
   @@index([businessPartnerId])
   @@index([engineerId])
   @@map("client_access_permissions")
+}
+
+// エンジニア表示権限
+model EngineerPermission {
+  id                BigInt   @id @default(autoincrement())
+  businessPartnerId BigInt
+  engineerId        BigInt
+  isAllowed         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  businessPartner BusinessPartner @relation(fields: [businessPartnerId], references: [id])
+  engineer        Engineer        @relation(fields: [engineerId], references: [id])
+
+  @@unique([businessPartnerId, engineerId])
+  @@index([businessPartnerId])
+  @@index([engineerId])
+  @@map("engineer_permissions")
+}
+
+// エンジニアNGリスト
+model EngineerNgList {
+  id                BigInt   @id @default(autoincrement())
+  businessPartnerId BigInt
+  engineerId        BigInt
+  reason            String?  @db.Text
+  createdAt         DateTime @default(now())
+
+  businessPartner BusinessPartner @relation(fields: [businessPartnerId], references: [id])
+  engineer        Engineer        @relation(fields: [engineerId], references: [id])
+
+  @@unique([businessPartnerId, engineerId])
+  @@index([businessPartnerId])
+  @@index([engineerId])
+  @@map("engineer_ng_lists")
+}
+
+// 取引先企業設定
+model BusinessPartnerSetting {
+  id                BigInt   @id @default(autoincrement())
+  businessPartnerId BigInt   @unique
+  viewType          String   @default("waiting") // all, waiting, custom
+  showWaitingOnly   Boolean  @default(true)
+  autoApprove       Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  businessPartner BusinessPartner @relation(fields: [businessPartnerId], references: [id])
+
+  @@map("business_partner_settings")
 }
 
 // 取引先企業閲覧ログ

@@ -1,48 +1,160 @@
-import { PrismaClient } from '@prisma/client';
-import { BusinessPartnerRepository } from '../repositories/businessPartnerRepository';
-import { NotFoundError, ValidationError, ConflictError, ForbiddenError } from '../middleware/error.middleware';
-import bcrypt from 'bcrypt';
-import { config } from '../config/environment';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { ValidationError } from '../utils/errors';
+import { logger } from '../utils/logger';
 
+const prisma = new PrismaClient();
+
+interface GetBusinessPartnersParams {
+  sesCompanyId: bigint;
+  page: number;
+  limit: number;
+  search?: string;
+  status?: 'active' | 'inactive';
+  sortBy: string;
+  order: 'asc' | 'desc';
+}
+
+interface CreateBusinessPartnerData {
+  companyName: string;
+  companyNameKana?: string;
+  postalCode?: string;
+  address?: string;
+  phone?: string;
+  fax?: string;
+  email?: string;
+  website?: string;
+  representative?: string;
+  department?: string;
+  contactPerson?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  contractType?: string;
+  contractStartDate?: Date;
+  contractEndDate?: Date;
+  monthlyFee?: number;
+  notes?: string;
+  sesCompanyId: bigint;
+  createdBy: bigint;
+}
+
+/**
+ * 取引先企業サービス
+ */
 export class BusinessPartnerService {
-  private partnerRepository: BusinessPartnerRepository;
-  private prisma: PrismaClient;
+  /**
+   * 取引先企業一覧取得
+   */
+  async getBusinessPartners(params: GetBusinessPartnersParams) {
+    const {
+      sesCompanyId,
+      page,
+      limit,
+      search,
+      status,
+      sortBy,
+      order
+    } = params;
 
-  constructor(prisma: PrismaClient) {
-    this.prisma = prisma;
-    this.partnerRepository = new BusinessPartnerRepository(prisma);
+    const skip = (page - 1) * limit;
+
+    // 検索条件構築
+    const where: Prisma.BusinessPartnerWhereInput = {
+      sesCompanyId,
+      deletedAt: null,
+      ...(status && { isActive: status === 'active' }),
+      ...(search && {
+        OR: [
+          { clientCompany: { name: { contains: search, mode: 'insensitive' } } },
+          { contractType: { contains: search, mode: 'insensitive' } },
+          { notes: { contains: search, mode: 'insensitive' } }
+        ]
+      })
+    };
+
+    // 並び替え条件
+    const orderBy: any = {};
+    if (sortBy === 'companyName') {
+      orderBy.clientCompany = { name: order };
+    } else {
+      orderBy[sortBy] = order;
+    }
+
+    const [partners, total] = await Promise.all([
+      prisma.businessPartner.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: {
+          clientCompany: true,
+          sesCompany: {
+            select: {
+              id: true,
+              name: true
+            }
+          },
+          clientUsers: {
+            where: { deletedAt: null },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              isActive: true
+            }
+          }
+        }
+      }),
+      prisma.businessPartner.count({ where })
+    ]);
+
+    return {
+      partners,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
   }
 
   /**
-   * 取引先一覧を取得
+   * 取引先企業詳細取得
    */
-  async getPartners(companyId: number, options?: any) {
-    return await this.partnerRepository.findBySESCompany(companyId, options);
-  }
-
-  /**
-   * 取引先詳細を取得
-   */
-  async getPartnerById(partnerId: number, companyId: number) {
-    const partner = await this.prisma.businessPartner.findFirst({
+  async getBusinessPartnerById(id: bigint, sesCompanyId: bigint) {
+    const partner = await prisma.businessPartner.findFirst({
       where: {
-        id: BigInt(partnerId),
-        sesCompanyId: BigInt(companyId)
+        id,
+        sesCompanyId,
+        deletedAt: null
       },
       include: {
         clientCompany: true,
-        clientUsers: {
-          where: { isActive: true }
+        sesCompany: {
+          select: {
+            id: true,
+            name: true
+          }
         },
-        accessPermissions: {
-          where: { isActive: true },
+        clientUsers: {
+          where: { deletedAt: null },
+          include: {
+            roles: {
+              include: {
+                role: true
+              }
+            }
+          }
+        },
+        engineerPermissions: {
           include: {
             engineer: {
               select: {
                 id: true,
-                name: true,
-                email: true,
-                currentStatus: true
+                lastName: true,
+                firstName: true,
+                lastNameKana: true,
+                firstNameKana: true
               }
             }
           }
@@ -50,308 +162,327 @@ export class BusinessPartnerService {
       }
     });
 
-    if (!partner) {
-      throw new NotFoundError('取引先');
-    }
-
     return partner;
   }
 
   /**
-   * 取引先を新規作成
+   * 取引先企業作成
    */
-  async createPartner(companyId: number, userId: number, data: any) {
+  async createBusinessPartner(data: CreateBusinessPartnerData) {
     // バリデーション
-    if (!data.clientCompanyId && !data.clientCompanyName) {
-      throw new ValidationError('取引先企業の指定が必要です');
+    if (!data.companyName) {
+      throw new ValidationError('会社名は必須です');
     }
 
-    let clientCompanyId = data.clientCompanyId;
-
-    // 新規企業作成が必要な場合
-    if (!clientCompanyId && data.clientCompanyName) {
-      const existingCompany = await this.prisma.company.findFirst({
-        where: { name: data.clientCompanyName }
-      });
-
-      if (existingCompany) {
-        clientCompanyId = existingCompany.id;
-      } else {
-        const newCompany = await this.prisma.company.create({
-          data: {
-            companyType: 'CLIENT',
-            name: data.clientCompanyName,
-            emailDomain: data.emailDomain,
-            contactEmail: data.contactEmail,
-            address: data.address,
-            phone: data.phone,
-            websiteUrl: data.websiteUrl,
-            isActive: true
-          }
-        });
-        clientCompanyId = newCompany.id;
-      }
+    if (data.email && !this.isValidEmail(data.email)) {
+      throw new ValidationError('メールアドレスの形式が正しくありません');
     }
 
-    // 既存の取引関係をチェック
-    const existingPartner = await this.prisma.businessPartner.findFirst({
+    if (data.contactEmail && !this.isValidEmail(data.contactEmail)) {
+      throw new ValidationError('担当者メールアドレスの形式が正しくありません');
+    }
+
+    // 取引先会社を作成または取得
+    let clientCompany = await prisma.company.findFirst({
       where: {
-        sesCompanyId: BigInt(companyId),
-        clientCompanyId: BigInt(clientCompanyId),
-        isActive: true
+        name: data.companyName,
+        companyType: 'CLIENT'
       }
     });
 
-    if (existingPartner) {
-      throw new ConflictError('この企業とは既に取引関係があります');
-    }
-
-    // エンジニアIDの検証
-    const engineerIds = data.engineerIds || [];
-    if (engineerIds.length > 0) {
-      const engineers = await this.prisma.engineer.findMany({
-        where: {
-          id: { in: engineerIds.map((id: number) => BigInt(id)) },
-          companyId: BigInt(companyId)
+    if (!clientCompany) {
+      clientCompany = await prisma.company.create({
+        data: {
+          name: data.companyName,
+          nameKana: data.companyNameKana,
+          companyType: 'CLIENT',
+          postalCode: data.postalCode,
+          address: data.address,
+          phone: data.phone,
+          fax: data.fax,
+          email: data.email,
+          website: data.website,
+          representative: data.representative
         }
       });
-
-      if (engineers.length !== engineerIds.length) {
-        throw new ValidationError('指定されたエンジニアが見つかりません');
-      }
     }
 
-    return await this.partnerRepository.createPartnership({
-      sesCompanyId: BigInt(companyId),
-      clientCompanyId: BigInt(clientCompanyId),
-      createdBy: BigInt(userId),
-      engineerIds: engineerIds.map((id: number) => BigInt(id))
+    // 取引先関係を作成
+    const partner = await prisma.businessPartner.create({
+      data: {
+        sesCompanyId: data.sesCompanyId,
+        clientCompanyId: clientCompany.id,
+        contractType: data.contractType,
+        contractStartDate: data.contractStartDate,
+        contractEndDate: data.contractEndDate,
+        monthlyFee: data.monthlyFee,
+        notes: data.notes,
+        isActive: true
+      },
+      include: {
+        clientCompany: true,
+        sesCompany: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
     });
+
+    logger.info(`取引先企業を作成しました: ${clientCompany.name}`);
+    return partner;
   }
 
   /**
-   * 取引先情報を更新
+   * 取引先企業更新
    */
-  async updatePartner(partnerId: number, companyId: number, data: any) {
-    const partner = await this.getPartnerById(partnerId, companyId);
+  async updateBusinessPartner(id: bigint, data: any) {
+    const partner = await prisma.businessPartner.findFirst({
+      where: { id, deletedAt: null }
+    });
 
-    const updateData: any = {};
-    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    if (!partner) {
+      throw new ValidationError('取引先企業が見つかりません');
+    }
 
-    const updatedPartner = await this.prisma.businessPartner.update({
-      where: { id: BigInt(partnerId) },
-      data: updateData,
+    // 会社情報の更新
+    if (data.companyName || data.companyNameKana || data.address || data.phone) {
+      await prisma.company.update({
+        where: { id: partner.clientCompanyId },
+        data: {
+          ...(data.companyName && { name: data.companyName }),
+          ...(data.companyNameKana && { nameKana: data.companyNameKana }),
+          ...(data.postalCode && { postalCode: data.postalCode }),
+          ...(data.address && { address: data.address }),
+          ...(data.phone && { phone: data.phone }),
+          ...(data.fax && { fax: data.fax }),
+          ...(data.email && { email: data.email }),
+          ...(data.website && { website: data.website }),
+          ...(data.representative && { representative: data.representative })
+        }
+      });
+    }
+
+    // 取引先関係の更新
+    const updatedPartner = await prisma.businessPartner.update({
+      where: { id },
+      data: {
+        ...(data.contractType && { contractType: data.contractType }),
+        ...(data.contractStartDate && { contractStartDate: data.contractStartDate }),
+        ...(data.contractEndDate && { contractEndDate: data.contractEndDate }),
+        ...(data.monthlyFee !== undefined && { monthlyFee: data.monthlyFee }),
+        ...(data.notes && { notes: data.notes }),
+        updatedAt: new Date()
+      },
       include: {
         clientCompany: true,
-        accessPermissions: true
+        sesCompany: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
       }
     });
 
-    // アクセス権限の更新
-    if (data.engineerIds) {
-      await this.updateAccessPermissions(partnerId, companyId, data.engineerIds, data.updatedBy);
-    }
-
+    logger.info(`取引先企業を更新しました: ID ${id}`);
     return updatedPartner;
   }
 
   /**
-   * アクセス権限を更新
+   * 取引先企業削除（論理削除）
    */
-  async updateAccessPermissions(
-    partnerId: number, 
-    companyId: number, 
-    engineerIds: number[], 
-    userId: number
-  ) {
-    // 権限確認
-    await this.getPartnerById(partnerId, companyId);
+  async deleteBusinessPartner(id: bigint, sesCompanyId: bigint) {
+    const partner = await prisma.businessPartner.findFirst({
+      where: {
+        id,
+        sesCompanyId,
+        deletedAt: null
+      }
+    });
 
-    // エンジニアIDの検証
-    if (engineerIds.length > 0) {
-      const engineers = await this.prisma.engineer.findMany({
+    if (!partner) {
+      throw new ValidationError('取引先企業が見つかりません');
+    }
+
+    // 関連するクライアントユーザーも論理削除
+    await prisma.$transaction([
+      prisma.clientUser.updateMany({
         where: {
-          id: { in: engineerIds.map(id => BigInt(id)) },
-          companyId: BigInt(companyId)
+          businessPartnerId: id,
+          deletedAt: null
+        },
+        data: {
+          deletedAt: new Date(),
+          isActive: false
         }
-      });
+      }),
+      prisma.businessPartner.update({
+        where: { id },
+        data: {
+          deletedAt: new Date(),
+          isActive: false
+        }
+      })
+    ]);
 
-      if (engineers.length !== engineerIds.length) {
-        throw new ValidationError('指定されたエンジニアが見つかりません');
-      }
-    }
-
-    await this.partnerRepository.updateAccessPermissions(
-      BigInt(partnerId),
-      engineerIds.map(id => BigInt(id)),
-      BigInt(userId)
-    );
-
-    return { success: true };
+    logger.info(`取引先企業を削除しました: ID ${id}`);
   }
 
   /**
-   * 取引先ユーザーを作成
+   * 取引先企業ステータス変更
    */
-  async createClientUser(partnerId: number, companyId: number, data: any) {
-    // 権限確認
-    const partner = await this.getPartnerById(partnerId, companyId);
-
-    // バリデーション
-    if (!data.email) {
-      throw new ValidationError('メールアドレスは必須です');
-    }
-    if (!data.name) {
-      throw new ValidationError('氏名は必須です');
-    }
-    if (!data.password) {
-      throw new ValidationError('パスワードは必須です');
-    }
-
-    // 既存ユーザーチェック
-    const existingUser = await this.prisma.clientUser.findUnique({
-      where: { email: data.email }
-    });
-
-    if (existingUser) {
-      throw new ConflictError('このメールアドレスは既に登録されています');
-    }
-
-    // パスワードハッシュ化
-    const passwordHash = await bcrypt.hash(data.password, config.security.bcryptRounds);
-
-    return await this.prisma.clientUser.create({
+  async updateBusinessPartnerStatus(id: bigint, isActive: boolean) {
+    const partner = await prisma.businessPartner.update({
+      where: { id },
       data: {
-        businessPartnerId: BigInt(partnerId),
-        email: data.email,
-        passwordHash,
-        name: data.name,
-        phone: data.phone,
-        department: data.department,
-        position: data.position,
-        isActive: true
+        isActive,
+        updatedAt: new Date()
       },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        department: true,
-        position: true,
-        isActive: true,
-        createdAt: true
-      }
-    });
-  }
-
-  /**
-   * 取引先ユーザーを更新
-   */
-  async updateClientUser(userId: number, partnerId: number, companyId: number, data: any) {
-    // 権限確認
-    await this.getPartnerById(partnerId, companyId);
-
-    const user = await this.prisma.clientUser.findFirst({
-      where: {
-        id: BigInt(userId),
-        businessPartnerId: BigInt(partnerId)
+      include: {
+        clientCompany: true
       }
     });
 
-    if (!user) {
-      throw new NotFoundError('ユーザー');
-    }
-
-    const updateData: any = {};
-    if (data.name !== undefined) updateData.name = data.name;
-    if (data.phone !== undefined) updateData.phone = data.phone;
-    if (data.department !== undefined) updateData.department = data.department;
-    if (data.position !== undefined) updateData.position = data.position;
-    if (data.isActive !== undefined) updateData.isActive = data.isActive;
-
-    // パスワード変更
-    if (data.password) {
-      updateData.passwordHash = await bcrypt.hash(data.password, config.security.bcryptRounds);
-    }
-
-    return await this.prisma.clientUser.update({
-      where: { id: BigInt(userId) },
-      data: updateData,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        department: true,
-        position: true,
-        isActive: true,
-        lastLoginAt: true
-      }
-    });
-  }
-
-  /**
-   * 取引先ユーザーを削除（論理削除）
-   */
-  async deleteClientUser(userId: number, partnerId: number, companyId: number) {
-    // 権限確認
-    await this.getPartnerById(partnerId, companyId);
-
-    const user = await this.prisma.clientUser.findFirst({
-      where: {
-        id: BigInt(userId),
-        businessPartnerId: BigInt(partnerId)
-      }
-    });
-
-    if (!user) {
-      throw new NotFoundError('ユーザー');
-    }
-
-    await this.prisma.clientUser.update({
-      where: { id: BigInt(userId) },
-      data: { isActive: false }
-    });
-
-    return { success: true };
-  }
-
-  /**
-   * アクセスURLを再生成
-   */
-  async regenerateAccessUrl(partnerId: number, companyId: number) {
-    const partner = await this.getPartnerById(partnerId, companyId);
-
-    // 新しいトークンを生成
-    const timestamp = Date.now().toString(36);
-    const randomBytes = require('crypto').randomBytes(16).toString('hex');
-    const newToken = `${timestamp}-${randomBytes}`;
-    const newUrl = `${config.frontendUrl}/client/access/${newToken}`;
-
-    return await this.prisma.businessPartner.update({
-      where: { id: BigInt(partnerId) },
-      data: {
-        urlToken: newToken,
-        accessUrl: newUrl
-      }
-    });
-  }
-
-  /**
-   * 取引先統計を取得
-   */
-  async getPartnerStats(companyId: number) {
-    return await this.partnerRepository.getPartnerStats(companyId);
-  }
-
-  /**
-   * URLトークンから取引先情報を取得（クライアント用）
-   */
-  async getPartnerByUrlToken(urlToken: string) {
-    const partner = await this.partnerRepository.findByUrlToken(urlToken);
-    
-    if (!partner || !partner.isActive) {
-      throw new NotFoundError('アクセスURL');
-    }
-
+    logger.info(`取引先企業ステータスを変更しました: ID ${id}, isActive: ${isActive}`);
     return partner;
   }
+
+  /**
+   * 取引先企業統計情報取得
+   */
+  async getBusinessPartnerStats(sesCompanyId: bigint) {
+    const [total, active, inactive, thisMonth] = await Promise.all([
+      prisma.businessPartner.count({
+        where: {
+          sesCompanyId,
+          deletedAt: null
+        }
+      }),
+      prisma.businessPartner.count({
+        where: {
+          sesCompanyId,
+          isActive: true,
+          deletedAt: null
+        }
+      }),
+      prisma.businessPartner.count({
+        where: {
+          sesCompanyId,
+          isActive: false,
+          deletedAt: null
+        }
+      }),
+      prisma.businessPartner.count({
+        where: {
+          sesCompanyId,
+          createdAt: {
+            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+          },
+          deletedAt: null
+        }
+      })
+    ]);
+
+    return {
+      total,
+      active,
+      inactive,
+      thisMonth
+    };
+  }
+
+  /**
+   * 権限チェック: 作成権限
+   */
+  async checkCreatePermission(userId: bigint, sesCompanyId: bigint): Promise<boolean> {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        companyId: sesCompanyId
+      },
+      include: {
+        userRoles: {
+          include: {
+            role: {
+              include: {
+                rolePermissions: {
+                  include: {
+                    permission: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user) return false;
+
+    // 管理者または営業権限をチェック
+    const hasPermission = user.userRoles.some(ur => 
+      ur.role.name === 'admin' || 
+      ur.role.name === 'sales' ||
+      ur.role.rolePermissions.some(rp => 
+        rp.permission.name === 'business_partner_create'
+      )
+    );
+
+    return hasPermission;
+  }
+
+  /**
+   * 権限チェック: 更新権限
+   */
+  async checkUpdatePermission(userId: bigint, sesCompanyId: bigint, partnerId: bigint): Promise<boolean> {
+    // 取引先が自社のものか確認
+    const partner = await prisma.businessPartner.findFirst({
+      where: {
+        id: partnerId,
+        sesCompanyId,
+        deletedAt: null
+      }
+    });
+
+    if (!partner) return false;
+
+    return this.checkCreatePermission(userId, sesCompanyId);
+  }
+
+  /**
+   * 権限チェック: 削除権限
+   */
+  async checkDeletePermission(userId: bigint, sesCompanyId: bigint): Promise<boolean> {
+    const user = await prisma.user.findFirst({
+      where: {
+        id: userId,
+        companyId: sesCompanyId
+      },
+      include: {
+        userRoles: {
+          include: {
+            role: true
+          }
+        }
+      }
+    });
+
+    if (!user) return false;
+
+    // 管理者のみ削除可能
+    const isAdmin = user.userRoles.some(ur => ur.role.name === 'admin');
+    return isAdmin;
+  }
+
+  /**
+   * メールアドレスバリデーション
+   */
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
 }
+
+export const businessPartnerService = new BusinessPartnerService();

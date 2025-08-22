@@ -8,7 +8,7 @@ const ApiTest: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string>('');
-  const [email, setEmail] = useState('admin@client-a.co.jp');
+  const [email, setEmail] = useState('admin@example-client-a.local');
   const [password, setPassword] = useState('Admin123!');
 
   const testLogin = async () => {
