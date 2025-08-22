@@ -19,6 +19,7 @@
    - API通信は必ずTanStack Queryを使用すること（https://tanstack.com/query/latest）
    - **必須**既存機能を壊さないこと
    - **必須**開発環境DockerのPort設定は壊さないこと
+   - **必須**必要な実装か不要な実装か、全体を見て正しい判断をしてから実装すること
 
 3. **実装ポリシー**
    - Kent Beck氏のテスト駆動開発（TDD）を実践。
