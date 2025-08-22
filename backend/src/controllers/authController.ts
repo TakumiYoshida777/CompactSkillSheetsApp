@@ -138,7 +138,7 @@ export class AuthController {
         });
       }
 
-      const tokens = await authService.refreshToken(refreshToken);
+      const tokens = await authService.refreshToken({ refreshToken });
 
       res.json({
         success: true,

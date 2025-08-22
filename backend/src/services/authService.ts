@@ -474,19 +474,6 @@ class AuthService {
   }
 
   /**
-   * パーミッションチェック
-   */
-  hasPermission(user: User, permission: string): boolean {
-    if (user.permissions) {
-      return user.permissions.some(p => p.name === permission);
-    }
-    
-    // ロールからパーミッションをチェック
-    const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
-    return rolePermissions.includes(permission);
-  }
-
-  /**
    * 複数パーミッションチェック
    */
   hasAnyPermission(user: User, permissions: string[]): boolean {
@@ -498,6 +485,84 @@ class AuthService {
    */
   hasAllPermissions(user: User, permissions: string[]): boolean {
     return permissions.every(permission => this.hasPermission(user, permission));
+  }
+
+  /**
+   * IDでユーザーを取得
+   */
+  async getUserById(userId: string): Promise<User | null> {
+    return this.getCurrentUser(userId);
+  }
+
+  /**
+   * パスワード変更
+   */
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    // データベースからユーザーを検索
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: BigInt(userId) }
+      });
+
+      if (dbUser && dbUser.passwordHash) {
+        // 現在のパスワードを検証
+        const isPasswordValid = await bcrypt.compare(currentPassword, dbUser.passwordHash);
+        if (!isPasswordValid) {
+          throw new UnauthorizedError('現在のパスワードが正しくありません');
+        }
+
+        // 新しいパスワードをハッシュ化して更新
+        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+        await prisma.user.update({
+          where: { id: BigInt(userId) },
+          data: { passwordHash: newPasswordHash }
+        });
+        return;
+      }
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        throw error;
+      }
+      logger.error('Database changePassword error:', error);
+    }
+
+    // モックユーザーの場合
+    const mockUser = mockUsers.get(userId);
+    if (!mockUser) {
+      throw new UnauthorizedError('ユーザーが見つかりません');
+    }
+
+    // 現在のパスワードを検証
+    const isPasswordValid = await bcrypt.compare(currentPassword, mockUser.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedError('現在のパスワードが正しくありません');
+    }
+
+    // 新しいパスワードをハッシュ化
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    mockUser.passwordHash = newPasswordHash;
+  }
+
+  /**
+   * リソース・アクション形式のパーミッションチェック（オーバーロード）
+   */
+  hasPermission(user: User, resourceOrPermission: string, action?: string): boolean {
+    if (action) {
+      // リソースとアクションが分離されている場合
+      const permission = `${resourceOrPermission}:${action}`;
+      if (user.permissions) {
+        return user.permissions.some(p => p.name === permission);
+      }
+      const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+      return rolePermissions.includes(permission);
+    } else {
+      // 結合された権限文字列の場合
+      if (user.permissions) {
+        return user.permissions.some(p => p.name === resourceOrPermission);
+      }
+      const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+      return rolePermissions.includes(resourceOrPermission);
+    }
   }
 }
 

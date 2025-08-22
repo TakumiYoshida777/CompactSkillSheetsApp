@@ -23,6 +23,16 @@ export class AuthenticationError extends Error {
 }
 
 /**
+ * 認証失敗エラー（401）
+ */
+export class UnauthorizedError extends Error {
+  constructor(message: string = '認証に失敗しました') {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}
+
+/**
  * 認可エラー
  */
 export class AuthorizationError extends Error {
