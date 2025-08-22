@@ -33,14 +33,9 @@ const ClientLogin: React.FC = () => {
   // デモアカウント情報
   const demoAccounts = [
     {
-      email: 'admin@example-client-a.local',
+      email: 'admin@example-client.local',
       password: 'Admin123!',
-      description: '株式会社クライアントA（全エンジニア閲覧可能）'
-    },
-    {
-      email: 'user@example-client-b.local',
-      password: 'Admin123!',
-      description: '株式会社クライアントB（待機中のみ閲覧可能）'
+      description: '株式会社ABCコーポレーション（クライアント管理者）'
     }
   ];
 
@@ -57,7 +52,7 @@ const ClientLogin: React.FC = () => {
       await login(values.email, values.password, rememberMe);
       
       // 取引先企業ユーザーのダッシュボードへリダイレクト
-      navigate('client/offer-board');
+      navigate('/client/offer-board');
       
       message.success('ログインに成功しました');
     } catch (error: any) {

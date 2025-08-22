@@ -176,7 +176,6 @@ model Engineer {
   firstNameKana    String?        @db.VarChar(50)
   availability     String?        @db.VarChar(50)
   currentProject   Json?
-  engineerSkills   EngineerSkill[]
   isActive         Boolean        @default(true)
 
   @@index([companyId])
