@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { authService } from '../services/authService';
+import authService from '../services/authService';
 import { JWTPayload, UnauthorizedError, ForbiddenError } from '../types/auth';
 
 // Expressのリクエスト型を拡張

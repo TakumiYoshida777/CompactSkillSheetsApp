@@ -9,7 +9,7 @@ import type {
   OfferStatus,
 } from '@/types/offer';
 
-const BASE_URL = '/api/client';
+const BASE_URL = 'client';
 
 // モックデータ（バックエンドAPI実装まで使用）
 const mockOfferBoardData: OfferBoardData = {

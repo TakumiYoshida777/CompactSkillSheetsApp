@@ -42,7 +42,7 @@ const Login: React.FC = () => {
       } else if (user?.roles.includes('admin')) {
         navigate('/dashboard');
       } else {
-        navigate('/');
+        navigate('/dashboard');
       }
       
       message.success('ログインに成功しました');
@@ -225,7 +225,7 @@ const Login: React.FC = () => {
                 block
                 onClick={() => {
                   form.setFieldsValue({
-                    email: 'admin@demo-ses.co.jp',
+                    email: 'admin@demo-ses.example.com',
                     password: 'password123'
                   });
                 }}
@@ -233,7 +233,7 @@ const Login: React.FC = () => {
                 管理者でログイン
               </Button>
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                デモ用: admin@demo-ses.co.jp / password123
+                デモ用: admin@demo-ses.example.com / password123
               </Text>
             </Space>
           </Card>

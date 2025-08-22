@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Form,
   Input,
@@ -19,6 +19,7 @@ import {
   Steps,
   message,
   Descriptions,
+  Spin,
 } from 'antd';
 import {
   UserOutlined,
@@ -30,10 +31,17 @@ import {
   SaveOutlined,
   ArrowLeftOutlined,
   UploadOutlined,
+  LockOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { UploadProps } from 'antd';
 import dayjs from 'dayjs';
+import { engineerApi } from '../../api/engineers/engineerApi';
+import { useAuthStore } from '../../stores/authStore';
+import type { EngineerCreateRequest, EngineerStatus } from '../../types/engineer';
+import { canRegisterEngineer, ROLE_DISPLAY_NAMES } from '../../constants/roles';
+import debounce from 'lodash/debounce';
+import axios from '../../lib/axios';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -48,9 +56,25 @@ interface SkillItem {
 const EngineerRegister: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [emailChecking, setEmailChecking] = useState(false);
+  const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<{resume?: any, skillSheet?: any}>({});
+
+  // 権限チェック
+  useEffect(() => {
+    console.log('EngineerRegister - User:', user);
+    console.log('EngineerRegister - User roles:', user?.roles);
+    console.log('EngineerRegister - Can register:', user ? canRegisterEngineer(user.roles) : false);
+    
+    if (user && !canRegisterEngineer(user.roles)) {
+      message.error('この機能にアクセスする権限がありません');
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   // スキルレベルの選択肢
   const skillLevels = [
@@ -124,7 +148,7 @@ const EngineerRegister: React.FC = () => {
   // ファイルアップロード設定
   const uploadProps: UploadProps = {
     name: 'file',
-    action: '/api/upload',
+    action: 'upload',
     headers: {
       authorization: 'authorization-text',
     },
@@ -137,22 +161,288 @@ const EngineerRegister: React.FC = () => {
     },
   };
 
+  // メールアドレス重複チェック（デバウンス処理）
+  const checkEmailAvailability = debounce(async (email: string) => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailAvailable(null);
+      return;
+    }
+
+    setEmailChecking(true);
+    try {
+      const response = await axios.get(`/api/v1/engineers/check-email`, {
+        params: { email }
+      });
+      setEmailAvailable(response.data.available);
+      if (!response.data.available) {
+        form.setFields([
+          {
+            name: 'email',
+            errors: ['このメールアドレスは既に登録されています'],
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('Email check failed:', error);
+      setEmailAvailable(null);
+    } finally {
+      setEmailChecking(false);
+    }
+  }, 500);
+
   // フォーム送信
   const handleSubmit = async (values: any) => {
+    // メールアドレスが利用不可の場合は送信しない
+    if (emailAvailable === false) {
+      message.error('メールアドレスが既に使用されています');
+      return;
+    }
+
+    // スキルが0件の場合は警告
+    if (skills.length === 0) {
+      const confirmed = await new Promise((resolve) => {
+        message.warning({
+          content: 'スキル情報が登録されていません。このまま登録しますか？',
+          duration: 0,
+          key: 'skill-warning',
+          onClick: () => {
+            message.destroy('skill-warning');
+            resolve(true);
+          },
+        });
+        setTimeout(() => {
+          message.destroy('skill-warning');
+          resolve(false);
+        }, 5000);
+      });
+      if (!confirmed) return;
+    }
+
     setLoading(true);
     try {
-      // APIコール（仮）
-      console.log('Form values:', values);
-      console.log('Skills:', skills);
+      // データ整形
+      const engineerData: EngineerCreateRequest = {
+        name: `${values.lastName} ${values.firstName}`,
+        nameKana: values.lastNameKana && values.firstNameKana 
+          ? `${values.lastNameKana} ${values.firstNameKana}` 
+          : undefined,
+        email: values.email,
+        phone: values.phone,
+        engineerType: values.contractType === 'フリーランス' ? 'freelance' : 
+                      values.contractType === '業務委託' ? 'partner' : 'employee',
+        currentStatus: mapStatusToEnum(values.status),
+        availableDate: values.availableDate?.format('YYYY-MM-DD'),
+        nearestStation: values.nearestStation,
+        birthDate: values.birthDate?.format('YYYY-MM-DD'),
+        gender: values.gender,
+        githubUrl: values.githubUrl,
+        portfolioUrl: values.portfolioUrl,
+        joinDate: values.joinDate?.format('YYYY-MM-DD'),
+        yearsOfExperience: values.totalExperience,
+        tags: [],
+      };
+
+      // エンジニア登録
+      const engineer = await engineerApi.create(engineerData);
+
+      // スキル情報の登録
+      if (skills.length > 0 && engineer.id) {
+        await updateEngineerSkills(engineer.id, skills);
+      }
+
+      // 追加情報の更新（自己PR、対応可能ロール等）
+      if (values.selfPR || values.availableRoles || values.availablePhases) {
+        await updateAdditionalInfo(engineer.id, {
+          selfPR: values.selfPR,
+          availableRoles: values.availableRoles,
+          availablePhases: values.availablePhases,
+          workLocation: values.workLocation,
+          workTime: values.workTime,
+          currentProject: values.currentProject,
+          projectEndDate: values.projectEndDate?.format('YYYY-MM-DD'),
+          notes: values.notes,
+          isPublic: values.isPublic !== false, // デフォルトは公開
+        });
+      }
+
+      // ファイルアップロード
+      if (uploadedFiles.resume || uploadedFiles.skillSheet) {
+        await uploadDocuments(engineer.id, uploadedFiles);
+      }
+
+      message.success('エンジニア情報を正常に登録しました');
       
-      message.success('エンジニア情報を登録しました');
-      navigate('/engineers/list');
-    } catch (error) {
-      message.error('登録に失敗しました');
+      // localStorageのクリア
+      localStorage.removeItem('engineer_register_draft');
+      
+      // 詳細画面へ遷移
+      navigate(`/engineers/${engineer.id}`);
+    } catch (error: any) {
+      console.error('Registration failed:', error);
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          '登録に失敗しました。もう一度お試しください。';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
+
+  // ステータスのマッピング
+  const mapStatusToEnum = (status: string): EngineerStatus => {
+    const statusMap: Record<string, EngineerStatus> = {
+      'available': 'waiting',
+      'assigned': 'working',
+      'waiting': 'waiting',
+      'waiting_scheduled': 'waiting_soon',
+      'leave': 'leaving',
+    };
+    return statusMap[status] || 'waiting';
+  };
+
+  // スキル情報の更新
+  const updateEngineerSkills = async (engineerId: string, skillList: SkillItem[]) => {
+    try {
+      const skillData = {
+        programmingLanguages: skillList
+          .filter(s => s.name && isLanguage(s.name))
+          .map(s => ({ name: s.name, level: s.level, experience: s.experience })),
+        frameworks: skillList
+          .filter(s => s.name && isFramework(s.name))
+          .map(s => ({ name: s.name, level: s.level, experience: s.experience })),
+        databases: skillList
+          .filter(s => s.name && isDatabase(s.name))
+          .map(s => ({ name: s.name, level: s.level, experience: s.experience })),
+        tools: skillList
+          .filter(s => s.name && !isLanguage(s.name) && !isFramework(s.name) && !isDatabase(s.name))
+          .map(s => ({ name: s.name, level: s.level, experience: s.experience })),
+      };
+      
+      await axios.put(`/api/v1/engineers/${engineerId}/skill-sheet`, skillData);
+    } catch (error) {
+      console.error('Failed to update skills:', error);
+      throw error;
+    }
+  };
+
+  // 追加情報の更新
+  const updateAdditionalInfo = async (engineerId: string, info: any) => {
+    try {
+      await axios.patch(`/api/v1/engineers/${engineerId}`, info);
+    } catch (error) {
+      console.error('Failed to update additional info:', error);
+      // エラーは握りつぶす（メインの登録は成功しているため）
+    }
+  };
+
+  // ドキュメントアップロード
+  const uploadDocuments = async (engineerId: string, files: any) => {
+    const promises = [];
+    if (files.resume) {
+      promises.push(
+        axios.post(`/api/v1/engineers/${engineerId}/documents`, {
+          type: 'resume',
+          file: files.resume,
+        })
+      );
+    }
+    if (files.skillSheet) {
+      promises.push(
+        axios.post(`/api/v1/engineers/${engineerId}/documents`, {
+          type: 'skill_sheet',
+          file: files.skillSheet,
+        })
+      );
+    }
+    try {
+      await Promise.all(promises);
+    } catch (error) {
+      console.error('Failed to upload documents:', error);
+      // エラーは握りつぶす
+    }
+  };
+
+  // スキル分類ヘルパー関数
+  const isLanguage = (skill: string): boolean => {
+    const languages = ['JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'C++', 'Go', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'Rust', 'Scala'];
+    return languages.some(lang => skill.toLowerCase().includes(lang.toLowerCase()));
+  };
+
+  const isFramework = (skill: string): boolean => {
+    const frameworks = ['React', 'Vue', 'Angular', 'Next.js', 'Nuxt', 'Express', 'Django', 'Flask', 'Spring', 'Rails', 'Laravel', '.NET'];
+    return frameworks.some(fw => skill.toLowerCase().includes(fw.toLowerCase()));
+  };
+
+  const isDatabase = (skill: string): boolean => {
+    const databases = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Oracle', 'SQL Server', 'DynamoDB', 'Elasticsearch'];
+    return databases.some(db => skill.toLowerCase().includes(db.toLowerCase()));
+  };
+
+  // フォームデータの一時保存（localStorage）
+  const saveDraft = () => {
+    const formData = form.getFieldsValue();
+    const draft = {
+      formData,
+      skills,
+      currentStep,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem('engineer_register_draft', JSON.stringify(draft));
+    message.info('入力内容を一時保存しました');
+  };
+
+  // 一時保存データの復元
+  useEffect(() => {
+    const draft = localStorage.getItem('engineer_register_draft');
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft);
+        const savedDate = new Date(parsed.savedAt);
+        const hoursSince = (Date.now() - savedDate.getTime()) / (1000 * 60 * 60);
+        
+        // 24時間以内のデータのみ復元
+        if (hoursSince < 24) {
+          message.info({
+            content: '前回の入力内容を復元しますか？',
+            duration: 0,
+            key: 'restore-draft',
+            btn: (
+              <Space>
+                <Button 
+                  size="small" 
+                  onClick={() => {
+                    message.destroy('restore-draft');
+                    localStorage.removeItem('engineer_register_draft');
+                  }}
+                >
+                  破棄
+                </Button>
+                <Button 
+                  type="primary" 
+                  size="small"
+                  onClick={() => {
+                    form.setFieldsValue(parsed.formData);
+                    setSkills(parsed.skills || []);
+                    setCurrentStep(parsed.currentStep || 0);
+                    message.destroy('restore-draft');
+                    message.success('入力内容を復元しました');
+                  }}
+                >
+                  復元
+                </Button>
+              </Space>
+            ),
+          });
+        } else {
+          // 24時間以上経過したデータは削除
+          localStorage.removeItem('engineer_register_draft');
+        }
+      } catch (error) {
+        console.error('Failed to restore draft:', error);
+        localStorage.removeItem('engineer_register_draft');
+      }
+    }
+  }, [form]);
 
   // ステップごとのコンテンツ
   const renderStepContent = () => {
@@ -206,8 +496,15 @@ const EngineerRegister: React.FC = () => {
                     { required: true, message: 'メールアドレスを入力してください' },
                     { type: 'email', message: '有効なメールアドレスを入力してください' },
                   ]}
+                  validateStatus={emailChecking ? 'validating' : emailAvailable === false ? 'error' : ''}
+                  help={emailChecking ? '確認中...' : emailAvailable === false ? 'このメールアドレスは既に登録されています' : ''}
                 >
-                  <Input prefix={<MailOutlined />} placeholder="tanaka@example.com" />
+                  <Input 
+                    prefix={<MailOutlined />} 
+                    placeholder="tanaka@example.com"
+                    onChange={(e) => checkEmailAvailability(e.target.value)}
+                    suffix={emailChecking ? <Spin size="small" /> : null}
+                  />
                 </Form.Item>
               </Col>
               <Col xs={24} md={12}>
@@ -733,15 +1030,46 @@ const EngineerRegister: React.FC = () => {
   };
 
 
+  // 権限がない場合の表示
+  if (user && !canRegisterEngineer(user.roles)) {
+    return (
+      <Card className="text-center" style={{ maxWidth: 600, margin: '100px auto' }}>
+        <LockOutlined style={{ fontSize: 48, color: '#ff4d4f', marginBottom: 24 }} />
+        <Title level={3}>アクセス権限がありません</Title>
+        <Text type="secondary">
+          エンジニア登録機能は管理者または営業担当者のみ利用可能です。
+        </Text>
+        <div style={{ marginTop: 24 }}>
+          <Button type="primary" onClick={() => navigate('/dashboard')}>
+            ダッシュボードに戻る
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <div>
       <div className="mb-4">
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate('/engineers/list')}
-        >
-          戻る
-        </Button>
+        <Space>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => {
+              if (skills.length > 0 || form.getFieldsValue().email) {
+                saveDraft();
+              }
+              navigate('engineers/list');
+            }}
+          >
+            戻る
+          </Button>
+          <Button
+            onClick={saveDraft}
+            disabled={!form.getFieldsValue().email}
+          >
+            一時保存
+          </Button>
+        </Space>
       </div>
 
       <Card>

@@ -121,7 +121,7 @@ const UserProfile: React.FC = () => {
   // プロフィール画像アップロード設定
   const uploadProps: UploadProps = {
     name: 'avatar',
-    action: '/api/upload/avatar',
+    action: 'upload/avatar',
     headers: {
       authorization: 'authorization-text',
     },

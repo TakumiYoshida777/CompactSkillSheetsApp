@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { businessPartnerApi } from '../../api/businessPartner';
+import type { BusinessPartner } from '../../api/businessPartner';
 import {
   Card,
   Table,
@@ -15,7 +18,6 @@ import {
   message,
   Badge,
   Tooltip,
-  DatePicker,
   Drawer,
   Descriptions,
   Timeline,
@@ -54,72 +56,45 @@ const { Option } = Select;
 const { Search } = Input;
 const { TabPane } = Tabs;
 
-interface ContactPerson {
-  id: string;
-  name: string;
-  department: string;
-  position: string;
-  email: string;
-  phone: string;
-  isPrimary: boolean;
-}
-
-interface ApproachHistory {
-  id: string;
-  date: string;
-  type: 'email' | 'phone' | 'meeting' | 'proposal';
-  subject: string;
-  engineerCount?: number;
-  status: 'sent' | 'replied' | 'pending' | 'accepted' | 'rejected';
-  note?: string;
-}
-
-interface BusinessPartner {
-  id: string;
-  companyName: string;
-  companyNameKana: string;
-  industry: string;
-  employeeSize: string;
-  website?: string;
-  phone: string;
-  address: string;
-  businessDescription?: string;
-  contacts: ContactPerson[];
-  contractTypes: string[];
-  budgetMin?: number;
-  budgetMax?: number;
-  preferredSkills?: string[];
-  status: 'active' | 'inactive' | 'prospective';
-  registeredDate: string;
-  lastContactDate?: string;
-  totalProposals: number;
-  acceptedProposals: number;
-  currentEngineers: number;
-  monthlyRevenue?: number;
-  rating?: number;
-  tags?: string[];
-  approaches?: ApproachHistory[];
-}
+// Types are imported from businessPartner.ts
 
 const BusinessPartnerList: React.FC = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [partners, setPartners] = useState<BusinessPartner[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedPartner, setSelectedPartner] = useState<BusinessPartner | null>(null);
   const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
-  const [filterVisible, setFilterVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [emailModalVisible, setEmailModalVisible] = useState(false);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  // モックデータの生成
-  useEffect(() => {
-    generateMockData();
-  }, []);
+  // APIからデータ取得
+  const { data: partnersData, isLoading, refetch } = useQuery({
+    queryKey: ['businessPartners', searchText, selectedStatus, selectedIndustries, currentPage, pageSize],
+    queryFn: () => businessPartnerApi.getList({
+      search: searchText || undefined,
+      status: selectedStatus !== 'all' ? selectedStatus : undefined,
+      industry: selectedIndustries.length > 0 ? selectedIndustries[0] : undefined,
+      page: currentPage,
+      limit: pageSize,
+    }),
+  });
 
-  const generateMockData = () => {
+  const partners = partnersData?.data || [];
+  const total = partnersData?.total || 0;
+
+  const filteredPartners = partners.filter(partner => {
+    const matchesSearch = partner.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
+                         (partner.companyNameKana?.toLowerCase().includes(searchText.toLowerCase()) || false);
+    const matchesStatus = selectedStatus === 'all' || partner.status === selectedStatus;
+    const matchesIndustry = selectedIndustries.length === 0 || (partner.industry && selectedIndustries.includes(partner.industry));
+    
+    return matchesSearch && matchesStatus && matchesIndustry;
+  });
+
+  /* const generateMockData = () => {
     const mockData: BusinessPartner[] = [
       {
         id: '1',
@@ -283,8 +258,9 @@ const BusinessPartnerList: React.FC = () => {
         tags: ['休止中'],
       },
     ];
-    setPartners(mockData);
-  };
+    // モックデータ生成は不要になりました
+    refetch();
+  }; */
 
   const handleBulkEmail = () => {
     if (selectedRowKeys.length === 0) {
@@ -294,16 +270,20 @@ const BusinessPartnerList: React.FC = () => {
     setEmailModalVisible(true);
   };
 
-  const handleDelete = (partner: BusinessPartner) => {
+  const handleDelete = async (partner: BusinessPartner) => {
     Modal.confirm({
       title: '取引先削除の確認',
       content: `${partner.companyName}を削除してもよろしいですか？`,
       okText: '削除',
       okType: 'danger',
       cancelText: 'キャンセル',
-      onOk: () => {
-        setPartners(partners.filter(p => p.id !== partner.id));
-        message.success('取引先を削除しました');
+      onOk: async () => {
+        try {
+          await businessPartnerApi.delete(partner.id);
+          refetch();
+        } catch {
+          // エラーはAPIで処理済み
+        }
       },
     });
   };
@@ -419,7 +399,7 @@ const BusinessPartnerList: React.FC = () => {
       width: 100,
       render: (status: string) => (
         <Badge
-          status={getStatusColor(status) as any}
+          status={getStatusColor(status) as 'success' | 'processing' | 'default' | 'error' | 'warning'}
           text={getStatusText(status)}
         />
       ),
@@ -552,14 +532,6 @@ const BusinessPartnerList: React.FC = () => {
     },
   };
 
-  const filteredPartners = partners.filter(partner => {
-    const matchesSearch = partner.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
-                         partner.companyNameKana.toLowerCase().includes(searchText.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || partner.status === selectedStatus;
-    const matchesIndustry = selectedIndustries.length === 0 || selectedIndustries.includes(partner.industry);
-    
-    return matchesSearch && matchesStatus && matchesIndustry;
-  });
 
   return (
     <div style={{ padding: '24px' }}>
@@ -576,12 +548,8 @@ const BusinessPartnerList: React.FC = () => {
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => {
-                  setLoading(true);
-                  setTimeout(() => {
-                    generateMockData();
-                    setLoading(false);
-                    message.success('データを更新しました');
-                  }, 1000);
+                  refetch();
+                  message.success('データを更新しました');
                 }}
               >
                 更新
@@ -589,7 +557,7 @@ const BusinessPartnerList: React.FC = () => {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={() => navigate('/business-partners/new')}
+                onClick={() => navigate('business-partners/new')}
               >
                 新規登録
               </Button>
@@ -700,12 +668,18 @@ const BusinessPartnerList: React.FC = () => {
           columns={columns}
           dataSource={filteredPartners}
           rowKey="id"
-          loading={loading}
+          loading={isLoading}
           scroll={{ x: 1500 }}
           pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
             showSizeChanger: true,
             showTotal: (total) => `全 ${total} 件`,
-            defaultPageSize: 10,
+            onChange: (page, size) => {
+              setCurrentPage(page);
+              if (size !== pageSize) setPageSize(size);
+            },
           }}
         />
       </Card>

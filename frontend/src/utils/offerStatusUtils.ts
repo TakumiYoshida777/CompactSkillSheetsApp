@@ -11,6 +11,7 @@ export const getStatusColor = (status: OfferStatus): string => {
     pending: 'warning',
     accepted: 'success',
     declined: 'error',
+    withdrawn: 'default',
   };
   
   return statusColorMap[status] || 'default';
@@ -27,6 +28,7 @@ export const getStatusText = (status: OfferStatus): string => {
     pending: '検討中',
     accepted: '承諾',
     declined: '辞退',
+    withdrawn: '取り下げ',
   };
   
   return statusTextMap[status] || '-';
@@ -43,6 +45,7 @@ export const getStatusPriority = (status: OfferStatus): number => {
     sent: 4,
     declined: 5,
     none: 6,
+    withdrawn: 7,
   };
   
   return priorityMap[status] || 999;

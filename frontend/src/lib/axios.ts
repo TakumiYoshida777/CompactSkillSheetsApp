@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { useAuthStore } from '../stores/authStore';
+import { getLoginPath } from '../utils/navigation';
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -11,14 +13,23 @@ const instance = axios.create({
 // リクエストインターセプター
 instance.interceptors.request.use(
   (config) => {
-    // 認証トークンの追加
-    const token = localStorage.getItem('access_token');
+    // Zustandストアから認証トークンを取得
+    const token = useAuthStore.getState().token;
+    console.log('[Axios Request] URL:', config.url);
+    console.log('[Axios Request] Base URL:', config.baseURL);
+    console.log('[Axios Request] Full URL:', `${config.baseURL}${config.url}`);
+    console.log('[Axios Request] Method:', config.method);
+    console.log('[Axios Request] Params:', config.params);
+    console.log('[Axios Interceptor] Adding token to request:', token ? 'Token exists' : 'No token');
     if (token) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('[Axios Interceptor] Authorization header set:', config.headers.Authorization);
     }
     return config;
   },
   (error) => {
+    console.error('[Axios Request Error]:', error);
     return Promise.reject(error);
   }
 );
@@ -26,9 +37,15 @@ instance.interceptors.request.use(
 // レスポンスインターセプター
 instance.interceptors.response.use(
   (response) => {
+    console.log('[Axios Response] URL:', response.config.url);
+    console.log('[Axios Response] Status:', response.status);
+    console.log('[Axios Response] Data:', response.data);
     return response;
   },
   async (error) => {
+    console.error('[Axios Response Error]:', error);
+    console.error('[Axios Response Error] Status:', error.response?.status);
+    console.error('[Axios Response Error] Data:', error.response?.data);
     const originalRequest = error.config;
 
     // 401エラーでリフレッシュトークンを使用
@@ -36,24 +53,50 @@ instance.interceptors.response.use(
       originalRequest._retry = true;
       
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = useAuthStore.getState().refreshToken;
+        const token = useAuthStore.getState().token;
+        const user = useAuthStore.getState().user;
+        
         if (refreshToken) {
-          const response = await axios.post('/api/auth/refresh', {
-            refresh_token: refreshToken,
+          // ユーザータイプに基づいてエンドポイントを決定
+          const userType = user?.userType || 'ses';
+          const endpoint = userType === 'client' ? '/api/v1/client/auth/refresh' : '/api/v1/auth/refresh';
+          
+          const response = await instance.post(endpoint, {
+            refreshToken: refreshToken,
           });
           
-          const { access_token } = response.data;
-          localStorage.setItem('access_token', access_token);
+          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          
+          // Zustandストアを更新
+          useAuthStore.getState().setAuthTokens(
+            useAuthStore.getState().user,
+            accessToken,
+            newRefreshToken
+          );
           
           // 元のリクエストを再実行
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return instance(originalRequest);
         }
       } catch (refreshError) {
-        // リフレッシュ失敗時はログイン画面へ
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
+        console.error('[Axios Interceptor] Refresh token failed:', refreshError);
+        // リフレッシュ失敗時はログアウト
+        useAuthStore.getState().logout();
+        
+        // ナビゲーション関数を使用してリダイレクト
+        const navigateToLogin = useAuthStore.getState().navigateToLogin;
+        const currentPath = window.location.pathname;
+        const loginPath = getLoginPath(currentPath);
+        
+        if (navigateToLogin) {
+          // React Routerのnavigateを使用
+          navigateToLogin(loginPath);
+        } else {
+          // フォールバック: window.locationを使用（初期化前などの場合）
+          window.location.href = loginPath;
+        }
+        
         return Promise.reject(refreshError);
       }
     }

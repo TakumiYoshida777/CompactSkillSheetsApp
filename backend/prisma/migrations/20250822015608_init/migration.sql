@@ -26,6 +26,15 @@ CREATE TYPE "public"."approach_type" AS ENUM ('MANUAL', 'PERIODIC', 'ASSIGN_REQU
 CREATE TYPE "public"."approach_status" AS ENUM ('SENT', 'OPENED', 'REPLIED', 'REJECTED');
 
 -- CreateEnum
+CREATE TYPE "public"."project_status" AS ENUM ('PLANNING', 'ACTIVE', 'ON_HOLD', 'COMPLETED', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "public"."assignment_status" AS ENUM ('ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "public"."approach_frequency" AS ENUM ('DAILY', 'WEEKLY', 'BIWEEKLY', 'MONTHLY', 'QUARTERLY');
+
+-- CreateEnum
 CREATE TYPE "public"."exclusion_type" AS ENUM ('NG_ENGINEER', 'PERIODIC_EXCLUSION', 'MANUAL_EXCLUSION');
 
 -- CreateEnum
@@ -258,17 +267,23 @@ CREATE TABLE "public"."skill_sheets" (
 -- CreateTable
 CREATE TABLE "public"."projects" (
     "id" BIGSERIAL NOT NULL,
+    "companyId" BIGINT NOT NULL,
     "name" VARCHAR(255) NOT NULL,
     "clientCompany" VARCHAR(255),
+    "status" "public"."project_status" NOT NULL DEFAULT 'PLANNING',
     "startDate" DATE NOT NULL,
     "endDate" DATE,
     "plannedEndDate" DATE,
+    "contractType" VARCHAR(50),
+    "monthlyRate" INTEGER,
+    "requiredEngineers" INTEGER NOT NULL DEFAULT 1,
     "projectScale" "public"."project_scale",
     "industry" VARCHAR(100),
     "businessType" VARCHAR(100),
     "developmentMethodology" VARCHAR(100),
     "teamSize" INTEGER,
     "description" TEXT,
+    "requiredSkills" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -292,6 +307,22 @@ CREATE TABLE "public"."engineer_projects" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "engineer_projects_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."project_assignments" (
+    "id" BIGSERIAL NOT NULL,
+    "projectId" BIGINT NOT NULL,
+    "engineerId" BIGINT NOT NULL,
+    "role" VARCHAR(100),
+    "startDate" DATE NOT NULL,
+    "endDate" DATE,
+    "allocationPercentage" INTEGER NOT NULL DEFAULT 100,
+    "status" "public"."assignment_status" NOT NULL DEFAULT 'ASSIGNED',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "project_assignments_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -496,6 +527,46 @@ CREATE TABLE "public"."email_logs" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "email_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."notifications" (
+    "id" BIGSERIAL NOT NULL,
+    "userId" BIGINT NOT NULL,
+    "type" VARCHAR(50) NOT NULL,
+    "title" VARCHAR(255) NOT NULL,
+    "message" TEXT NOT NULL,
+    "data" JSONB,
+    "isRead" BOOLEAN NOT NULL DEFAULT false,
+    "readAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."periodic_approaches" (
+    "id" BIGSERIAL NOT NULL,
+    "approachId" BIGINT NOT NULL,
+    "companyId" BIGINT NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "description" TEXT,
+    "frequency" "public"."approach_frequency" NOT NULL DEFAULT 'MONTHLY',
+    "dayOfWeek" INTEGER,
+    "dayOfMonth" INTEGER,
+    "timeOfDay" VARCHAR(5),
+    "nextRunAt" TIMESTAMP(3),
+    "lastRunAt" TIMESTAMP(3),
+    "runCount" INTEGER NOT NULL DEFAULT 0,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "isPaused" BOOLEAN NOT NULL DEFAULT false,
+    "pausedAt" TIMESTAMP(3),
+    "pausedBy" BIGINT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "periodic_approaches_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -828,6 +899,9 @@ CREATE INDEX "skills_category_idx" ON "public"."skills"("category");
 CREATE UNIQUE INDEX "skill_sheets_engineerId_key" ON "public"."skill_sheets"("engineerId");
 
 -- CreateIndex
+CREATE INDEX "projects_companyId_idx" ON "public"."projects"("companyId");
+
+-- CreateIndex
 CREATE INDEX "projects_startDate_endDate_idx" ON "public"."projects"("startDate", "endDate");
 
 -- CreateIndex
@@ -841,6 +915,15 @@ CREATE INDEX "engineer_projects_isCurrent_idx" ON "public"."engineer_projects"("
 
 -- CreateIndex
 CREATE INDEX "engineer_projects_startDate_endDate_idx" ON "public"."engineer_projects"("startDate", "endDate");
+
+-- CreateIndex
+CREATE INDEX "project_assignments_projectId_idx" ON "public"."project_assignments"("projectId");
+
+-- CreateIndex
+CREATE INDEX "project_assignments_engineerId_idx" ON "public"."project_assignments"("engineerId");
+
+-- CreateIndex
+CREATE INDEX "project_assignments_startDate_endDate_idx" ON "public"."project_assignments"("startDate", "endDate");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "freelancers_engineerId_key" ON "public"."freelancers"("engineerId");
@@ -913,6 +996,27 @@ CREATE INDEX "approaches_sentAt_idx" ON "public"."approaches"("sentAt");
 
 -- CreateIndex
 CREATE INDEX "approaches_approachType_idx" ON "public"."approaches"("approachType");
+
+-- CreateIndex
+CREATE INDEX "notifications_userId_idx" ON "public"."notifications"("userId");
+
+-- CreateIndex
+CREATE INDEX "notifications_isRead_idx" ON "public"."notifications"("isRead");
+
+-- CreateIndex
+CREATE INDEX "notifications_createdAt_idx" ON "public"."notifications"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "periodic_approaches_approachId_key" ON "public"."periodic_approaches"("approachId");
+
+-- CreateIndex
+CREATE INDEX "periodic_approaches_companyId_idx" ON "public"."periodic_approaches"("companyId");
+
+-- CreateIndex
+CREATE INDEX "periodic_approaches_nextRunAt_idx" ON "public"."periodic_approaches"("nextRunAt");
+
+-- CreateIndex
+CREATE INDEX "periodic_approaches_isActive_isPaused_idx" ON "public"."periodic_approaches"("isActive", "isPaused");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "admin_users_username_key" ON "public"."admin_users"("username");
@@ -1068,10 +1172,19 @@ ALTER TABLE "public"."engineer_skills" ADD CONSTRAINT "engineer_skills_skillId_f
 ALTER TABLE "public"."skill_sheets" ADD CONSTRAINT "skill_sheets_engineerId_fkey" FOREIGN KEY ("engineerId") REFERENCES "public"."engineers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "public"."projects" ADD CONSTRAINT "projects_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "public"."companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "public"."engineer_projects" ADD CONSTRAINT "engineer_projects_engineerId_fkey" FOREIGN KEY ("engineerId") REFERENCES "public"."engineers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."engineer_projects" ADD CONSTRAINT "engineer_projects_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "public"."projects"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."project_assignments" ADD CONSTRAINT "project_assignments_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "public"."projects"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."project_assignments" ADD CONSTRAINT "project_assignments_engineerId_fkey" FOREIGN KEY ("engineerId") REFERENCES "public"."engineers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."freelancers" ADD CONSTRAINT "freelancers_engineerId_fkey" FOREIGN KEY ("engineerId") REFERENCES "public"."engineers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -1153,6 +1266,15 @@ ALTER TABLE "public"."email_logs" ADD CONSTRAINT "email_logs_approachId_fkey" FO
 
 -- AddForeignKey
 ALTER TABLE "public"."email_logs" ADD CONSTRAINT "email_logs_templateId_fkey" FOREIGN KEY ("templateId") REFERENCES "public"."email_templates"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."notifications" ADD CONSTRAINT "notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."periodic_approaches" ADD CONSTRAINT "periodic_approaches_approachId_fkey" FOREIGN KEY ("approachId") REFERENCES "public"."approaches"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."periodic_approaches" ADD CONSTRAINT "periodic_approaches_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "public"."companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."admin_user_roles" ADD CONSTRAINT "admin_user_roles_adminUserId_fkey" FOREIGN KEY ("adminUserId") REFERENCES "public"."admin_users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

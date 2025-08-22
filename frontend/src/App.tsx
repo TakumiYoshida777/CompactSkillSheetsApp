@@ -3,6 +3,7 @@ import { ConfigProvider, Spin } from 'antd';
 import jaJP from 'antd/locale/ja_JP';
 import { lazy, Suspense, useEffect } from 'react';
 import './App.css';
+import { NavigationSetup } from './components/NavigationSetup';
 
 // レイアウトコンポーネント（常に必要なので通常インポート）
 import MainLayout from './layouts/MainLayout';
@@ -68,7 +69,7 @@ const ClientAuthDebug = lazy(() => import('./pages/Client/AuthDebug'));
 // ローディングコンポーネント
 const PageLoader = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-    <Spin size="large" tip="読み込み中..." />
+    <Spin size="large" />
   </div>
 );
 
@@ -89,6 +90,7 @@ function App() {
   return (
     <ConfigProvider locale={jaJP}>
       <Router>
+        <NavigationSetup />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* テストページ */}
@@ -163,13 +165,18 @@ function App() {
                     <EngineerDetail />
                   </Suspense>
                 } />
-                {/* ENG003 - エンジニア登録・編集 */}
-                <Route path="new" element={
+                {/* ENG003 - エンジニア登録 */}
+                <Route path="register" element={
                   <Suspense fallback={<PageLoader />}>
                     <EngineerRegister />
                   </Suspense>
                 } />
-                <Route path="edit/:id" element={<div>エンジニア編集（開発中）</div>} />
+                {/* ENG004 - エンジニア編集 */}
+                <Route path="edit/:id" element={
+                  <Suspense fallback={<PageLoader />}>
+                    <EngineerRegister />
+                  </Suspense>
+                } />
               </Route>
               
               {/* スキルシート管理 */}

@@ -35,7 +35,7 @@ export class AuthCheckService {
     console.log('[checkAuth] UserType from token:', userTypeFromToken);
     
     const userType = userTypeFromToken || user?.userType;
-    const endpoint = userType === 'client' ? '/api/client/auth/me' : '/api/auth/me';
+    const endpoint = userType === 'client' ? 'client/auth/me' : 'auth/me';
     console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', userType);
     
     return endpoint;

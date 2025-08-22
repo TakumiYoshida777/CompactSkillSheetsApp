@@ -244,3 +244,55 @@ export const createCrossFieldValidator = {
     }),
   }),
 };
+
+// エンジニア作成リクエストのバリデーション
+export const validateEngineerCreateRequest = (data: any): { isValid: boolean; errors: string[] } => {
+  const errors: string[] = [];
+
+  // 必須フィールドのチェック
+  if (!data.name || data.name.trim() === '') {
+    errors.push('名前は必須です');
+  }
+
+  if (!data.email || data.email.trim() === '') {
+    errors.push('メールアドレスは必須です');
+  } else if (!validateEmail(data.email)) {
+    errors.push('有効なメールアドレスを入力してください');
+  }
+
+  if (!data.engineerType) {
+    errors.push('エンジニアタイプは必須です');
+  } else if (!['employee', 'partner', 'freelance'].includes(data.engineerType)) {
+    errors.push('有効なエンジニアタイプを選択してください');
+  }
+
+  // オプションフィールドのチェック
+  if (data.phone && !validatePhoneNumber(data.phone)) {
+    errors.push('有効な電話番号を入力してください');
+  }
+
+  if (data.githubUrl && !validateUrl(data.githubUrl)) {
+    errors.push('有効なGitHub URLを入力してください');
+  }
+
+  if (data.portfolioUrl && !validateUrl(data.portfolioUrl)) {
+    errors.push('有効なポートフォリオURLを入力してください');
+  }
+
+  if (data.currentStatus && !['working', 'waiting', 'waiting_soon', 'leaving'].includes(data.currentStatus)) {
+    errors.push('有効なステータスを選択してください');
+  }
+
+  if (data.gender && !['male', 'female', 'other'].includes(data.gender)) {
+    errors.push('有効な性別を選択してください');
+  }
+
+  if (data.yearsOfExperience !== undefined && data.yearsOfExperience < 0) {
+    errors.push('経験年数は0以上で入力してください');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};

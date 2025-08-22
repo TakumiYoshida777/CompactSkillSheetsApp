@@ -371,9 +371,73 @@ HSTS: 有効化必須
 }
 ```
 
-## 10. パフォーマンス最適化
+## 10. スキルシート閲覧URL API
 
-### 10.1 ページネーション
+### 10.1 URL生成エンドポイント
+```yaml
+POST /api/v1/skill-sheets/generate-url
+Authorization: Bearer <token>
+Content-Type: application/json
+
+Request:
+{
+  "engineerIds": [1, 2, 3],
+  "targetCompanyId": 200,
+  "expiresIn": 2592000  # 30日（秒）
+}
+
+Response:
+{
+  "success": true,
+  "data": {
+    "url": "https://app.example.com/skill-sheets/view?token=xxxxx",
+    "engineerIds": [1, 2, 3],
+    "expiresIn": 2592000
+  }
+}
+```
+
+### 10.2 URL経由のスキルシート閲覧
+```yaml
+GET /api/v1/skill-sheets/view?token=xxxxx
+# 認証不要
+
+Response:
+{
+  "success": true,
+  "data": {
+    "engineers": [
+      {
+        "id": 1,
+        "firstName": "太郎",
+        "lastName": "山田",
+        "currentStatus": "稼働中",
+        "availableDate": "2024-04-01",
+        "technicalSkills": {...},
+        "projectHistory": [...]
+      }
+    ],
+    "expiresAt": "2024-02-01T00:00:00Z",
+    "companyId": 200
+  }
+}
+```
+
+### 10.3 メール送信時のURL埋め込み
+```yaml
+アプローチメール送信時:
+- エンジニアIDリストからURL自動生成
+- メール本文にURL埋め込み
+- 有効期限30日間
+- 個別エンジニアごとのURL生成
+
+テンプレート変数:
+{{SKILL_SHEET_URLS}} - スキルシートURL一覧を挿入
+```
+
+## 11. パフォーマンス最適化
+
+### 11.1 ページネーション
 ```yaml
 デフォルト件数: 20件
 最大件数: 100件
@@ -381,7 +445,7 @@ HSTS: 有効化必須
 オフセットベース: 小規模データ用
 ```
 
-### 10.2 フィールド選択
+### 11.2 フィールド選択
 ```yaml
 # 必要なフィールドのみ取得
 GET /engineers?fields=id,name,skills,status
@@ -391,7 +455,7 @@ GET /engineers?include=skillSheet,currentProject
 GET /engineers?exclude=internalNotes
 ```
 
-### 10.3 圧縮
+### 11.3 圧縮
 ```yaml
 Gzip: 全レスポンスで有効
 Brotli: 対応ブラウザで有効

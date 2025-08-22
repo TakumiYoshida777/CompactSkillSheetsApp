@@ -35,7 +35,7 @@ export const createTokenManagementActions: StateCreator<
       const userType = token ? getUserTypeFromToken(token) : null;
       console.log('[refreshAccessToken] UserType from token:', userType);
       
-      const endpoint = userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
+      const endpoint = userType === 'client' ? 'client/auth/refresh' : 'auth/refresh';
       console.log('[refreshAccessToken] Using endpoint:', endpoint);
       
       const tokens = await AuthService.refreshToken(endpoint, refreshToken);

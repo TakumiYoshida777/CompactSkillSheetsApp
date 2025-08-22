@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 import { 
   User, 
   LoginRequest, 
@@ -8,277 +11,184 @@ import {
   AuthTokens, 
   JWTPayload,
   Company,
-  RefreshTokenData,
-  UnauthorizedError,
-  USER_ROLES,
-  PERMISSIONS
+  RefreshTokenRequest,
+  UserRole,
+  Permission
 } from '../types/auth';
+import { UnauthorizedError, AuthenticationError } from '../utils/errors';
+import { logger } from '../config/logger';
 
-// 環境変数から設定を読み込み
-const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key-change-this-in-production';
-const JWT_EXPIRY = process.env.JWT_EXPIRY || '8h';
-const BCRYPT_ROUNDS = 10;
+// 権限定義
+const PERMISSIONS = {
+  // ユーザー管理
+  USER_VIEW: 'user:view',
+  USER_CREATE: 'user:create',
+  USER_UPDATE: 'user:update',
+  USER_DELETE: 'user:delete',
+  
+  // エンジニア管理
+  ENGINEER_VIEW: 'engineer:view',
+  ENGINEER_CREATE: 'engineer:create',
+  ENGINEER_UPDATE: 'engineer:update',
+  ENGINEER_DELETE: 'engineer:delete',
+  
+  // スキルシート管理
+  SKILLSHEET_VIEW: 'skillsheet:view',
+  SKILLSHEET_CREATE: 'skillsheet:create',
+  SKILLSHEET_UPDATE: 'skillsheet:update',
+  SKILLSHEET_DELETE: 'skillsheet:delete',
+  
+  // 会社管理
+  COMPANY_VIEW: 'company:view',
+  COMPANY_UPDATE: 'company:update',
+  
+  // オファー管理
+  OFFER_VIEW: 'offer:view',
+  OFFER_CREATE: 'offer:create',
+  OFFER_UPDATE: 'offer:update',
+  OFFER_DELETE: 'offer:delete'
+};
 
-// モックデータストア（本番環境ではデータベースを使用）
-const mockUsers: Map<string, User> = new Map();
-const mockCompanies: Map<string, Company> = new Map();
-const mockRefreshTokens: Map<string, RefreshTokenData> = new Map();
+// ロール定義
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  admin: Object.values(PERMISSIONS),
+  manager: [
+    PERMISSIONS.USER_VIEW,
+    PERMISSIONS.USER_CREATE,
+    PERMISSIONS.USER_UPDATE,
+    PERMISSIONS.ENGINEER_VIEW,
+    PERMISSIONS.ENGINEER_CREATE,
+    PERMISSIONS.ENGINEER_UPDATE,
+    PERMISSIONS.SKILLSHEET_VIEW,
+    PERMISSIONS.SKILLSHEET_CREATE,
+    PERMISSIONS.SKILLSHEET_UPDATE,
+    PERMISSIONS.COMPANY_VIEW,
+    PERMISSIONS.OFFER_VIEW,
+    PERMISSIONS.OFFER_CREATE,
+    PERMISSIONS.OFFER_UPDATE
+  ],
+  sales: [
+    PERMISSIONS.ENGINEER_VIEW,
+    PERMISSIONS.SKILLSHEET_VIEW,
+    PERMISSIONS.OFFER_VIEW,
+    PERMISSIONS.OFFER_CREATE,
+    PERMISSIONS.OFFER_UPDATE
+  ],
+  engineer: [
+    PERMISSIONS.SKILLSHEET_VIEW,
+    PERMISSIONS.SKILLSHEET_UPDATE
+  ]
+};
 
-// 初期データの作成
+// モックデータストア
+const mockUsers = new Map<string, User & { passwordHash: string }>();
+const mockRefreshTokens = new Map<string, { userId: string; expiresAt: Date }>();
+
+// モックデータの初期化
 const initializeMockData = () => {
-  // デモ用SES企業
-  const demoCompany: Company = {
-    id: 'company-1',
-    name: 'デモSES株式会社',
-    companyType: 'ses',
-    emailDomain: 'demo-ses.co.jp',
-    address: '東京都渋谷区',
-    phone: '03-1234-5678',
-    websiteUrl: 'https://demo-ses.co.jp',
-    contactEmail: 'contact@demo-ses.co.jp',
-    maxEngineers: 100,
+  // 管理者ユーザー
+  const adminPasswordHash = bcrypt.hashSync('password123', 10);
+  const adminUser = {
+    id: '1',
+    email: 'admin@demo-ses.example.com',
+    passwordHash: adminPasswordHash,
+    name: 'システム管理者',
+    role: 'admin' as const,
+    companyId: '1',
+    companyName: 'デモSES企業',
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-  mockCompanies.set(demoCompany.id, demoCompany);
-
-  // デモ用管理者ユーザー
-  const adminUser: User = {
-    id: 'user-admin-1',
-    email: 'admin@demo-ses.co.jp',
-    name: '管理者太郎',
-    companyId: demoCompany.id,
+    permissions: Object.values(PERMISSIONS).map((permission, index) => ({
+      id: `perm-${index + 1}`,
+      name: permission,
+      displayName: permission,
+      resource: permission.split(':')[0],
+      action: permission.split(':')[1]
+    })),
     roles: [{
       id: 'role-1',
-      name: USER_ROLES.ADMIN,
+      name: 'admin',
       displayName: '管理者',
-      permissions: [
-        {
-          id: 'perm-1',
-          name: PERMISSIONS.USER_VIEW,
-          displayName: 'ユーザー閲覧',
-          resource: 'user',
-          action: 'view'
-        },
-        {
-          id: 'perm-2',
-          name: PERMISSIONS.USER_CREATE,
-          displayName: 'ユーザー作成',
-          resource: 'user',
-          action: 'create'
-        },
-        {
-          id: 'perm-3',
-          name: PERMISSIONS.USER_UPDATE,
-          displayName: 'ユーザー更新',
-          resource: 'user',
-          action: 'update'
-        },
-        {
-          id: 'perm-4',
-          name: PERMISSIONS.USER_DELETE,
-          displayName: 'ユーザー削除',
-          resource: 'user',
-          action: 'delete'
-        },
-        {
-          id: 'perm-5',
-          name: PERMISSIONS.ENGINEER_VIEW,
-          displayName: 'エンジニア閲覧',
-          resource: 'engineer',
-          action: 'view'
-        },
-        {
-          id: 'perm-6',
-          name: PERMISSIONS.ENGINEER_CREATE,
-          displayName: 'エンジニア作成',
-          resource: 'engineer',
-          action: 'create'
-        },
-        {
-          id: 'perm-7',
-          name: PERMISSIONS.COMPANY_VIEW,
-          displayName: '企業情報閲覧',
-          resource: 'company',
-          action: 'view'
-        },
-        {
-          id: 'perm-8',
-          name: PERMISSIONS.COMPANY_UPDATE,
-          displayName: '企業情報更新',
-          resource: 'company',
-          action: 'update'
-        }
-      ],
-      isSystem: true
+      permissions: Object.values(PERMISSIONS).map((permission, index) => ({
+        id: `perm-${index + 1}`,
+        name: permission,
+        displayName: permission,
+        resource: permission.split(':')[0],
+        action: permission.split(':')[1]
+      }))
     }],
-    permissions: [], // rolesから取得
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
-
-  // パスワードをハッシュ化（デモ用: password123）
-  const hashedPassword = bcrypt.hashSync('password123', BCRYPT_ROUNDS);
-  (adminUser as any).passwordHash = hashedPassword;
-  
   mockUsers.set(adminUser.id, adminUser);
 
-  // デモ用エンジニアユーザー
-  const engineerUser: User = {
-    id: 'user-engineer-1',
-    email: 'engineer@demo.com',
+  // エンジニアユーザー
+  const engineerPasswordHash = bcrypt.hashSync('password123', 10);
+  const engineerUser = {
+    id: 'engineer-1',
+    email: 'engineer@demo.example.com',
+    passwordHash: engineerPasswordHash,
     name: 'エンジニア太郎',
-    companyId: demoCompany.id,
-    engineerId: 'engineer-1',
-    roles: [{
-      id: 'role-engineer-1',
-      name: USER_ROLES.ENGINEER,
-      displayName: 'エンジニア',
-      permissions: [
-        {
-          id: 'perm-eng-1',
-          name: PERMISSIONS.SKILL_SHEET_VIEW,
-          displayName: 'スキルシート閲覧',
-          resource: 'skill_sheet',
-          action: 'view'
-        },
-        {
-          id: 'perm-eng-2',
-          name: PERMISSIONS.SKILL_SHEET_UPDATE,
-          displayName: 'スキルシート更新',
-          resource: 'skill_sheet',
-          action: 'update'
-        }
-      ],
-      isSystem: false
-    }],
-    permissions: [],
+    role: 'engineer' as const,
+    companyId: '1',
+    companyName: 'デモSES企業',
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    permissions: ROLE_PERMISSIONS['engineer'].map((permission, index) => ({
+      id: `perm-eng-${index + 1}`,
+      name: permission,
+      displayName: permission,
+      resource: permission.split(':')[0],
+      action: permission.split(':')[1]
+    })),
+    roles: [{
+      id: 'role-3',
+      name: 'engineer',
+      displayName: 'エンジニア',
+      permissions: ROLE_PERMISSIONS['engineer'].map((permission, index) => ({
+        id: `perm-eng-${index + 1}`,
+        name: permission,
+        displayName: permission,
+        resource: permission.split(':')[0],
+        action: permission.split(':')[1]
+      }))
+    }],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
-  (engineerUser as any).passwordHash = hashedPassword;
   mockUsers.set(engineerUser.id, engineerUser);
 
-  // デモエンジニアA: 全クライアント対応可能
-  const demoEngineerA: User = {
-    id: 'user-demo-engineer-a',
-    email: 'demo-engineer-a@example.com',
-    name: 'デモエンジニアA',
-    companyId: demoCompany.id,
-    engineerId: 'engineer-demo-a',
-    roles: [{
-      id: 'role-demo-engineer-a',
-      name: USER_ROLES.ENGINEER,
-      displayName: 'エンジニア',
-      permissions: [
-        {
-          id: 'perm-demo-eng-a-1',
-          name: PERMISSIONS.SKILL_SHEET_VIEW,
-          displayName: 'スキルシート閲覧',
-          resource: 'skill_sheet',
-          action: 'view'
-        },
-        {
-          id: 'perm-demo-eng-a-2',
-          name: PERMISSIONS.SKILL_SHEET_UPDATE,
-          displayName: 'スキルシート更新',
-          resource: 'skill_sheet',
-          action: 'update'
-        }
-      ],
-      isSystem: false
-    }],
-    permissions: [],
+  // 営業ユーザー
+  const salesPasswordHash = bcrypt.hashSync('password123', 10);
+  const salesUser = {
+    id: '3',
+    email: 'sales@demo-ses.example.com',
+    passwordHash: salesPasswordHash,
+    name: 'デモ営業',
+    role: 'sales' as const,
+    companyId: '1',
+    companyName: 'デモSES企業',
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-  // DemoPass123! のハッシュ
-  (demoEngineerA as any).passwordHash = '$2b$10$jxpI2aT/wIx7CsNFvIHqIuNVxvFxdvxOeY4jEbktY.Fz/5.32IF2y';
-  mockUsers.set(demoEngineerA.id, demoEngineerA);
-
-  // デモエンジニアB: 待機中ステータス
-  const demoEngineerB: User = {
-    id: 'user-demo-engineer-b',
-    email: 'demo-engineer-b@example.com',
-    name: 'デモエンジニアB',
-    companyId: demoCompany.id,
-    engineerId: 'engineer-demo-b',
+    permissions: ROLE_PERMISSIONS['sales'].map((permission, index) => ({
+      id: `perm-sales-${index + 1}`,
+      name: permission,
+      displayName: permission,
+      resource: permission.split(':')[0],
+      action: permission.split(':')[1]
+    })),
     roles: [{
-      id: 'role-demo-engineer-b',
-      name: USER_ROLES.ENGINEER,
-      displayName: 'エンジニア',
-      permissions: [
-        {
-          id: 'perm-demo-eng-b-1',
-          name: PERMISSIONS.SKILL_SHEET_VIEW,
-          displayName: 'スキルシート閲覧',
-          resource: 'skill_sheet',
-          action: 'view'
-        },
-        {
-          id: 'perm-demo-eng-b-2',
-          name: PERMISSIONS.SKILL_SHEET_UPDATE,
-          displayName: 'スキルシート更新',
-          resource: 'skill_sheet',
-          action: 'update'
-        }
-      ],
-      isSystem: false
-    }],
-    permissions: [],
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-  // DemoPass123! のハッシュ
-  (demoEngineerB as any).passwordHash = '$2b$10$jxpI2aT/wIx7CsNFvIHqIuNVxvFxdvxOeY4jEbktY.Fz/5.32IF2y';
-  mockUsers.set(demoEngineerB.id, demoEngineerB);
-
-  // デモ用営業ユーザー
-  const salesUser: User = {
-    id: 'user-sales-1',
-    email: 'sales@demo-ses.co.jp',
-    name: '営業花子',
-    companyId: demoCompany.id,
-    roles: [{
-      id: 'role-sales-1',
-      name: USER_ROLES.SALES,
+      id: 'role-4',
+      name: 'sales',
       displayName: '営業',
-      permissions: [
-        {
-          id: 'perm-sales-1',
-          name: PERMISSIONS.ENGINEER_VIEW,
-          displayName: 'エンジニア閲覧',
-          resource: 'engineer',
-          action: 'view'
-        },
-        {
-          id: 'perm-sales-2',
-          name: PERMISSIONS.CLIENT_VIEW,
-          displayName: '取引先閲覧',
-          resource: 'client',
-          action: 'view'
-        },
-        {
-          id: 'perm-sales-3',
-          name: PERMISSIONS.CLIENT_CREATE,
-          displayName: '取引先作成',
-          resource: 'client',
-          action: 'create'
-        }
-      ],
-      isSystem: false
+      permissions: ROLE_PERMISSIONS['sales'].map((permission, index) => ({
+        id: `perm-sales-${index + 1}`,
+        name: permission,
+        displayName: permission,
+        resource: permission.split(':')[0],
+        action: permission.split(':')[1]
+      }))
     }],
-    permissions: [],
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
-  (salesUser as any).passwordHash = hashedPassword;
   mockUsers.set(salesUser.id, salesUser);
 };
 
@@ -292,31 +202,70 @@ class AuthService {
   async login(loginRequest: LoginRequest): Promise<{ user: User; tokens: AuthTokens }> {
     const { email, password, rememberMe } = loginRequest;
 
-    // ユーザーをメールアドレスで検索
-    const user = Array.from(mockUsers.values()).find(u => u.email === email);
-    
-    if (!user) {
+    // データベースからユーザーを検索
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { email },
+        include: {
+          company: true
+        }
+      });
+      
+      if (dbUser && dbUser.isActive) {
+        // データベースユーザーのパスワード検証
+        if (!dbUser.passwordHash) {
+          throw new UnauthorizedError('パスワードが設定されていません');
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, dbUser.passwordHash);
+        if (!isPasswordValid) {
+          throw new UnauthorizedError('メールアドレスまたはパスワードが正しくありません');
+        }
+
+        // Userオブジェクトに変換
+        const user: User = {
+          id: dbUser.id.toString(),
+          email: dbUser.email,
+          name: dbUser.name || '',
+          role: 'admin', // TODO: ロール管理を実装
+          companyId: dbUser.companyId?.toString(),
+          companyName: dbUser.company?.name,
+          isActive: dbUser.isActive,
+          createdAt: dbUser.createdAt.toISOString(),
+          updatedAt: dbUser.updatedAt.toISOString()
+        };
+
+        // トークン生成
+        const expiresIn = rememberMe ? 30 * 24 * 60 * 60 : 8 * 60 * 60; // 30日 or 8時間
+        const tokens = this.generateTokens(user, expiresIn);
+
+        return { user, tokens };
+      }
+    } catch (error) {
+      logger.error('Database login error:', error);
+    }
+
+    // モックデータでフォールバック
+    const mockUser = Array.from(mockUsers.values()).find(u => u.email === email);
+    if (!mockUser) {
       throw new UnauthorizedError('メールアドレスまたはパスワードが正しくありません');
     }
 
-    // パスワード検証
-    const passwordHash = (user as any).passwordHash;
-    const isPasswordValid = await bcrypt.compare(password, passwordHash);
-    
+    // モックユーザーのパスワード検証
+    if (!mockUser.passwordHash) {
+      throw new UnauthorizedError('パスワードが設定されていません');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, mockUser.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedError('メールアドレスまたはパスワードが正しくありません');
     }
 
-    // アカウントが有効か確認
-    if (!user.isActive) {
-      throw new UnauthorizedError('アカウントが無効化されています');
-    }
+    // モックユーザーでのトークン生成
+    const expiresIn = rememberMe ? 30 * 24 * 60 * 60 : 8 * 60 * 60; // 30日 or 8時間
+    const tokens = this.generateTokens(mockUser, expiresIn);
 
-    // トークン生成
-    const tokens = await this.generateTokens(user, rememberMe);
-
-    // パスワードハッシュを除外してユーザー情報を返す
-    const userWithoutPassword = { ...user };
+    const userWithoutPassword = { ...mockUser };
     delete (userWithoutPassword as any).passwordHash;
 
     return { user: userWithoutPassword, tokens };
@@ -338,81 +287,58 @@ class AuthService {
   }
 
   /**
-   * 新規登録処理
+   * 登録処理
    */
   async register(registerRequest: RegisterRequest): Promise<{ user: User; tokens: AuthTokens }> {
-    const { email, password, name, companyName, phone } = registerRequest;
+    const { email, password, name, companyId } = registerRequest;
 
     // 既存ユーザーチェック
     const existingUser = Array.from(mockUsers.values()).find(u => u.email === email);
     if (existingUser) {
-      throw new Error('このメールアドレスは既に使用されています');
-    }
-
-    // 企業作成または既存企業の取得
-    let company: Company;
-    if (companyName) {
-      // 新規企業作成
-      company = {
-        id: `company-${Date.now()}`,
-        name: companyName,
-        companyType: 'ses',
-        phone,
-        maxEngineers: 100,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      mockCompanies.set(company.id, company);
-    } else {
-      // デフォルト企業を使用
-      company = mockCompanies.get('company-1')!;
+      throw new AuthenticationError('このメールアドレスは既に登録されています');
     }
 
     // パスワードハッシュ化
-    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    const passwordHash = await bcrypt.hash(password, 10);
 
     // 新規ユーザー作成
-    const newUser: User = {
-      id: `user-${Date.now()}`,
+    const newUser = {
+      id: crypto.randomUUID(),
       email,
+      passwordHash,
       name,
-      companyId: company.id,
-      roles: [{
-        id: 'role-2',
-        name: USER_ROLES.MANAGER,
-        displayName: 'マネージャー',
-        permissions: [
-          {
-            id: 'perm-9',
-            name: PERMISSIONS.ENGINEER_VIEW,
-            displayName: 'エンジニア閲覧',
-            resource: 'engineer',
-            action: 'view'
-          },
-          {
-            id: 'perm-10',
-            name: PERMISSIONS.ENGINEER_CREATE,
-            displayName: 'エンジニア作成',
-            resource: 'engineer',
-            action: 'create'
-          }
-        ],
-        isSystem: false
-      }],
-      permissions: [],
+      role: 'engineer' as const, // デフォルトロール
+      companyId,
+      companyName: 'デモSES企業', // TODO: 実際の会社名を取得
       isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      permissions: ROLE_PERMISSIONS['engineer'].map((permission, index) => ({
+        id: `perm-new-${index + 1}`,
+        name: permission,
+        displayName: permission,
+        resource: permission.split(':')[0],
+        action: permission.split(':')[1]
+      })),
+      roles: [{
+        id: 'role-3',
+        name: 'engineer',
+        displayName: 'エンジニア',
+        permissions: ROLE_PERMISSIONS['engineer'].map((permission, index) => ({
+          id: `perm-new-${index + 1}`,
+          name: permission,
+          displayName: permission,
+          resource: permission.split(':')[0],
+          action: permission.split(':')[1]
+        }))
+      }],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
-    (newUser as any).passwordHash = passwordHash;
     mockUsers.set(newUser.id, newUser);
 
     // トークン生成
-    const tokens = await this.generateTokens(newUser);
+    const tokens = this.generateTokens(newUser, 8 * 60 * 60); // 8時間
 
-    // パスワードハッシュを除外してユーザー情報を返す
     const userWithoutPassword = { ...newUser };
     delete (userWithoutPassword as any).passwordHash;
 
@@ -420,21 +346,24 @@ class AuthService {
   }
 
   /**
-   * リフレッシュトークンによるアクセストークン更新
+   * トークンリフレッシュ
    */
-  async refreshToken(refreshToken: string): Promise<AuthTokens> {
+  async refreshToken(request: RefreshTokenRequest): Promise<AuthTokens> {
+    const { refreshToken } = request;
+
+    // リフレッシュトークンの検証
     const tokenData = mockRefreshTokens.get(refreshToken);
-    
     if (!tokenData) {
       throw new UnauthorizedError('無効なリフレッシュトークンです');
     }
 
-    if (new Date() > tokenData.expiresAt) {
+    if (tokenData.expiresAt < new Date()) {
       mockRefreshTokens.delete(refreshToken);
       throw new UnauthorizedError('リフレッシュトークンの有効期限が切れています');
     }
 
-    const user = mockUsers.get(tokenData.userId);
+    // ユーザー取得
+    const user = await this.getCurrentUser(tokenData.userId);
     if (!user) {
       throw new UnauthorizedError('ユーザーが見つかりません');
     }
@@ -443,47 +372,56 @@ class AuthService {
     mockRefreshTokens.delete(refreshToken);
 
     // 新しいトークンを生成
-    return await this.generateTokens(user);
+    const tokens = this.generateTokens(user, 8 * 60 * 60); // 8時間
+
+    return tokens;
   }
 
   /**
-   * ログアウト処理
+   * ログアウト
    */
-  async logout(refreshToken: string): Promise<void> {
-    mockRefreshTokens.delete(refreshToken);
-  }
-
-  /**
-   * トークン検証
-   */
-  async verifyToken(token: string): Promise<JWTPayload> {
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload;
-      
-      // ユーザーの有効性確認
-      const user = mockUsers.get(decoded.userId);
-      if (!user || !user.isActive) {
-        throw new UnauthorizedError('ユーザーが無効です');
-      }
-
-      return decoded;
-    } catch (error) {
-      if (error instanceof jwt.TokenExpiredError) {
-        throw new UnauthorizedError('トークンの有効期限が切れています');
-      }
-      if (error instanceof jwt.JsonWebTokenError) {
-        throw new UnauthorizedError('無効なトークンです');
-      }
-      throw error;
+  async logout(refreshToken?: string): Promise<void> {
+    if (refreshToken) {
+      mockRefreshTokens.delete(refreshToken);
     }
   }
 
   /**
-   * ユーザー情報取得
+   * 現在のユーザー取得
    */
-  async getUserById(userId: string): Promise<User | null> {
+  async getCurrentUser(userId: string): Promise<User | null> {
+    // データベースからユーザーを検索
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: BigInt(userId) },
+        include: {
+          company: true
+        }
+      });
+
+      if (dbUser) {
+        return {
+          id: dbUser.id.toString(),
+          email: dbUser.email,
+          name: dbUser.name || '',
+          role: 'admin', // TODO: ロール管理を実装
+          companyId: dbUser.companyId?.toString(),
+          companyName: dbUser.company?.name,
+          isActive: dbUser.isActive,
+          createdAt: dbUser.createdAt.toISOString(),
+          updatedAt: dbUser.updatedAt.toISOString()
+        };
+      }
+    } catch (error) {
+      // データベースエラーの場合はモックにフォールバック
+      logger.error('Database getCurrentUser error:', error);
+    }
+
+    // モックデータにフォールバック
     const user = mockUsers.get(userId);
-    if (!user) return null;
+    if (!user) {
+      return null;
+    }
 
     const userWithoutPassword = { ...user };
     delete (userWithoutPassword as any).passwordHash;
@@ -491,93 +429,141 @@ class AuthService {
   }
 
   /**
-   * JWT トークン生成
+   * JWTトークン検証
    */
-  private async generateTokens(user: User, rememberMe: boolean = false): Promise<AuthTokens> {
-    // 権限情報を収集
-    const permissions = user.roles.flatMap(role => 
-      role.permissions.map(perm => perm.name)
-    );
+  verifyToken(token: string): JWTPayload {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-jwt-secret') as JWTPayload;
+      return decoded;
+    } catch (error) {
+      throw new UnauthorizedError('無効なトークンです');
+    }
+  }
 
+  /**
+   * トークン生成
+   */
+  private generateTokens(user: User, expiresIn: number): AuthTokens {
     const payload: JWTPayload = {
       userId: user.id,
-      companyId: user.companyId,
       email: user.email,
-      roles: user.roles.map(r => r.name),
-      permissions,
-      iss: 'engineer-skillsheet-system',
-      aud: 'engineer-skillsheet-client',
+      role: user.role,
+      companyId: user.companyId
     };
 
-    // アクセストークン生成
-    const accessToken = jwt.sign(payload, JWT_SECRET, {
-      expiresIn: rememberMe ? '30d' : JWT_EXPIRY,
-    });
+    const accessToken = jwt.sign(
+      payload,
+      process.env.JWT_SECRET || 'dev-jwt-secret',
+      { expiresIn }
+    );
 
-    // リフレッシュトークン生成
-    const refreshTokenStr = crypto.randomBytes(64).toString('hex');
-    const refreshExpiry = rememberMe ? 90 : 30; // 日数
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+    const refreshExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30日
 
-    const refreshTokenData: RefreshTokenData = {
-      id: `refresh-${Date.now()}`,
-      token: refreshTokenStr,
+    // リフレッシュトークンを保存
+    mockRefreshTokens.set(refreshToken, {
       userId: user.id,
-      expiresAt: new Date(Date.now() + refreshExpiry * 24 * 60 * 60 * 1000),
-      createdAt: new Date(),
-    };
-
-    mockRefreshTokens.set(refreshTokenStr, refreshTokenData);
+      expiresAt: refreshExpiresAt
+    });
 
     return {
       accessToken,
-      refreshToken: refreshTokenStr,
-      expiresIn: rememberMe ? 30 * 24 * 60 * 60 : 8 * 60 * 60, // 秒単位
+      refreshToken,
+      expiresIn
     };
+  }
+
+  /**
+   * 複数パーミッションチェック
+   */
+  hasAnyPermission(user: User, permissions: string[]): boolean {
+    return permissions.some(permission => this.hasPermission(user, permission));
+  }
+
+  /**
+   * 全パーミッションチェック
+   */
+  hasAllPermissions(user: User, permissions: string[]): boolean {
+    return permissions.every(permission => this.hasPermission(user, permission));
+  }
+
+  /**
+   * IDでユーザーを取得
+   */
+  async getUserById(userId: string): Promise<User | null> {
+    return this.getCurrentUser(userId);
   }
 
   /**
    * パスワード変更
    */
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
-    const user = mockUsers.get(userId);
-    if (!user) {
-      throw new Error('ユーザーが見つかりません');
+    // データベースからユーザーを検索
+    try {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: BigInt(userId) }
+      });
+
+      if (dbUser && dbUser.passwordHash) {
+        // 現在のパスワードを検証
+        const isPasswordValid = await bcrypt.compare(currentPassword, dbUser.passwordHash);
+        if (!isPasswordValid) {
+          throw new UnauthorizedError('現在のパスワードが正しくありません');
+        }
+
+        // 新しいパスワードをハッシュ化して更新
+        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+        await prisma.user.update({
+          where: { id: BigInt(userId) },
+          data: { passwordHash: newPasswordHash }
+        });
+        return;
+      }
+    } catch (error) {
+      if (error instanceof UnauthorizedError) {
+        throw error;
+      }
+      logger.error('Database changePassword error:', error);
     }
 
-    const passwordHash = (user as any).passwordHash;
-    const isPasswordValid = await bcrypt.compare(currentPassword, passwordHash);
-    
+    // モックユーザーの場合
+    const mockUser = mockUsers.get(userId);
+    if (!mockUser) {
+      throw new UnauthorizedError('ユーザーが見つかりません');
+    }
+
+    // 現在のパスワードを検証
+    const isPasswordValid = await bcrypt.compare(currentPassword, mockUser.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedError('現在のパスワードが正しくありません');
     }
 
-    const newPasswordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-    (user as any).passwordHash = newPasswordHash;
-    user.updatedAt = new Date();
+    // 新しいパスワードをハッシュ化
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    mockUser.passwordHash = newPasswordHash;
   }
 
   /**
-   * 権限チェック
+   * リソース・アクション形式のパーミッションチェック（オーバーロード）
    */
-  hasPermission(user: User, resource: string, action: string): boolean {
-    return user.roles.some(role =>
-      role.permissions.some(perm =>
-        perm.resource === resource && perm.action === action
-      )
-    );
-  }
-
-  /**
-   * 管理者権限チェック
-   */
-  isAdmin(user: User): boolean {
-    return user.roles.some(role => 
-      role.name === USER_ROLES.ADMIN || role.name === USER_ROLES.SUPER_ADMIN
-    );
+  hasPermission(user: User, resourceOrPermission: string, action?: string): boolean {
+    if (action) {
+      // リソースとアクションが分離されている場合
+      const permission = `${resourceOrPermission}:${action}`;
+      if (user.permissions) {
+        return user.permissions.some(p => p.name === permission);
+      }
+      const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+      return rolePermissions.includes(permission);
+    } else {
+      // 結合された権限文字列の場合
+      if (user.permissions) {
+        return user.permissions.some(p => p.name === resourceOrPermission);
+      }
+      const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+      return rolePermissions.includes(resourceOrPermission);
+    }
   }
 }
 
-export const authService = new AuthService();
-
-// モックデータストアをエクスポート（companyServiceから参照できるように）
-export { mockCompanies, mockUsers };
+export default new AuthService();

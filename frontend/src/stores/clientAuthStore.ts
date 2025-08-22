@@ -62,7 +62,7 @@ const useClientAuthStore = create<ClientAuthState>()(
       login: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await clientAxios.post('/client/auth/login', {
+          const response = await clientAxios.post('client/auth/login', {
             email,
             password,
             rememberMe,
@@ -119,7 +119,7 @@ const useClientAuthStore = create<ClientAuthState>()(
         clientAxios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
         try {
-          const response = await clientAxios.get('/client/auth/me');
+          const response = await clientAxios.get('client/auth/me');
           set({
             user: response.data,
             isAuthenticated: true,
@@ -134,7 +134,7 @@ const useClientAuthStore = create<ClientAuthState>()(
               await get().refreshAccessToken();
               
               // 新しいトークンで再試行
-              const response = await clientAxios.get('/client/auth/me');
+              const response = await clientAxios.get('client/auth/me');
               set({
                 user: response.data,
                 isAuthenticated: true,
@@ -159,7 +159,7 @@ const useClientAuthStore = create<ClientAuthState>()(
         }
 
         try {
-          const response = await clientAxios.post('/client/auth/refresh', {
+          const response = await clientAxios.post('client/auth/refresh', {
             refreshToken,
           });
           

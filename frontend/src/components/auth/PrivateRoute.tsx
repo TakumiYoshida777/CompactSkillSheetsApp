@@ -19,7 +19,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, requiredRoles }) 
         alignItems: 'center',
         minHeight: '100vh',
       }}>
-        <Spin size="large" tip="読み込み中..." />
+        <Spin size="large" />
       </div>
     );
   }

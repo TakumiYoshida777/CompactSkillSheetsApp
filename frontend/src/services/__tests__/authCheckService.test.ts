@@ -50,7 +50,7 @@ describe('AuthCheckService', () => {
         engineerId: '123'
       });
 
-      expect(endpoint).toBe('/api/engineer/profile');
+      expect(endpoint).toBe('engineer/profile');
     });
 
     it('クライアントユーザーのエンドポイントを返す', () => {
@@ -58,7 +58,7 @@ describe('AuthCheckService', () => {
         role: 'client'
       });
 
-      expect(endpoint).toBe('/api/client/profile');
+      expect(endpoint).toBe('client/profile');
     });
 
     it('管理者ユーザーのエンドポイントを返す', () => {
@@ -66,12 +66,12 @@ describe('AuthCheckService', () => {
         role: 'admin'
       });
 
-      expect(endpoint).toBe('/api/admin/profile');
+      expect(endpoint).toBe('admin/profile');
     });
 
     it('デフォルトエンドポイントを返す', () => {
       const endpoint = AuthCheckService.determineEndpoint('token', {});
-      expect(endpoint).toBe('/api/auth/me');
+      expect(endpoint).toBe('auth/me');
     });
   });
 
@@ -99,7 +99,7 @@ describe('AuthCheckService', () => {
       });
 
       expect(mockAxios.get).toHaveBeenCalledWith(
-        '/api/client/profile',
+        'client/profile',
         {
           headers: {
             Authorization: 'Bearer token'

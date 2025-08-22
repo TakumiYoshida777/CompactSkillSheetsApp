@@ -2,8 +2,8 @@
  * エラーハンドリングフック
  */
 
-import { useCallback } from 'react';
-import { message, notification } from 'antd';
+import React, { useCallback } from 'react';
+import { message, notification, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { AppError, ErrorCode, ErrorFactory } from '../errors/AppError';
 import useAuthStore from '../stores/authStore';
@@ -56,22 +56,17 @@ export const useErrorHandler = () => {
         description: userMessage,
         duration: 5,
         placement: 'topRight',
-        ...(error.isRetryable && options.retryCallback && {
-          btn: (
-            React.createElement(
-              'button',
-              {
-                className: 'ant-btn ant-btn-primary ant-btn-sm',
-                onClick: async () => {
-                  notification.close('error-notification');
-                  await options.retryCallback?.();
-                }
-              },
-              '再試行'
-            )
-          ),
+        ...(error.isRetryable && options.retryCallback ? {
+          btn: React.createElement(Button, {
+            type: "primary",
+            size: "small",
+            onClick: async () => {
+              notification.close('error-notification');
+              await options.retryCallback?.();
+            }
+          }, '再試行'),
           key: 'error-notification'
-        })
+        } : {})
       });
     } else {
       // メッセージ形式で表示
@@ -84,7 +79,7 @@ export const useErrorHandler = () => {
    */
   const handleAuthError = useCallback((error: AppError) => {
     logout();
-    navigate('/login', {
+    navigate('login', {
       state: { 
         from: window.location.pathname,
         message: error.getUserMessage()

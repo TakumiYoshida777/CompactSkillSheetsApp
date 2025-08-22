@@ -246,7 +246,7 @@ const ApproachHistory: React.FC = () => {
   };
 
   const handleCreateApproach = () => {
-    navigate('/approaches/create');
+    navigate('approaches/create');
   };
 
   const handleFollowUp = (approach: ApproachRecord) => {

@@ -1,71 +1,61 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-interface Project {
-  id: string;
-  name: string;
-  clientCompany: string;
-  role: string;
-  startDate: string;
-  endDate?: string;
-  status: 'ongoing' | 'completed' | 'upcoming';
-  teamSize: number;
-  technologies: string[];
-  phases: string[];
-  description: string;
-  achievements?: string;
-  industry?: string;
-  location?: string;
-  responsibilities?: string[];
-}
+import { projectAPI, Project, Assignment, TimelineData, ProjectFilters, UtilizationData } from '../api/projects/projectApi';
 
 interface ProjectState {
   projects: Project[];
-  currentProject: Project | null;
-  upcomingProjects: Project[];
+  selectedProject: Project | null;
+  assignments: Assignment[];
+  timeline: TimelineData[] | null;
+  utilization: UtilizationData[] | null;
+  viewMode: 'kanban' | 'list' | 'calendar';
   isLoading: boolean;
   error: string | null;
 
   // Actions
-  fetchProjects: () => Promise<void>;
+  fetchProjects: (filters?: ProjectFilters) => Promise<void>;
   fetchProjectById: (id: string) => Promise<void>;
-  addProject: (project: Omit<Project, 'id'>) => Promise<void>;
+  createProject: (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateProject: (id: string, data: Partial<Project>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
-  setCurrentProject: (projectId: string) => Promise<void>;
+  updateProjectStatus: (id: string, status: string) => Promise<void>;
+  
+  // Assignment management
+  fetchAssignments: (projectId: string) => Promise<void>;
+  assignEngineer: (projectId: string, engineerId: string, data: any) => Promise<void>;
+  updateAssignment: (projectId: string, assignmentId: string, data: Partial<Assignment>) => Promise<void>;
+  removeAssignment: (projectId: string, assignmentId: string) => Promise<void>;
+  
+  // Timeline and utilization
+  fetchTimeline: () => Promise<void>;
+  fetchUtilization: () => Promise<void>;
+  fetchProjectTimeline: (projectId: string) => Promise<void>;
+  extendProject: (projectId: string, newEndDate: string) => Promise<void>;
+  
+  // View management
+  setViewMode: (mode: 'kanban' | 'list' | 'calendar') => void;
+  setSelectedProject: (project: Project | null) => void;
   clearError: () => void;
 }
 
 const useProjectStore = create<ProjectState>((set, get) => ({
   projects: [],
-  currentProject: null,
-  upcomingProjects: [],
+  selectedProject: null,
+  assignments: [],
+  timeline: null,
+  utilization: null,
+  viewMode: 'kanban',
   isLoading: false,
   error: null,
 
-  fetchProjects: async () => {
+  fetchProjects: async (filters?: ProjectFilters) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get('/api/engineers/me/projects');
-      
-      const projects = response.data;
-      const currentProject = projects.find((p: Project) => 
-        p.status === 'ongoing' && !p.endDate
-      );
-      const upcomingProjects = projects.filter((p: Project) => 
-        p.status === 'upcoming'
-      );
-      
-      set({
-        projects,
-        currentProject,
-        upcomingProjects,
-        isLoading: false,
-      });
+      const projects = await projectAPI.fetchProjects(filters);
+      set({ projects, isLoading: false });
     } catch (error: any) {
       set({
         isLoading: false,
-        error: error.response?.data?.message || 'プロジェクトの取得に失敗しました',
+        error: error.message || 'プロジェクトの取得に失敗しました',
       });
     }
   },
@@ -73,35 +63,32 @@ const useProjectStore = create<ProjectState>((set, get) => ({
   fetchProjectById: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`/api/projects/${id}`);
-      
+      const project = await projectAPI.fetchProjectById(id);
       set((state) => ({
-        projects: state.projects.map(p => 
-          p.id === id ? response.data : p
-        ),
+        projects: state.projects.map(p => p.id === id ? project : p),
+        selectedProject: project,
         isLoading: false,
       }));
     } catch (error: any) {
       set({
         isLoading: false,
-        error: error.response?.data?.message || 'プロジェクトの取得に失敗しました',
+        error: error.message || 'プロジェクトの取得に失敗しました',
       });
     }
   },
 
-  addProject: async (project: Omit<Project, 'id'>) => {
+  createProject: async (data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.post('/api/engineers/me/projects', project);
-      
+      const project = await projectAPI.createProject(data);
       set((state) => ({
-        projects: [...state.projects, response.data],
+        projects: [...state.projects, project],
         isLoading: false,
       }));
     } catch (error: any) {
       set({
         isLoading: false,
-        error: error.response?.data?.message || 'プロジェクトの追加に失敗しました',
+        error: error.message || 'プロジェクトの作成に失敗しました',
       });
       throw error;
     }
@@ -110,21 +97,16 @@ const useProjectStore = create<ProjectState>((set, get) => ({
   updateProject: async (id: string, data: Partial<Project>) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.put(`/api/engineers/me/projects/${id}`, data);
-      
+      const project = await projectAPI.updateProject(id, data);
       set((state) => ({
-        projects: state.projects.map(p => 
-          p.id === id ? response.data : p
-        ),
-        currentProject: state.currentProject?.id === id 
-          ? response.data 
-          : state.currentProject,
+        projects: state.projects.map(p => p.id === id ? project : p),
+        selectedProject: state.selectedProject?.id === id ? project : state.selectedProject,
         isLoading: false,
       }));
     } catch (error: any) {
       set({
         isLoading: false,
-        error: error.response?.data?.message || 'プロジェクトの更新に失敗しました',
+        error: error.message || 'プロジェクトの更新に失敗しました',
       });
       throw error;
     }
@@ -133,45 +115,169 @@ const useProjectStore = create<ProjectState>((set, get) => ({
   deleteProject: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.delete(`/api/engineers/me/projects/${id}`);
-      
+      await projectAPI.deleteProject(id);
       set((state) => ({
         projects: state.projects.filter(p => p.id !== id),
-        currentProject: state.currentProject?.id === id 
-          ? null 
-          : state.currentProject,
-        upcomingProjects: state.upcomingProjects.filter(p => p.id !== id),
+        selectedProject: state.selectedProject?.id === id ? null : state.selectedProject,
         isLoading: false,
       }));
     } catch (error: any) {
       set({
         isLoading: false,
-        error: error.response?.data?.message || 'プロジェクトの削除に失敗しました',
+        error: error.message || 'プロジェクトの削除に失敗しました',
       });
       throw error;
     }
   },
 
-  setCurrentProject: async (projectId: string) => {
+  updateProjectStatus: async (id: string, status: string) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.patch(`/api/engineers/me/projects/${projectId}/current`);
-      
-      const project = get().projects.find(p => p.id === projectId);
-      
-      set({
-        currentProject: project || null,
+      const project = await projectAPI.updateProjectStatus(id, status);
+      set((state) => ({
+        projects: state.projects.map(p => p.id === id ? project : p),
+        selectedProject: state.selectedProject?.id === id ? project : state.selectedProject,
         isLoading: false,
-      });
+      }));
     } catch (error: any) {
       set({
         isLoading: false,
-        error: error.response?.data?.message || '現在のプロジェクト設定に失敗しました',
+        error: error.message || 'プロジェクトステータスの更新に失敗しました',
       });
       throw error;
     }
   },
 
+  fetchAssignments: async (projectId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const assignments = await projectAPI.fetchAssignments(projectId);
+      set({ assignments, isLoading: false });
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error.message || 'アサインメントの取得に失敗しました',
+      });
+    }
+  },
+
+  assignEngineer: async (projectId: string, engineerId: string, data: any) => {
+    set({ isLoading: true, error: null });
+    try {
+      const assignment = await projectAPI.createAssignment(projectId, {
+        ...data,
+        projectId,
+        engineerId,
+      });
+      set((state) => ({
+        assignments: [...state.assignments, assignment],
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error.message || 'エンジニアのアサインに失敗しました',
+      });
+      throw error;
+    }
+  },
+
+  updateAssignment: async (projectId: string, assignmentId: string, data: Partial<Assignment>) => {
+    set({ isLoading: true, error: null });
+    try {
+      const assignment = await projectAPI.updateAssignment(projectId, assignmentId, data);
+      set((state) => ({
+        assignments: state.assignments.map(a => a.id === assignmentId ? assignment : a),
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error.message || 'アサインメントの更新に失敗しました',
+      });
+      throw error;
+    }
+  },
+
+  removeAssignment: async (projectId: string, assignmentId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      await projectAPI.deleteAssignment(projectId, assignmentId);
+      set((state) => ({
+        assignments: state.assignments.filter(a => a.id !== assignmentId),
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error.message || 'アサインメントの削除に失敗しました',
+      });
+      throw error;
+    }
+  },
+
+  fetchTimeline: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const timeline = await projectAPI.fetchTimeline();
+      set({ timeline, isLoading: false });
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error.message || 'タイムラインの取得に失敗しました',
+      });
+    }
+  },
+
+  fetchUtilization: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const utilization = await projectAPI.fetchUtilization();
+      set({ utilization, isLoading: false });
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error.message || '稼働率の取得に失敗しました',
+      });
+    }
+  },
+
+  fetchProjectTimeline: async (projectId: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const timeline = await projectAPI.fetchProjectTimeline(projectId);
+      set((state) => ({
+        timeline: [timeline],
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error.message || 'プロジェクトタイムラインの取得に失敗しました',
+      });
+    }
+  },
+
+  extendProject: async (projectId: string, newEndDate: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const project = await projectAPI.extendProject(projectId, newEndDate);
+      set((state) => ({
+        projects: state.projects.map(p => p.id === projectId ? project : p),
+        selectedProject: state.selectedProject?.id === projectId ? project : state.selectedProject,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({
+        isLoading: false,
+        error: error.message || 'プロジェクトの延長に失敗しました',
+      });
+      throw error;
+    }
+  },
+
+  setViewMode: (mode: 'kanban' | 'list' | 'calendar') => set({ viewMode: mode }),
+  setSelectedProject: (project: Project | null) => set({ selectedProject: project }),
   clearError: () => set({ error: null }),
 }));
 

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { authService } from '../services/authService';
+import authService from '../services/authService';
 import { LoginRequest, RegisterRequest } from '../types/auth';
 import { validationResult } from 'express-validator';
 
@@ -138,7 +138,7 @@ export class AuthController {
         });
       }
 
-      const tokens = await authService.refreshToken(refreshToken);
+      const tokens = await authService.refreshToken({ refreshToken });
 
       res.json({
         success: true,

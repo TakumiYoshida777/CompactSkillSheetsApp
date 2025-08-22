@@ -12,7 +12,7 @@ vi.mock('react-router-dom', async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useLocation: () => ({ pathname: '/dashboard' }),
+    useLocation: () => ({ pathname: 'dashboard' }),
     Outlet: () => <div>Outlet Content</div>,
   };
 });
@@ -63,7 +63,7 @@ describe('MainLayout', () => {
       fireEvent.click(dashboardItem);
       
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+        expect(mockNavigate).toHaveBeenCalledWith('dashboard');
       });
     });
 

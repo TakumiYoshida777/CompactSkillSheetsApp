@@ -4,6 +4,7 @@ import axios from 'axios';
 import { getUserTypeFromToken } from '../utils/jwtHelper';
 import { AuthService } from '../services/authService';
 import { AuthCheckService } from '../services/authCheckService';
+import { getLoginPath } from '../utils/navigation';
 import type { AuthState, User } from './types/authTypes';
 
 const useAuthStore = create<AuthState>()(
@@ -15,11 +16,12 @@ const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      navigateToLogin: null,  // ナビゲーション関数を保持
 
       login: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
         try {
-          const authResponse = await AuthService.performLogin('/api/auth/login', {
+          const authResponse = await AuthService.performLogin('auth/login', {
             email,
             password,
             rememberMe,
@@ -60,7 +62,7 @@ const useAuthStore = create<AuthState>()(
       clientLogin: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
         try {
-          const authResponse = await AuthService.performLogin('/api/client/auth/login', {
+          const authResponse = await AuthService.performLogin('client/auth/login', {
             email,
             password,
             rememberMe,
@@ -107,7 +109,7 @@ const useAuthStore = create<AuthState>()(
       register: async (data: any) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post('/api/auth/register', data);
+          const response = await axios.post('auth/register', data);
           
           const { user, accessToken, refreshToken } = response.data;
           
@@ -142,7 +144,7 @@ const useAuthStore = create<AuthState>()(
           console.log('[refreshAccessToken] UserType from token:', userType);
           
           // ユーザータイプに応じて適切なエンドポイントを使用
-          const endpoint = userType === 'client' ? '/api/client/auth/refresh' : '/api/auth/refresh';
+          const endpoint = userType === 'client' ? 'client/auth/refresh' : 'auth/refresh';
           console.log('[refreshAccessToken] Using endpoint:', endpoint);
           
           const tokens = await AuthService.refreshToken(endpoint, refreshToken);
@@ -162,7 +164,7 @@ const useAuthStore = create<AuthState>()(
       updateProfile: async (data: any) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.put('/api/users/profile', data);
+          const response = await axios.put('users/profile', data);
           
           set({
             user: response.data,
@@ -229,13 +231,26 @@ const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
         // rolesが配列であることを確認
-        return Array.isArray(user.roles) && user.roles.includes(role);
+        if (Array.isArray(user.roles)) {
+          // rolesがオブジェクトの配列の場合
+          if (user.roles.length > 0 && typeof user.roles[0] === 'object' && 'name' in user.roles[0]) {
+            return user.roles.some((r: any) => r.name === role);
+          }
+          // rolesが文字列の配列の場合
+          return user.roles.includes(role);
+        }
+        // 単一のroleプロパティがある場合
+        if (user.role) {
+          return user.role === role;
+        }
+        return false;
       },
 
       isAdmin: () => {
         const { user } = get();
         if (!user) return false;
-        return user.roles.includes('admin');
+        // hasRoleメソッドを使用
+        return get().hasRole('admin');
       },
 
       isClientUser: () => {
@@ -255,6 +270,10 @@ const useAuthStore = create<AuthState>()(
         // userTypeがclientの場合、またはrolesが配列でclient_adminかclient_userを含む場合
         return user.userType === 'client' || 
                (Array.isArray(user.roles) && (user.roles.includes('client_admin') || user.roles.includes('client_user')));
+      },
+
+      setNavigateFunction: (navigate: ((path: string) => void) | null) => {
+        set({ navigateToLogin: navigate });
       },
     }),
     {

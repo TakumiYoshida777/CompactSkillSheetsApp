@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axiosInstance from '../lib/axios';
 import type { AxiosResponse } from 'axios';
 import { AppError, ErrorFactory } from '../errors/AppError';
 
@@ -16,11 +16,13 @@ interface AuthResponse {
 }
 
 interface ApiLoginResponse {
-  data?: AuthResponse;
+  success?: boolean;
+  data?: AuthResponse | any;
   user?: any;
   accessToken?: string;
   refreshToken?: string;
   message?: string;
+  meta?: any;
 }
 
 /**
@@ -67,7 +69,7 @@ export class AuthService {
     credentials: LoginCredentials
   ): Promise<AuthResponse> {
     try {
-      const response: AxiosResponse<ApiLoginResponse> = await axios.post(endpoint, credentials);
+      const response: AxiosResponse<ApiLoginResponse> = await axiosInstance.post(endpoint, credentials);
       
       // APIレスポンスの構造を正規化
       const authResponse = this.normalizeAuthResponse(response.data);
@@ -87,11 +89,24 @@ export class AuthService {
    * @returns 正規化された認証レスポンス
    */
   private static normalizeAuthResponse(data: ApiLoginResponse): AuthResponse {
+    console.log('[AuthService] Normalizing auth response:', data);
+    
+    // バックエンドの標準レスポンス形式（success: true, data: {...}）
+    if (data.success && data.data) {
+      const authData = data.data;
+      return {
+        user: authData.user,
+        accessToken: authData.accessToken || authData.token,
+        refreshToken: authData.refreshToken,
+        message: data.message,
+      };
+    }
+    
     // /api/auth/login のレスポンス形式（data オブジェクト内にネスト）
     if (data.data) {
       return {
         user: data.data.user,
-        accessToken: data.data.accessToken,
+        accessToken: data.data.accessToken || data.data.token,
         refreshToken: data.data.refreshToken,
         message: data.message,
       };
@@ -100,7 +115,7 @@ export class AuthService {
     // /api/client/auth/login のレスポンス形式（フラット）
     return {
       user: data.user!,
-      accessToken: data.accessToken!,
+      accessToken: data.accessToken || (data as any).token!,
       refreshToken: data.refreshToken!,
       message: data.message,
     };
@@ -111,14 +126,16 @@ export class AuthService {
    * @param token アクセストークン
    */
   static setAuthorizationHeader(token: string): void {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    // トークンが設定されていることを確認（インターセプターで自動的に処理される）
+    console.log('[AuthService] Token set in store for interceptor:', token ? 'Token exists' : 'No token');
   }
 
   /**
    * Axiosのデフォルトヘッダーから認証トークンを削除
    */
   static removeAuthorizationHeader(): void {
-    delete axios.defaults.headers.common['Authorization'];
+    // トークンがクリアされたことを確認（インターセプターで自動的に処理される）
+    console.log('[AuthService] Token cleared from store');
   }
 
   /**
@@ -141,7 +158,7 @@ export class AuthService {
     refreshToken: string
   ): Promise<{ accessToken: string; refreshToken: string }> {
     try {
-      const response = await axios.post(endpoint, { refreshToken });
+      const response = await axiosInstance.post(endpoint, { refreshToken });
       const { accessToken, refreshToken: newRefreshToken } = response.data;
       
       this.setAuthorizationHeader(accessToken);
@@ -162,7 +179,15 @@ export class AuthService {
    */
   static async fetchUserInfo(endpoint: string): Promise<any> {
     try {
-      const response = await axios.get(endpoint);
+      console.log('[AuthService] Fetching user info from:', endpoint);
+      console.log('[AuthService] Current Authorization header:', axiosInstance.defaults.headers.common['Authorization']);
+      const response = await axiosInstance.get(endpoint);
+      console.log('[AuthService] User info response:', response.data);
+      
+      // APIレスポンスの形式に応じて適切にデータを返す
+      if (response.data.success && response.data.data) {
+        return response.data.data;
+      }
       return response.data;
     } catch (error) {
       throw this.handleAuthError(error);

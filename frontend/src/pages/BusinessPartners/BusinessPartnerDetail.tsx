@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { businessPartnerApi, BusinessPartner as BusinessPartnerType, ProposedEngineer, Project, ApproachHistory, ContactPerson } from '../../api/businessPartner';
 import {
   Card,
   Row,
@@ -53,263 +55,32 @@ const { TabPane } = Tabs;
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface ContactPerson {
-  id: string;
-  name: string;
-  department: string;
-  position: string;
-  email: string;
-  phone: string;
-  isPrimary: boolean;
-}
-
-interface ProposedEngineer {
-  id: string;
-  name: string;
-  skills: string[];
-  experience: number;
-  unitPrice: number;
-  status: 'proposed' | 'accepted' | 'rejected' | 'pending';
-  proposedDate: string;
-  projectName?: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  startDate: string;
-  endDate?: string;
-  engineerCount: number;
-  totalRevenue: number;
-  status: 'active' | 'completed' | 'paused';
-  engineers: string[];
-}
-
-interface ApproachHistory {
-  id: string;
-  date: string;
-  type: 'email' | 'phone' | 'meeting' | 'proposal';
-  subject: string;
-  engineerCount?: number;
-  status: 'sent' | 'replied' | 'pending' | 'accepted' | 'rejected';
-  note?: string;
-  attachments?: string[];
-  responseDate?: string;
-  responseNote?: string;
-}
-
-interface BusinessPartnerDetail {
-  id: string;
-  companyName: string;
-  companyNameKana: string;
-  industry: string;
-  employeeSize: string;
-  website?: string;
-  phone: string;
-  address: string;
-  businessDescription?: string;
-  contacts: ContactPerson[];
-  contractTypes: string[];
-  budgetMin?: number;
-  budgetMax?: number;
-  preferredSkills?: string[];
-  preferredIndustries?: string[];
-  requirements?: string;
-  status: 'active' | 'inactive' | 'prospective';
-  registeredDate: string;
-  lastContactDate?: string;
-  totalProposals: number;
-  acceptedProposals: number;
-  currentEngineers: number;
-  monthlyRevenue?: number;
-  totalRevenue?: number;
-  rating?: number;
-  tags?: string[];
-  approaches: ApproachHistory[];
-  proposedEngineers: ProposedEngineer[];
-  projects: Project[];
-  notes?: string;
-  paymentTerms?: string;
-  autoEmailEnabled?: boolean;
-  followUpEnabled?: boolean;
-}
+// Types are imported from businessPartner.ts
+type BusinessPartnerDetail = BusinessPartnerType;
 
 const BusinessPartnerDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [partner, setPartner] = useState<BusinessPartnerDetail | null>(null);
-  const [loading, setLoading] = useState(true);
   const [proposalModalVisible, setProposalModalVisible] = useState(false);
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [form] = Form.useForm();
   const [noteForm] = Form.useForm();
 
-  useEffect(() => {
-    loadPartnerDetail();
-  }, [id]);
+  // APIからデータ取得
+  const { data: partnerData, isLoading, error } = useQuery({
+    queryKey: ['businessPartner', id],
+    queryFn: () => businessPartnerApi.getById(id || ''),
+    enabled: !!id,
+  });
 
-  const loadPartnerDetail = () => {
-    setLoading(true);
-    // モックデータの生成
-    setTimeout(() => {
-      const mockData: BusinessPartnerDetail = {
-        id: id || '1',
-        companyName: '株式会社ABC商事',
-        companyNameKana: 'カブシキガイシャエービーシーショウジ',
-        industry: 'IT・通信',
-        employeeSize: '501-1000名',
-        website: 'https://abc-shoji.co.jp',
-        phone: '03-1234-5678',
-        address: '東京都千代田区丸の内1-1-1 ABCビル10F',
-        businessDescription: 'システム開発、ITコンサルティング、クラウドソリューション提供',
-        contacts: [
-          {
-            id: '1',
-            name: '山田太郎',
-            department: '人事部',
-            position: '部長',
-            email: 'yamada@abc-shoji.co.jp',
-            phone: '03-1234-5678',
-            isPrimary: true,
-          },
-          {
-            id: '2',
-            name: '佐藤花子',
-            department: '開発部',
-            position: '課長',
-            email: 'sato@abc-shoji.co.jp',
-            phone: '03-1234-5679',
-            isPrimary: false,
-          },
-          {
-            id: '3',
-            name: '鈴木次郎',
-            department: 'IT戦略部',
-            position: 'マネージャー',
-            email: 'suzuki@abc-shoji.co.jp',
-            phone: '03-1234-5680',
-            isPrimary: false,
-          },
-        ],
-        contractTypes: ['準委任契約', '派遣契約'],
-        budgetMin: 500000,
-        budgetMax: 1000000,
-        preferredSkills: ['React', 'TypeScript', 'AWS', 'Docker', 'Kubernetes'],
-        preferredIndustries: ['金融', 'IT'],
-        requirements: 'フロントエンド開発経験3年以上、チーム開発経験必須',
-        status: 'active',
-        registeredDate: '2024-01-15',
-        lastContactDate: '2024-11-28',
-        totalProposals: 15,
-        acceptedProposals: 8,
-        currentEngineers: 5,
-        monthlyRevenue: 3750000,
-        totalRevenue: 45000000,
-        rating: 4.5,
-        tags: ['優良顧客', '長期取引', 'リピート多'],
-        paymentTerms: '月末締め翌月末払い',
-        autoEmailEnabled: true,
-        followUpEnabled: true,
-        notes: '主にフロントエンド開発案件が多い。React経験者を優先的に提案。',
-        approaches: [
-          {
-            id: '1',
-            date: '2024-11-28',
-            type: 'email',
-            subject: 'Reactエンジニア3名のご提案',
-            engineerCount: 3,
-            status: 'sent',
-            note: 'フロントエンド開発経験豊富なエンジニアを提案',
-            attachments: ['スキルシート_田中.pdf', 'スキルシート_佐藤.pdf', 'スキルシート_鈴木.pdf'],
-          },
-          {
-            id: '2',
-            date: '2024-11-20',
-            type: 'meeting',
-            subject: '定例ミーティング',
-            status: 'accepted',
-            note: '来月からの新規プロジェクトについて打ち合わせ',
-            responseDate: '2024-11-21',
-            responseNote: '2名のエンジニアを採用決定',
-          },
-          {
-            id: '3',
-            date: '2024-11-10',
-            type: 'proposal',
-            subject: 'AWSエンジニア2名のご提案',
-            engineerCount: 2,
-            status: 'accepted',
-            note: 'インフラ構築案件向けの提案',
-          },
-        ],
-        proposedEngineers: [
-          {
-            id: '1',
-            name: '田中一郎',
-            skills: ['React', 'TypeScript', 'Next.js'],
-            experience: 5,
-            unitPrice: 650000,
-            status: 'accepted',
-            proposedDate: '2024-11-20',
-            projectName: 'ECサイトリニューアル',
-          },
-          {
-            id: '2',
-            name: '佐藤二郎',
-            skills: ['AWS', 'Docker', 'Kubernetes'],
-            experience: 7,
-            unitPrice: 750000,
-            status: 'accepted',
-            proposedDate: '2024-11-10',
-            projectName: 'クラウド基盤構築',
-          },
-          {
-            id: '3',
-            name: '鈴木三郎',
-            skills: ['React', 'Vue.js', 'Node.js'],
-            experience: 4,
-            unitPrice: 600000,
-            status: 'pending',
-            proposedDate: '2024-11-28',
-          },
-        ],
-        projects: [
-          {
-            id: '1',
-            name: 'ECサイトリニューアル',
-            startDate: '2024-10-01',
-            engineerCount: 3,
-            totalRevenue: 9000000,
-            status: 'active',
-            engineers: ['田中一郎', '山田四郎', '伊藤五郎'],
-          },
-          {
-            id: '2',
-            name: 'クラウド基盤構築',
-            startDate: '2024-09-01',
-            endDate: '2024-11-30',
-            engineerCount: 2,
-            totalRevenue: 4500000,
-            status: 'completed',
-            engineers: ['佐藤二郎', '高橋六郎'],
-          },
-          {
-            id: '3',
-            name: '業務システム改修',
-            startDate: '2024-06-01',
-            endDate: '2024-08-31',
-            engineerCount: 4,
-            totalRevenue: 7200000,
-            status: 'completed',
-            engineers: ['加藤七郎', '渡辺八郎', '中村九郎', '小林十郎'],
-          },
-        ],
-      };
-      setPartner(mockData);
-      setLoading(false);
-    }, 1000);
-  };
+  useEffect(() => {
+    if (partnerData) {
+      setPartner(partnerData);
+    }
+  }, [partnerData]);
+
 
   const handleProposal = () => {
     setProposalModalVisible(true);
@@ -473,9 +244,9 @@ const BusinessPartnerDetail: React.FC = () => {
     },
   ];
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <Card loading={loading}>
+      <Card loading={isLoading}>
         <div style={{ height: 400 }} />
       </Card>
     );
@@ -499,7 +270,7 @@ const BusinessPartnerDetail: React.FC = () => {
               <Button
                 type="text"
                 icon={<ArrowLeftOutlined />}
-                onClick={() => navigate('/business-partners/list')}
+                onClick={() => navigate('business-partners/list')}
                 style={{ marginLeft: -8 }}
               >
                 一覧に戻る

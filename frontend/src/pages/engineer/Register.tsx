@@ -41,7 +41,7 @@ const EngineerRegister: React.FC = () => {
         });
 
         message.success('登録に成功しました');
-        navigate('/engineer/skill-sheet');
+        navigate('engineer/skill-sheet');
       }
     } catch (error: any) {
       console.error('Register error:', error);

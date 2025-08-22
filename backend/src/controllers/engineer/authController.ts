@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { authService } from '../../services/authService';
+import authService from '../../services/authService';
 import { engineerService } from '../../services/engineerService';
 import { LoginRequest, RegisterRequest, User } from '../../types/auth';
 import { validationResult } from 'express-validator';

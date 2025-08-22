@@ -1,11 +1,11 @@
 -- 企業データの作成（SES企業）
 INSERT INTO companies (id, company_type, name, email_domain, address, phone, website_url, contact_email, max_engineers, is_active)
 VALUES 
-(1, 'ses', '株式会社テックソリューション', 'techsolution.co.jp', '東京都渋谷区渋谷1-1-1', '03-1234-5678', 'https://techsolution.co.jp', 'contact@techsolution.co.jp', 6000, true),
-(2, 'ses', '株式会社デジタルイノベーション', 'digital-innovation.co.jp', '東京都港区六本木2-2-2', '03-2345-6789', 'https://digital-innovation.co.jp', 'info@digital-innovation.co.jp', 6000, true),
-(3, 'ses', 'SESパートナーズ株式会社', 'ses-partners.co.jp', '東京都新宿区西新宿3-3-3', '03-3456-7890', 'https://ses-partners.co.jp', 'contact@ses-partners.co.jp', 6000, true),
-(4, 'ses', '株式会社クラウドテック', 'cloudtech.co.jp', '東京都千代田区大手町4-4-4', '03-4567-8901', 'https://cloudtech.co.jp', 'info@cloudtech.co.jp', 6000, true),
-(5, 'ses', '株式会社システムプロ', 'systempro.co.jp', '東京都品川区大崎5-5-5', '03-5678-9012', 'https://systempro.co.jp', 'contact@systempro.co.jp', 6000, true)
+(1, 'ses', '株式会社テックソリューション', 'techsolution.example.com', '東京都渋谷区渋谷1-1-1', '03-1234-5678', 'https://techsolution.example.com', 'contact@techsolution.example.com', 6000, true),
+(2, 'ses', '株式会社デジタルイノベーション', 'digital-innovation.example.com', '東京都港区六本木2-2-2', '03-2345-6789', 'https://digital-innovation.example.com', 'info@digital-innovation.example.com', 6000, true),
+(3, 'ses', 'SESパートナーズ株式会社', 'ses-partners.example.com', '東京都新宿区西新宿3-3-3', '03-3456-7890', 'https://ses-partners.example.com', 'contact@ses-partners.example.com', 6000, true),
+(4, 'ses', '株式会社クラウドテック', 'cloudtech.example.com', '東京都千代田区大手町4-4-4', '03-4567-8901', 'https://cloudtech.example.com', 'info@cloudtech.example.com', 6000, true),
+(5, 'ses', '株式会社システムプロ', 'systempro.example.com', '東京都品川区大崎5-5-5', '03-5678-9012', 'https://systempro.example.com', 'contact@systempro.example.com', 6000, true)
 ON CONFLICT (id) DO NOTHING;
 
 -- シーケンスのリセット
@@ -14,16 +14,16 @@ SELECT setval('companies_id_seq', (SELECT MAX(id) FROM companies));
 -- エンジニアデータの作成
 INSERT INTO engineers (id, company_id, name, name_kana, email, phone, birth_date, gender, nearest_station, engineer_type, current_status, available_date, is_public)
 VALUES
-(1, 1, '田中太郎', 'タナカタロウ', 'tanaka@techsolution.co.jp', '090-1234-5678', '1992-03-15', 'male', '渋谷駅', 'employee', 'waiting', '2024-02-01', true),
-(2, 2, '佐藤花子', 'サトウハナコ', 'sato@digital-innovation.co.jp', '090-2345-6789', '1996-07-22', 'female', '六本木駅', 'employee', 'waiting', '2024-02-15', true),
-(3, 1, '鈴木一郎', 'スズキイチロウ', 'suzuki@techsolution.co.jp', '090-3456-7890', '1989-11-08', 'male', '新宿駅', 'employee', 'waiting', '2024-03-01', true),
-(4, 3, '山田次郎', 'ヤマダジロウ', 'yamada@ses-partners.co.jp', '090-4567-8901', '1994-05-20', 'male', '西新宿駅', 'employee', 'waiting_soon', '2024-04-01', true),
-(5, 2, '伊藤美咲', 'イトウミサキ', 'ito@digital-innovation.co.jp', '090-5678-9012', '1998-01-30', 'female', '恵比寿駅', 'employee', 'waiting', '2024-01-20', true),
-(6, 4, '高橋健一', 'タカハシケンイチ', 'takahashi@cloudtech.co.jp', '090-6789-0123', '1991-09-12', 'male', '大手町駅', 'employee', 'waiting', '2024-02-01', true),
-(7, 3, '小林明美', 'コバヤシアケミ', 'kobayashi@ses-partners.co.jp', '090-7890-1234', '1995-06-18', 'female', '新宿三丁目駅', 'employee', 'waiting', '2024-02-10', true),
-(8, 5, '渡辺大輔', 'ワタナベダイスケ', 'watanabe@systempro.co.jp', '090-8901-2345', '1990-12-25', 'male', '大崎駅', 'employee', 'waiting', '2024-02-20', true),
-(9, 1, '中村優子', 'ナカムラユウコ', 'nakamura@techsolution.co.jp', '090-9012-3456', '1993-04-10', 'female', '表参道駅', 'employee', 'waiting', '2024-01-25', true),
-(10, 4, '加藤剛', 'カトウツヨシ', 'kato@cloudtech.co.jp', '090-0123-4567', '1988-08-05', 'male', '東京駅', 'employee', 'waiting', '2024-02-05', true)
+(1, 1, '田中太郎', 'タナカタロウ', 'tanaka@techsolution.example.com', '090-1234-5678', '1992-03-15', 'male', '渋谷駅', 'employee', 'waiting', '2024-02-01', true),
+(2, 2, '佐藤花子', 'サトウハナコ', 'sato@digital-innovation.example.com', '090-2345-6789', '1996-07-22', 'female', '六本木駅', 'employee', 'waiting', '2024-02-15', true),
+(3, 1, '鈴木一郎', 'スズキイチロウ', 'suzuki@techsolution.example.com', '090-3456-7890', '1989-11-08', 'male', '新宿駅', 'employee', 'waiting', '2024-03-01', true),
+(4, 3, '山田次郎', 'ヤマダジロウ', 'yamada@ses-partners.example.com', '090-4567-8901', '1994-05-20', 'male', '西新宿駅', 'employee', 'waiting_soon', '2024-04-01', true),
+(5, 2, '伊藤美咲', 'イトウミサキ', 'ito@digital-innovation.example.com', '090-5678-9012', '1998-01-30', 'female', '恵比寿駅', 'employee', 'waiting', '2024-01-20', true),
+(6, 4, '高橋健一', 'タカハシケンイチ', 'takahashi@cloudtech.example.com', '090-6789-0123', '1991-09-12', 'male', '大手町駅', 'employee', 'waiting', '2024-02-01', true),
+(7, 3, '小林明美', 'コバヤシアケミ', 'kobayashi@ses-partners.example.com', '090-7890-1234', '1995-06-18', 'female', '新宿三丁目駅', 'employee', 'waiting', '2024-02-10', true),
+(8, 5, '渡辺大輔', 'ワタナベダイスケ', 'watanabe@systempro.example.com', '090-8901-2345', '1990-12-25', 'male', '大崎駅', 'employee', 'waiting', '2024-02-20', true),
+(9, 1, '中村優子', 'ナカムラユウコ', 'nakamura@techsolution.example.com', '090-9012-3456', '1993-04-10', 'female', '表参道駅', 'employee', 'waiting', '2024-01-25', true),
+(10, 4, '加藤剛', 'カトウツヨシ', 'kato@cloudtech.example.com', '090-0123-4567', '1988-08-05', 'male', '東京駅', 'employee', 'waiting', '2024-02-05', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- シーケンスのリセット

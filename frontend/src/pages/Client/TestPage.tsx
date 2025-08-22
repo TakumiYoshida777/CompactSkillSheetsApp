@@ -20,10 +20,10 @@ const TestPage: React.FC = () => {
         <Text>会社名: {user?.clientCompany?.name || user?.company?.name || '未設定'}</Text>
         
         <Space>
-          <Button type="primary" onClick={() => navigate('/client/login')}>
+          <Button type="primary" onClick={() => navigate('client/login')}>
             ログインページへ
           </Button>
-          <Button onClick={() => navigate('/client/offer-board')}>
+          <Button onClick={() => navigate('client/offer-board')}>
             オファーボードへ
           </Button>
         </Space>

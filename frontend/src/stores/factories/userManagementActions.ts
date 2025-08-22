@@ -14,7 +14,7 @@ export const createUserManagementActions: StateCreator<
   updateProfile: async (data: any) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.put('/api/users/profile', data);
+      const response = await axios.put('users/profile', data);
       
       set({
         user: response.data,

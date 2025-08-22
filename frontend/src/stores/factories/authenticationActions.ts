@@ -22,7 +22,7 @@ export const createAuthenticationActions: StateCreator<
   login: async (email: string, password: string, rememberMe?: boolean) => {
     set({ isLoading: true, error: null });
     try {
-      const authResponse = await AuthService.performLogin('/api/auth/login', {
+      const authResponse = await AuthService.performLogin('auth/login', {
         email,
         password,
         rememberMe,
@@ -49,7 +49,7 @@ export const createAuthenticationActions: StateCreator<
   clientLogin: async (email: string, password: string, rememberMe?: boolean) => {
     set({ isLoading: true, error: null });
     try {
-      const authResponse = await AuthService.performLogin('/api/client/auth/login', {
+      const authResponse = await AuthService.performLogin('client/auth/login', {
         email,
         password,
         rememberMe,
@@ -95,7 +95,7 @@ export const createAuthenticationActions: StateCreator<
   register: async (data: any) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),

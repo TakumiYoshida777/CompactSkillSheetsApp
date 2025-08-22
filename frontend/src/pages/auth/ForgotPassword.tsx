@@ -53,7 +53,7 @@ const ForgotPassword: React.FC = () => {
   const handleSendEmail = async (values: { email: string }) => {
     try {
       setIsLoading(true);
-      await axios.post('/api/auth/forgot-password', { email: values.email });
+      await axios.post('auth/forgot-password', { email: values.email });
       setEmail(values.email);
       setCurrentStep(1);
       message.success('認証コードをメールで送信しました');
@@ -70,7 +70,7 @@ const ForgotPassword: React.FC = () => {
   const handleVerifyCode = async (values: { code: string }) => {
     try {
       setIsLoading(true);
-      const response = await axios.post('/api/auth/verify-reset-code', {
+      const response = await axios.post('auth/verify-reset-code', {
         email,
         code: values.code,
       });
@@ -92,7 +92,7 @@ const ForgotPassword: React.FC = () => {
   }) => {
     try {
       setIsLoading(true);
-      await axios.post('/api/auth/reset-password', {
+      await axios.post('auth/reset-password', {
         token: resetToken,
         password: values.password,
       });
@@ -306,7 +306,7 @@ const ForgotPassword: React.FC = () => {
               <Button
                 type="primary"
                 key="login"
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('login')}
                 size="large"
               >
                 ログインページへ

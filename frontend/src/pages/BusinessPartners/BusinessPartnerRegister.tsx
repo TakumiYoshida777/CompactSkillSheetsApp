@@ -246,14 +246,14 @@ Email: sales@example.com
             message.success('取引先を登録しました');
             message.success('自動営業メールを送信しました', 3);
             setTimeout(() => {
-              navigate('/business-partners/list');
+              navigate('business-partners/list');
             }, 1000);
           },
         });
       } else {
         message.success('取引先を登録しました');
         setTimeout(() => {
-          navigate('/business-partners/list');
+          navigate('business-partners/list');
         }, 1000);
       }
     } catch (error: any) {
@@ -742,7 +742,7 @@ Email: sales@example.com
               <Space>
                 <Button
                   size="large"
-                  onClick={() => navigate('/business-partners/list')}
+                  onClick={() => navigate('business-partners/list')}
                 >
                   キャンセル
                 </Button>

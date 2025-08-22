@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-query';
 import { message } from 'antd';
 import * as offerApi from '../api/client/offerApi';
-import { OfferStatus } from '../stores/offerStore';
+import type { OfferStatus } from '../stores/offerStore';
 import { queryOptions, infiniteQueryOptions } from '../config/queryClient';
 
 const QUERY_KEYS = {

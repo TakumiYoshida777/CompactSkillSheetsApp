@@ -19,7 +19,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   requireAuth = true,
   requireRoles = [],
   requirePermissions = [],
-  redirectTo = '/login',
+  redirectTo = 'login',
 }) => {
   const { 
     isAuthenticated, 
@@ -32,22 +32,28 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   } = useAuthStore();
   
   const location = useLocation();
-  const [isInitialized, setIsInitialized] = React.useState(false);
+  const [isChecking, setIsChecking] = React.useState(false);
+  const [hasChecked, setHasChecked] = React.useState(false);
 
   useEffect(() => {
     // 初回マウント時に認証状態をチェック
-    // トークンが存在し、まだ認証されていない場合のみチェック
-    if (!isInitialized) {
-      if (requireAuth && token && !isAuthenticated) {
-        checkAuth().finally(() => setIsInitialized(true));
-      } else {
-        setIsInitialized(true);
-      }
+    // トークンが存在する場合は認証チェックを実行
+    if (!hasChecked && !isChecking && requireAuth && token) {
+      console.log('[AuthGuard] Token exists, checking authentication...');
+      setIsChecking(true);
+      checkAuth().finally(() => {
+        setIsChecking(false);
+        setHasChecked(true);
+      });
+    } else if (!token) {
+      // トークンがない場合は即座にチェック完了とする
+      setHasChecked(true);
     }
-  }, [requireAuth, token, isAuthenticated, checkAuth, isInitialized]);
+  }, [requireAuth, token, checkAuth, hasChecked, isChecking]);
 
-  // ローディング中または初期化中
-  if (isLoading || !isInitialized) {
+  // ローディング中またはチェック中
+  if (isLoading || isChecking || (requireAuth && token && !hasChecked)) {
+    console.log('[AuthGuard] Loading state - isLoading:', isLoading, 'isChecking:', isChecking, 'hasChecked:', hasChecked);
     return (
       <div style={{
         display: 'flex',
@@ -55,13 +61,14 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
         alignItems: 'center',
         minHeight: '100vh',
       }}>
-        <Spin size="large" tip="認証情報を確認中..." />
+        <Spin size="large" />
       </div>
     );
   }
 
   // 認証が必要な場合
   if (requireAuth && !isAuthenticated) {
+    console.log('[AuthGuard] Not authenticated, redirecting to:', redirectTo);
     return (
       <Navigate 
         to={redirectTo} 

@@ -54,7 +54,7 @@ describe('認証フロー統合テスト', () => {
       mockAxios.post = vi.fn().mockResolvedValue(loginResponse);
 
       // Step 1: ログイン実行
-      const authResponse = await AuthService.performLogin('/api/auth/login', {
+      const authResponse = await AuthService.performLogin('auth/login', {
         email: 'test@example.com',
         password: 'password123',
         rememberMe: false
@@ -100,7 +100,7 @@ describe('認証フロー統合テスト', () => {
       });
 
       await expect(
-        AuthService.performLogin('/api/auth/login', {
+        AuthService.performLogin('auth/login', {
           email: 'test@example.com',
           password: 'wrong-password',
           rememberMe: false
@@ -155,7 +155,7 @@ describe('認証フロー統合テスト', () => {
         data: { token: 'engineer-token', user: engineerUser }
       });
 
-      const loginResult = await AuthService.performLogin('/api/auth/engineer/login', {
+      const loginResult = await AuthService.performLogin('auth/engineer/login', {
         email: 'engineer@example.com',
         password: 'password',
         rememberMe: false
@@ -165,7 +165,7 @@ describe('認証フロー統合テスト', () => {
 
       // エンジニア用エンドポイントの確認
       const endpoint = AuthCheckService.determineEndpoint('engineer-token', engineerUser);
-      expect(endpoint).toBe('/api/engineer/profile');
+      expect(endpoint).toBe('engineer/profile');
     });
 
     it('クライアントユーザーの認証フロー', async () => {
@@ -181,7 +181,7 @@ describe('認証フロー統合テスト', () => {
         data: { token: 'client-token', user: clientUser }
       });
 
-      const loginResult = await AuthService.performLogin('/api/auth/client/login', {
+      const loginResult = await AuthService.performLogin('auth/client/login', {
         email: 'client@example.com',
         password: 'password',
         rememberMe: false
@@ -191,7 +191,7 @@ describe('認証フロー統合テスト', () => {
 
       // クライアント用エンドポイントの確認
       const endpoint = AuthCheckService.determineEndpoint('client-token', clientUser);
-      expect(endpoint).toBe('/api/client/profile');
+      expect(endpoint).toBe('client/profile');
     });
   });
 
@@ -212,7 +212,7 @@ describe('認証フロー統合テスト', () => {
       mockAxios.post = vi.fn().mockResolvedValue(loginResponse);
 
       // Remember Meを有効にしてログイン
-      await AuthService.performLogin('/api/auth/login', {
+      await AuthService.performLogin('auth/login', {
         email: 'test@example.com',
         password: 'password',
         rememberMe: true

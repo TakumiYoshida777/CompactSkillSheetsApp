@@ -85,6 +85,14 @@ export interface PermissionActions {
   isClientUser: () => boolean;
 }
 
+/**
+ * ナビゲーション管理アクション
+ */
+export interface NavigationActions {
+  navigateToLogin: ((path: string) => void) | null;
+  setNavigateFunction: (navigate: ((path: string) => void) | null) => void;
+}
+
 // =====================================
 // 統合インターフェース
 // =====================================
@@ -97,7 +105,8 @@ export interface AuthState extends
   AuthenticationActions,
   TokenManagementActions,
   UserManagementActions,
-  PermissionActions {}
+  PermissionActions,
+  NavigationActions {}
 
 // =====================================
 // ユーティリティ型
