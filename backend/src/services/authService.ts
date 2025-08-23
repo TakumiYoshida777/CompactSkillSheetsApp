@@ -93,18 +93,61 @@ export class AuthService {
   /**
    * ユーザーが特定の権限を持っているかチェック
    */
-  static async hasPermission(userId: string, resource: string, action: string): Promise<boolean> {
+  static async hasPermission(
+    userId: string, 
+    resource: string, 
+    action: string, 
+    scope?: string,
+    targetId?: string
+  ): Promise<boolean> {
     try {
-      const permission = `${resource}:${action}`;
       const permissions = await this.getUserPermissions(userId);
-      
-      // 管理者は全権限を持つ
       const roles = await this.getUserRoles(userId);
-      if (roles.includes('admin')) {
+      
+      // スーパー管理者は全権限を持つ
+      if (roles.includes('super_admin')) {
         return true;
       }
-
-      return permissions.includes(permission);
+      
+      // 権限の組み合わせパターンをチェック
+      const possiblePermissions = [
+        `${resource}:${action}:all`, // 全体権限
+        `${resource}:${action}`, // スコープなし権限
+      ];
+      
+      // スコープに応じた権限を追加
+      if (scope) {
+        possiblePermissions.push(`${resource}:${action}:${scope}`);
+      }
+      
+      // 自分のリソースの場合
+      if (scope === 'own' && targetId === userId) {
+        possiblePermissions.push(`${resource}:${action}:own`);
+      }
+      
+      // 自社のリソースの場合
+      if (scope === 'company') {
+        const user = await prisma.users.findUnique({
+          where: { id: BigInt(userId) },
+          select: { companyId: true }
+        });
+        
+        if (targetId && user?.companyId) {
+          const target = await prisma.users.findUnique({
+            where: { id: BigInt(targetId) },
+            select: { companyId: true }
+          });
+          
+          if (target?.companyId === user.companyId) {
+            possiblePermissions.push(`${resource}:${action}:company`);
+          }
+        } else if (user?.companyId) {
+          possiblePermissions.push(`${resource}:${action}:company`);
+        }
+      }
+      
+      // いずれかの権限を持っているかチェック
+      return possiblePermissions.some(perm => permissions.includes(perm));
     } catch (error) {
       logger.error('Error checking permission:', error);
       return false;

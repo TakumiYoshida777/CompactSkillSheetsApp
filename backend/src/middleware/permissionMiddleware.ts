@@ -15,8 +15,9 @@ interface AuthRequest extends Request {
  * 特定の権限を要求するミドルウェア
  * @param resource リソース名（例: 'user', 'engineer', 'skillsheet'）
  * @param action アクション名（例: 'view', 'create', 'update', 'delete'）
+ * @param scope スコープ（例: 'all', 'company', 'own', 'allowed'）
  */
-export const requirePermission = (resource: string, action: string) => {
+export const requirePermission = (resource: string, action: string, scope?: string) => {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       if (!req.user) {
@@ -29,18 +30,28 @@ export const requirePermission = (resource: string, action: string) => {
 
       const { userId } = req.user;
       
+      // リクエストからターゲットIDを取得（パラメータまたはボディから）
+      let targetId: string | undefined;
+      if (scope === 'own') {
+        targetId = req.params.id || req.params.userId || req.body?.userId;
+      } else if (scope === 'company') {
+        targetId = req.params.id || req.params.userId || req.body?.userId;
+      }
+      
       // 権限チェック
-      const hasPermission = await AuthService.hasPermission(userId, resource, action);
+      const hasPermission = await AuthService.hasPermission(userId, resource, action, scope, targetId);
       
       if (!hasPermission) {
-        logger.warn(`Permission denied for user ${userId}: ${resource}:${action}`);
+        const permString = scope ? `${resource}:${action}:${scope}` : `${resource}:${action}`;
+        logger.warn(`Permission denied for user ${userId}: ${permString}`);
         return res.status(403).json({
           success: false,
           message: 'この操作を実行する権限がありません'
         });
       }
 
-      logger.debug(`Permission granted for user ${userId}: ${resource}:${action}`);
+      const permString = scope ? `${resource}:${action}:${scope}` : `${resource}:${action}`;
+      logger.debug(`Permission granted for user ${userId}: ${permString}`);
       next();
     } catch (error) {
       logger.error('Permission middleware error:', error);
