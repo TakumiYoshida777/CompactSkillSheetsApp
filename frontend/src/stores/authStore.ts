@@ -220,11 +220,25 @@ const useAuthStore = create<AuthState>()(
         if (!user) return false;
         
         // 管理者は全権限を持つ
-        if (user.roles.includes('admin')) return true;
+        if (user.roles && user.roles.includes('admin')) return true;
         
         // 特定の権限をチェック
         const permission = `${resource}:${action}`;
-        return user.permissions.includes(permission) || user.permissions.includes('*');
+        
+        // permissionsが配列の場合（文字列の配列）
+        if (Array.isArray(user.permissions)) {
+          // permissionsが文字列の配列の場合
+          if (typeof user.permissions[0] === 'string') {
+            return user.permissions.includes(permission) || user.permissions.includes('*');
+          }
+          // permissionsがオブジェクトの配列の場合
+          return user.permissions.some(p => 
+            p.name === permission || 
+            (p.resource === resource && p.action === action)
+          );
+        }
+        
+        return false;
       },
 
       hasRole: (role: string) => {
