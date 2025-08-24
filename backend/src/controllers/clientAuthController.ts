@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { securityConfig } from '../config/security';
 
 const prisma = new PrismaClient();
 
@@ -142,7 +143,7 @@ export class ClientAuthController {
           roles,
           permissions
         },
-        process.env.JWT_SECRET || 'your-secret-key',
+        securityConfig.getJwtSecret(),
         { expiresIn: '8h' }
       );
 
@@ -153,7 +154,7 @@ export class ClientAuthController {
           userType: 'client',
           tokenType: 'refresh'
         },
-        process.env.JWT_REFRESH_SECRET || 'your-refresh-secret',
+        securityConfig.getJwtRefreshSecret(),
         { expiresIn: '30d' }
       );
 
@@ -200,7 +201,7 @@ export class ClientAuthController {
       // リフレッシュトークン検証
       const decoded = jwt.verify(
         refreshToken,
-        process.env.JWT_REFRESH_SECRET || 'your-refresh-secret'
+        securityConfig.getJwtRefreshSecret()
       ) as any;
 
       if (decoded.userType !== 'client' || decoded.tokenType !== 'refresh') {
@@ -270,7 +271,7 @@ export class ClientAuthController {
           roles,
           permissions
         },
-        process.env.JWT_SECRET || 'your-secret-key',
+        securityConfig.getJwtSecret(),
         { expiresIn: '8h' }
       );
 

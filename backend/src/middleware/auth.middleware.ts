@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { securityConfig } from '../config/security';
 
 // Requestの型を拡張
 declare global {
@@ -32,7 +33,7 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     });
   }
 
-  const secret = process.env.JWT_SECRET || 'your-secret-key';
+  const secret = securityConfig.getJwtSecret();
 
   jwt.verify(token, secret, (err, decoded) => {
     if (err) {

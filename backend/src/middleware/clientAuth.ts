@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import { securityConfig } from '../config/security';
 
 const prisma = new PrismaClient();
 
@@ -46,7 +47,7 @@ export const authenticateClientUser = async (
     // トークン検証
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || 'your-secret-key'
+      securityConfig.getJwtSecret()
     ) as any;
     console.log('[authenticateClientUser] Token decoded - UserType:', decoded.userType, 'Sub:', decoded.sub);
 

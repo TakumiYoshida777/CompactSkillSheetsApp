@@ -16,11 +16,11 @@ import {
 import { UnauthorizedError, AuthenticationError } from '../utils/errors';
 import logger from '../config/logger';
 import permissionCache from './permissionCacheService';
+import { securityConfig } from '../config/security';
 
 const prisma = new PrismaClient();
 
 // 環境変数から設定を取得
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-jwt-secret';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
 const SALT_ROUNDS = 10;
@@ -516,11 +516,11 @@ export class AuthService {
    * トークンの生成
    */
   private static generateTokens(payload: Omit<JWTPayload, 'iat' | 'exp'>): AuthTokens {
-    const accessToken = jwt.sign(payload, JWT_SECRET, {
+    const accessToken = jwt.sign(payload, securityConfig.getJwtSecret(), {
       expiresIn: JWT_EXPIRES_IN
     });
 
-    const refreshToken = jwt.sign(payload, JWT_SECRET, {
+    const refreshToken = jwt.sign(payload, securityConfig.getJwtRefreshSecret(), {
       expiresIn: REFRESH_TOKEN_EXPIRES_IN
     });
 

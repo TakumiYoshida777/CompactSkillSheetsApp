@@ -25,22 +25,22 @@ const EngineerLayout: React.FC = () => {
 
   const menuItems = [
     {
-      key: 'engineer/dashboard',
+      key: '/engineer/dashboard',
       icon: <DashboardOutlined />,
       label: 'ダッシュボード',
     },
     {
-      key: 'engineer/profile',
+      key: '/engineer/profile',
       icon: <UserOutlined />,
       label: 'プロフィール編集',
     },
     {
-      key: 'engineer/skill-sheet',
+      key: '/engineer/skill-sheet',
       icon: <FileTextOutlined />,
       label: 'スキルシート編集',
     },
     {
-      key: 'engineer/approach-history',
+      key: '/engineer/approach-history',
       icon: <HistoryOutlined />,
       label: 'アプローチ履歴',
     },
@@ -51,13 +51,13 @@ const EngineerLayout: React.FC = () => {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'プロフィール',
-      onClick: () => navigate('engineer/profile'),
+      onClick: () => navigate('/engineer/profile'),
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
       label: '設定',
-      onClick: () => navigate('engineer/settings'),
+      onClick: () => navigate('/engineer/settings'),
     },
     {
       type: 'divider' as const,
@@ -68,7 +68,7 @@ const EngineerLayout: React.FC = () => {
       label: 'ログアウト',
       onClick: () => {
         logout();
-        navigate('login');
+        navigate('/engineer/login');
       },
     },
   ];
@@ -112,7 +112,7 @@ const EngineerLayout: React.FC = () => {
                 <Button
                   type="text"
                   icon={<BellOutlined />}
-                  onClick={() => navigate('engineer/notifications')}
+                  onClick={() => navigate('/engineer/notifications')}
                 />
               </Badge>
               

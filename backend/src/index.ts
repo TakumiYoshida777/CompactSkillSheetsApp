@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import logger from './config/logger';
 import { morganMiddleware, responseTimeMiddleware } from './middleware/httpLogger';
+import { generalRateLimiter, loginRateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/authRoutes';
 import companyRoutes from './routes/companyRoutes';
 import engineerAuthRoutes from './routes/engineer/authRoutes';
@@ -64,10 +65,18 @@ app.use(morganMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// レート制限を適用（全体）
+app.use(generalRateLimiter);
+
 // ヘルスチェックエンドポイント
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+
+// ログインエンドポイントには厳しいレート制限を適用
+app.use('/api/auth/login', loginRateLimiter);
+app.use('/api/client/auth/login', loginRateLimiter);
+app.use('/api/engineer/auth/login', loginRateLimiter);
 
 // APIルートの登録
 app.use('/api/auth', authRoutes);
