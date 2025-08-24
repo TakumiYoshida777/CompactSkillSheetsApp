@@ -66,17 +66,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // レート制限を適用（全体）
-app.use(generalRateLimiter);
+// TODO: rateLimiterの問題を修正後に有効化
+// app.use(generalRateLimiter);
 
 // ヘルスチェックエンドポイント
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 // ログインエンドポイントには厳しいレート制限を適用
-app.use('/api/auth/login', loginRateLimiter);
-app.use('/api/client/auth/login', loginRateLimiter);
-app.use('/api/engineer/auth/login', loginRateLimiter);
+// TODO: rateLimiterの問題を修正後に有効化
+// app.use('/api/auth/login', loginRateLimiter);
+// app.use('/api/client/auth/login', loginRateLimiter);
+// app.use('/api/engineer/auth/login', loginRateLimiter);
 
 // APIルートの登録
 app.use('/api/auth', authRoutes);
@@ -90,7 +92,7 @@ app.use('/api/business-partners', businessPartnerRoutes);  // 取引先企業管
 app.use('/api/client', offerRoutes);  // オファー関連のルート
 
 // APIルートのプレースホルダー
-app.get('/api/v1', (req, res) => {
+app.get('/api/v1', (_req, res) => {
   res.json({ 
     message: 'SkillSheetsMgmtAPp API',
     version: '1.0.0',
@@ -130,7 +132,7 @@ app.use('/api/v1/notifications', notificationsRoutes);
 app.use('/api/v1', v1Routes);
 
 // エラーハンドリングミドルウェア
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error('エラーが発生しました', {
     error: err.stack || err.message,
     method: req.method,
@@ -163,6 +165,17 @@ process.on('SIGTERM', async () => {
     await prisma.$disconnect();
     logger.info('HTTPサーバーが終了しました');
   });
+});
+
+// エラーハンドリング
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception:', err);
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 export default app;

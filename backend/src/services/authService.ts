@@ -25,6 +25,11 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
 const SALT_ROUNDS = 10;
 
+// JWT シークレット（SecurityConfigから取得）
+// Note: これらの変数は使用されず、全てsecurityConfigから取得されます
+const JWT_SECRET = process.env.JWT_SECRET || '';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || '';
+
 // リフレッシュトークンの管理（本番環境ではRedisを使用）
 const refreshTokenStore = new Map<string, { userId: string; expiresAt: Date }>();
 
@@ -422,7 +427,7 @@ export class AuthService {
 
     try {
       // リフレッシュトークンの検証
-      const decoded = jwt.verify(refreshToken, JWT_SECRET) as JWTPayload;
+      const decoded = jwt.verify(refreshToken, securityConfig.getJwtRefreshSecret()) as JWTPayload;
       
       // ストアから検証
       const storedToken = refreshTokenStore.get(refreshToken);
@@ -500,7 +505,7 @@ export class AuthService {
    */
   static verifyToken(token: string): JWTPayload {
     try {
-      return jwt.verify(token, JWT_SECRET) as JWTPayload;
+      return jwt.verify(token, securityConfig.getJwtSecret()) as JWTPayload;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
         throw new UnauthorizedError('トークンの有効期限が切れています');

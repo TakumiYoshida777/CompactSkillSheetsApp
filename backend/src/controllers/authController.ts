@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import authService from '../services/authService';
+import AuthService from '../services/AuthService';
 import { LoginRequest, RegisterRequest } from '../types/auth';
 import { validationResult } from 'express-validator';
 
@@ -26,7 +26,7 @@ export class AuthController {
       }
 
       const loginRequest: LoginRequest = req.body;
-      const result = await authService.login(loginRequest);
+      const result = await AuthService.login(loginRequest);
 
       // ログイン成功
       res.json({
@@ -83,7 +83,7 @@ export class AuthController {
       }
 
       const registerRequest: RegisterRequest = req.body;
-      const result = await authService.register(registerRequest);
+      const result = await AuthService.register(registerRequest);
 
       // 登録成功
       res.status(201).json({
@@ -138,7 +138,7 @@ export class AuthController {
         });
       }
 
-      const tokens = await authService.refreshToken({ refreshToken });
+      const tokens = await AuthService.refreshToken({ refreshToken });
 
       res.json({
         success: true,
@@ -180,7 +180,7 @@ export class AuthController {
       const { refreshToken } = req.body;
 
       if (refreshToken) {
-        await authService.logout(refreshToken);
+        await AuthService.logout(refreshToken);
       }
 
       res.json({
@@ -213,7 +213,7 @@ export class AuthController {
         });
       }
 
-      const user = await authService.getUserById(req.user.userId);
+      const user = await AuthService.getUserById(req.user.userId);
 
       if (!user) {
         return res.status(404).json({
@@ -280,7 +280,7 @@ export class AuthController {
         });
       }
 
-      await authService.changePassword(req.user.userId, currentPassword, newPassword);
+      await AuthService.changePassword(req.user.userId, currentPassword, newPassword);
 
       res.json({
         success: true,
@@ -336,7 +336,7 @@ export class AuthController {
         });
       }
 
-      const user = await authService.getUserById(req.user.userId);
+      const user = await AuthService.getUserById(req.user.userId);
       if (!user) {
         return res.status(404).json({
           success: false,
@@ -347,7 +347,7 @@ export class AuthController {
         });
       }
 
-      const hasPermission = authService.hasPermission(
+      const hasPermission = AuthService.hasPermission(
         user,
         resource as string,
         action as string

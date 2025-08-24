@@ -5,7 +5,7 @@
 
 import rateLimit from 'express-rate-limit';
 import { Request, Response } from 'express';
-import { logger } from '../utils/logger';
+import logger from '../config/logger';
 
 /**
  * 基本的なレート制限（全API）

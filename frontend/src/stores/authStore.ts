@@ -21,7 +21,7 @@ const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
         try {
-          const authResponse = await AuthService.performLogin('auth/login', {
+          const authResponse = await AuthService.performLogin('/auth/login', {
             email,
             password,
             rememberMe,
@@ -62,7 +62,7 @@ const useAuthStore = create<AuthState>()(
       clientLogin: async (email: string, password: string, rememberMe?: boolean) => {
         set({ isLoading: true, error: null });
         try {
-          const authResponse = await AuthService.performLogin('client/auth/login', {
+          const authResponse = await AuthService.performLogin('/client/auth/login', {
             email,
             password,
             rememberMe,

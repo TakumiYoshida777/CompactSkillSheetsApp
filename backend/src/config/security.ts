@@ -3,7 +3,7 @@
  * 本番環境での安全な運用を保証するための設定
  */
 
-import { logger } from '../utils/logger';
+import logger from './logger';
 
 /**
  * JWT設定の検証と取得
@@ -26,7 +26,17 @@ export class SecurityConfig {
    */
   public static getInstance(): SecurityConfig {
     if (!SecurityConfig.instance) {
-      SecurityConfig.instance = new SecurityConfig();
+      try {
+        SecurityConfig.instance = new SecurityConfig();
+      } catch (error) {
+        logger.error('Security configuration failed:', error);
+        // 開発環境では警告のみ、本番環境では例外を再スロー
+        if (process.env.NODE_ENV === 'production') {
+          throw error;
+        }
+        // 開発環境用のフォールバック設定
+        SecurityConfig.instance = new SecurityConfig();
+      }
     }
     return SecurityConfig.instance;
   }

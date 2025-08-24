@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import authService from '../services/authService';
+import AuthService from '../services/AuthService';
 import { JWTPayload, UnauthorizedError, ForbiddenError } from '../types/auth';
 
 // Expressのリクエスト型を拡張
@@ -33,7 +33,7 @@ export const authenticateToken = async (
     }
 
     // トークンを検証
-    const decoded = await authService.verifyToken(token);
+    const decoded = await AuthService.verifyToken(token);
     
     // リクエストオブジェクトにユーザー情報を追加
     req.user = decoded;
@@ -79,7 +79,7 @@ export const optionalAuth = async (
       : null;
 
     if (token) {
-      const decoded = await authService.verifyToken(token);
+      const decoded = await AuthService.verifyToken(token);
       req.user = decoded;
       req.token = token;
     }
@@ -103,13 +103,13 @@ export const requirePermission = (resource: string, action: string) => {
       }
 
       // ユーザー情報を取得
-      const user = await authService.getUserById(req.user.userId);
+      const user = await AuthService.getUserById(req.user.userId);
       if (!user) {
         throw new UnauthorizedError('ユーザーが見つかりません');
       }
 
       // 権限チェック
-      const hasPermission = authService.hasPermission(user, resource, action);
+      const hasPermission = AuthService.hasPermission(user, resource, action);
       
       if (!hasPermission) {
         throw new ForbiddenError(`この操作を実行する権限がありません（${resource}:${action}）`);
@@ -215,12 +215,12 @@ export const requireAdmin = async (
       throw new UnauthorizedError('認証が必要です');
     }
 
-    const user = await authService.getUserById(req.user.userId);
+    const user = await AuthService.getUserById(req.user.userId);
     if (!user) {
       throw new UnauthorizedError('ユーザーが見つかりません');
     }
 
-    if (!authService.isAdmin(user)) {
+    if (!AuthService.isAdmin(user)) {
       throw new ForbiddenError('管理者権限が必要です');
     }
 
