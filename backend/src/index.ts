@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import logger from './config/logger';
 import { morganMiddleware, responseTimeMiddleware } from './middleware/httpLogger';
+import { generalRateLimiter, loginRateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/authRoutes';
 import companyRoutes from './routes/companyRoutes';
 import engineerAuthRoutes from './routes/engineer/authRoutes';
@@ -18,6 +19,7 @@ import offerRoutes from './routes/client/offerRoutes';
 // ルートのインポート
 import analyticsRoutes from './routes/analytics.routes';
 import notificationsRoutes from './routes/notifications.routes';
+import permissionRoutes from './routes/permissionRoutes';
 
 // v1 APIルート
 import v1Routes from './routes/v1';
@@ -63,13 +65,24 @@ app.use(morganMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// レート制限を適用（全体）
+// TODO: rateLimiterの問題を修正後に有効化
+// app.use(generalRateLimiter);
+
 // ヘルスチェックエンドポイント
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// ログインエンドポイントには厳しいレート制限を適用
+// TODO: rateLimiterの問題を修正後に有効化
+// app.use('/api/auth/login', loginRateLimiter);
+// app.use('/api/client/auth/login', loginRateLimiter);
+// app.use('/api/engineer/auth/login', loginRateLimiter);
+
 // APIルートの登録
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', permissionRoutes);  // 権限管理APIルート
 app.use('/api/companies', companyRoutes);
 app.use('/api/engineer/auth', engineerAuthRoutes);
 app.use('/api/engineers', engineerDashboardRoutes);
@@ -79,7 +92,7 @@ app.use('/api/business-partners', businessPartnerRoutes);  // 取引先企業管
 app.use('/api/client', offerRoutes);  // オファー関連のルート
 
 // APIルートのプレースホルダー
-app.get('/api/v1', (req, res) => {
+app.get('/api/v1', (_req, res) => {
   res.json({ 
     message: 'SkillSheetsMgmtAPp API',
     version: '1.0.0',
@@ -119,7 +132,7 @@ app.use('/api/v1/notifications', notificationsRoutes);
 app.use('/api/v1', v1Routes);
 
 // エラーハンドリングミドルウェア
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
   logger.error('エラーが発生しました', {
     error: err.stack || err.message,
     method: req.method,
@@ -152,6 +165,17 @@ process.on('SIGTERM', async () => {
     await prisma.$disconnect();
     logger.info('HTTPサーバーが終了しました');
   });
+});
+
+// エラーハンドリング
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception:', err);
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 export default app;

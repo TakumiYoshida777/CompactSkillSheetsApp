@@ -113,6 +113,7 @@ model Permission {
   displayName String   @db.VarChar(100)
   resource    String   @db.VarChar(50)
   action      String   @db.VarChar(50)
+  scope       String?  @db.VarChar(50)
   description String?  @db.Text
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

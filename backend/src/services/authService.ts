@@ -2,8 +2,6 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 import { 
   User, 
   LoginRequest, 
@@ -16,554 +14,713 @@ import {
   Permission
 } from '../types/auth';
 import { UnauthorizedError, AuthenticationError } from '../utils/errors';
-import { logger } from '../config/logger';
+import logger from '../config/logger';
+import permissionCache from './permissionCacheService';
+import { securityConfig } from '../config/security';
 
-// 権限定義
-const PERMISSIONS = {
-  // ユーザー管理
-  USER_VIEW: 'user:view',
-  USER_CREATE: 'user:create',
-  USER_UPDATE: 'user:update',
-  USER_DELETE: 'user:delete',
-  
-  // エンジニア管理
-  ENGINEER_VIEW: 'engineer:view',
-  ENGINEER_CREATE: 'engineer:create',
-  ENGINEER_UPDATE: 'engineer:update',
-  ENGINEER_DELETE: 'engineer:delete',
-  
-  // スキルシート管理
-  SKILLSHEET_VIEW: 'skillsheet:view',
-  SKILLSHEET_CREATE: 'skillsheet:create',
-  SKILLSHEET_UPDATE: 'skillsheet:update',
-  SKILLSHEET_DELETE: 'skillsheet:delete',
-  
-  // 会社管理
-  COMPANY_VIEW: 'company:view',
-  COMPANY_UPDATE: 'company:update',
-  
-  // オファー管理
-  OFFER_VIEW: 'offer:view',
-  OFFER_CREATE: 'offer:create',
-  OFFER_UPDATE: 'offer:update',
-  OFFER_DELETE: 'offer:delete'
-};
+const prisma = new PrismaClient();
 
-// ロール定義
-const ROLE_PERMISSIONS: Record<string, string[]> = {
-  admin: Object.values(PERMISSIONS),
-  manager: [
-    PERMISSIONS.USER_VIEW,
-    PERMISSIONS.USER_CREATE,
-    PERMISSIONS.USER_UPDATE,
-    PERMISSIONS.ENGINEER_VIEW,
-    PERMISSIONS.ENGINEER_CREATE,
-    PERMISSIONS.ENGINEER_UPDATE,
-    PERMISSIONS.SKILLSHEET_VIEW,
-    PERMISSIONS.SKILLSHEET_CREATE,
-    PERMISSIONS.SKILLSHEET_UPDATE,
-    PERMISSIONS.COMPANY_VIEW,
-    PERMISSIONS.OFFER_VIEW,
-    PERMISSIONS.OFFER_CREATE,
-    PERMISSIONS.OFFER_UPDATE
-  ],
-  sales: [
-    PERMISSIONS.ENGINEER_VIEW,
-    PERMISSIONS.SKILLSHEET_VIEW,
-    PERMISSIONS.OFFER_VIEW,
-    PERMISSIONS.OFFER_CREATE,
-    PERMISSIONS.OFFER_UPDATE
-  ],
-  engineer: [
-    PERMISSIONS.SKILLSHEET_VIEW,
-    PERMISSIONS.SKILLSHEET_UPDATE
-  ]
-};
+// 環境変数から設定を取得
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
+const SALT_ROUNDS = 10;
 
-// モックデータストア
-const mockUsers = new Map<string, User & { passwordHash: string }>();
-const mockRefreshTokens = new Map<string, { userId: string; expiresAt: Date }>();
+// JWT シークレット（SecurityConfigから取得）
+// Note: これらの変数は使用されず、全てsecurityConfigから取得されます
+const JWT_SECRET = process.env.JWT_SECRET || '';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || '';
 
-// モックデータの初期化
-const initializeMockData = () => {
-  // 管理者ユーザー
-  const adminPasswordHash = bcrypt.hashSync('password123', 10);
-  const adminUser = {
-    id: '1',
-    email: 'admin@demo-ses.example.com',
-    passwordHash: adminPasswordHash,
-    name: 'システム管理者',
-    role: 'admin' as const,
-    companyId: '1',
-    companyName: 'デモSES企業',
-    isActive: true,
-    permissions: Object.values(PERMISSIONS).map((permission, index) => ({
-      id: `perm-${index + 1}`,
-      name: permission,
-      displayName: permission,
-      resource: permission.split(':')[0],
-      action: permission.split(':')[1]
-    })),
-    roles: [{
-      id: 'role-1',
-      name: 'admin',
-      displayName: '管理者',
-      permissions: Object.values(PERMISSIONS).map((permission, index) => ({
-        id: `perm-${index + 1}`,
-        name: permission,
-        displayName: permission,
-        resource: permission.split(':')[0],
-        action: permission.split(':')[1]
-      }))
-    }],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  mockUsers.set(adminUser.id, adminUser);
+// リフレッシュトークンの管理（本番環境ではRedisを使用）
+const refreshTokenStore = new Map<string, { userId: string; expiresAt: Date }>();
 
-  // エンジニアユーザー
-  const engineerPasswordHash = bcrypt.hashSync('password123', 10);
-  const engineerUser = {
-    id: 'engineer-1',
-    email: 'engineer@demo.example.com',
-    passwordHash: engineerPasswordHash,
-    name: 'エンジニア太郎',
-    role: 'engineer' as const,
-    companyId: '1',
-    companyName: 'デモSES企業',
-    isActive: true,
-    permissions: ROLE_PERMISSIONS['engineer'].map((permission, index) => ({
-      id: `perm-eng-${index + 1}`,
-      name: permission,
-      displayName: permission,
-      resource: permission.split(':')[0],
-      action: permission.split(':')[1]
-    })),
-    roles: [{
-      id: 'role-3',
-      name: 'engineer',
-      displayName: 'エンジニア',
-      permissions: ROLE_PERMISSIONS['engineer'].map((permission, index) => ({
-        id: `perm-eng-${index + 1}`,
-        name: permission,
-        displayName: permission,
-        resource: permission.split(':')[0],
-        action: permission.split(':')[1]
-      }))
-    }],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  mockUsers.set(engineerUser.id, engineerUser);
+export class AuthService {
+  /**
+   * ユーザーの権限をデータベースから取得
+   */
+  static async getUserPermissions(userId: string): Promise<string[]> {
+    try {
+      // キャッシュから取得を試みる
+      const cached = await permissionCache.getUserPermissions(userId);
+      if (cached) {
+        return cached;
+      }
 
-  // 営業ユーザー
-  const salesPasswordHash = bcrypt.hashSync('password123', 10);
-  const salesUser = {
-    id: '3',
-    email: 'sales@demo-ses.example.com',
-    passwordHash: salesPasswordHash,
-    name: 'デモ営業',
-    role: 'sales' as const,
-    companyId: '1',
-    companyName: 'デモSES企業',
-    isActive: true,
-    permissions: ROLE_PERMISSIONS['sales'].map((permission, index) => ({
-      id: `perm-sales-${index + 1}`,
-      name: permission,
-      displayName: permission,
-      resource: permission.split(':')[0],
-      action: permission.split(':')[1]
-    })),
-    roles: [{
-      id: 'role-4',
-      name: 'sales',
-      displayName: '営業',
-      permissions: ROLE_PERMISSIONS['sales'].map((permission, index) => ({
-        id: `perm-sales-${index + 1}`,
-        name: permission,
-        displayName: permission,
-        resource: permission.split(':')[0],
-        action: permission.split(':')[1]
-      }))
-    }],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  mockUsers.set(salesUser.id, salesUser);
-};
+      const userWithRoles = await prisma.user.findUnique({
+        where: { id: BigInt(userId) },
+        include: {
+          userRoles: {
+            include: {
+              role: {
+                include: {
+                  rolePermissions: {
+                    include: {
+                      permission: true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
 
-// 初期化実行
-initializeMockData();
+      if (!userWithRoles) {
+        return [];
+      }
 
-class AuthService {
+      // 全ての権限を収集（重複を除去）
+      const permissions = new Set<string>();
+      userWithRoles.userRoles.forEach(userRole => {
+        userRole.role.rolePermissions.forEach(rolePerm => {
+          permissions.add(rolePerm.permission.name);
+        });
+      });
+
+      const permissionArray = Array.from(permissions);
+      
+      // キャッシュに保存
+      await permissionCache.setUserPermissions(userId, permissionArray);
+      
+      return permissionArray;
+    } catch (error) {
+      logger.error('Error fetching user permissions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * ユーザーのロールをデータベースから取得
+   */
+  static async getUserRoles(userId: string): Promise<string[]> {
+    try {
+      // キャッシュから取得を試みる
+      const cached = await permissionCache.getUserRoles(userId);
+      if (cached) {
+        return cached;
+      }
+
+      const userRoles = await prisma.userRole.findMany({
+        where: { userId: BigInt(userId) },
+        include: {
+          role: true
+        }
+      });
+
+      const roles = userRoles.map(ur => ur.role.name);
+      
+      // キャッシュに保存
+      await permissionCache.setUserRoles(userId, roles);
+      
+      return roles;
+    } catch (error) {
+      logger.error('Error fetching user roles:', error);
+      return [];
+    }
+  }
+
+  /**
+   * ユーザーが特定の権限を持っているかチェック
+   */
+  static async hasPermission(
+    userId: string, 
+    resource: string, 
+    action: string, 
+    scope?: string,
+    targetId?: string
+  ): Promise<boolean> {
+    try {
+      const permissions = await this.getUserPermissions(userId);
+      const roles = await this.getUserRoles(userId);
+      
+      // スーパー管理者は全権限を持つ
+      if (roles.includes('super_admin')) {
+        return true;
+      }
+      
+      // 権限の組み合わせパターンをチェック
+      const possiblePermissions = [
+        `${resource}:${action}:all`, // 全体権限
+        `${resource}:${action}`, // スコープなし権限
+      ];
+      
+      // スコープに応じた権限を追加
+      if (scope) {
+        possiblePermissions.push(`${resource}:${action}:${scope}`);
+      }
+      
+      // 自分のリソースの場合
+      if (scope === 'own' && targetId === userId) {
+        possiblePermissions.push(`${resource}:${action}:own`);
+      }
+      
+      // 自社のリソースの場合
+      if (scope === 'company') {
+        const user = await prisma.user.findUnique({
+          where: { id: BigInt(userId) },
+          select: { companyId: true }
+        });
+        
+        if (targetId && user?.companyId) {
+          const target = await prisma.user.findUnique({
+            where: { id: BigInt(targetId) },
+            select: { companyId: true }
+          });
+          
+          if (target?.companyId === user.companyId) {
+            possiblePermissions.push(`${resource}:${action}:company`);
+          }
+        } else if (user?.companyId) {
+          possiblePermissions.push(`${resource}:${action}:company`);
+        }
+      }
+      
+      // いずれかの権限を持っているかチェック
+      return possiblePermissions.some(perm => permissions.includes(perm));
+    } catch (error) {
+      logger.error('Error checking permission:', error);
+      return false;
+    }
+  }
+
+  /**
+   * ユーザーが特定のロールを持っているかチェック
+   */
+  static async hasRole(userId: string, role: string): Promise<boolean> {
+    try {
+      const roles = await this.getUserRoles(userId);
+      return roles.includes(role);
+    } catch (error) {
+      logger.error('Error checking role:', error);
+      return false;
+    }
+  }
+
   /**
    * ログイン処理
    */
-  async login(loginRequest: LoginRequest): Promise<{ user: User; tokens: AuthTokens }> {
-    const { email, password, rememberMe } = loginRequest;
+  static async login(loginRequest: LoginRequest): Promise<{ user: User; tokens: AuthTokens }> {
+    const { email, password } = loginRequest;
 
-    // データベースからユーザーを検索
     try {
-      const dbUser = await prisma.user.findUnique({
+      // ユーザーを検索
+      const user = await prisma.user.findUnique({
         where: { email },
         include: {
-          company: true
+          company: true,
+          userRoles: {
+            include: {
+              role: true
+            }
+          }
         }
       });
-      
-      if (dbUser && dbUser.isActive) {
-        // データベースユーザーのパスワード検証
-        if (!dbUser.passwordHash) {
-          throw new UnauthorizedError('パスワードが設定されていません');
-        }
 
-        const isPasswordValid = await bcrypt.compare(password, dbUser.passwordHash);
-        if (!isPasswordValid) {
-          throw new UnauthorizedError('メールアドレスまたはパスワードが正しくありません');
-        }
-
-        // Userオブジェクトに変換
-        const user: User = {
-          id: dbUser.id.toString(),
-          email: dbUser.email,
-          name: dbUser.name || '',
-          role: 'admin', // TODO: ロール管理を実装
-          companyId: dbUser.companyId?.toString(),
-          companyName: dbUser.company?.name,
-          isActive: dbUser.isActive,
-          createdAt: dbUser.createdAt.toISOString(),
-          updatedAt: dbUser.updatedAt.toISOString()
-        };
-
-        // トークン生成
-        const expiresIn = rememberMe ? 30 * 24 * 60 * 60 : 8 * 60 * 60; // 30日 or 8時間
-        const tokens = this.generateTokens(user, expiresIn);
-
-        return { user, tokens };
+      if (!user) {
+        throw new UnauthorizedError('メールアドレスまたはパスワードが正しくありません');
       }
+
+      // アカウントがロックされているか確認
+      if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
+        const remainingTime = Math.ceil((user.accountLockedUntil.getTime() - Date.now()) / 1000 / 60);
+        throw new UnauthorizedError(`アカウントがロックされています。${remainingTime}分後に再試行してください`);
+      }
+
+      // パスワードの検証
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+      
+      if (!isPasswordValid) {
+        // ログイン失敗回数を増やす
+        const failedCount = user.failedLoginCount + 1;
+        let accountLockedUntil = null;
+
+        // ロック判定
+        if (failedCount >= 10 && failedCount < 20) {
+          accountLockedUntil = new Date(Date.now() + 30 * 60 * 1000); // 30分
+        } else if (failedCount >= 20 && failedCount < 30) {
+          accountLockedUntil = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2時間
+        } else if (failedCount >= 30) {
+          // 管理者によるロック解除が必要
+          accountLockedUntil = new Date('2099-12-31');
+        }
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            failedLoginCount: failedCount,
+            accountLockedUntil
+          }
+        });
+
+        throw new UnauthorizedError('メールアドレスまたはパスワードが正しくありません');
+      }
+
+      // ログイン成功時の処理
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          failedLoginCount: 0,
+          accountLockedUntil: null,
+          lastLoginAt: new Date()
+        }
+      });
+
+      // 権限とロールを取得
+      const permissions = await this.getUserPermissions(user.id.toString());
+      const roles = await this.getUserRoles(user.id.toString());
+
+      // JWTトークンの生成
+      const tokens = this.generateTokens({
+        userId: user.id.toString(),
+        email: user.email,
+        roles,
+        companyId: user.companyId?.toString()
+      });
+
+      // ユーザー情報の整形
+      const userResponse: User = {
+        id: user.id.toString(),
+        email: user.email,
+        name: user.name,
+        role: roles[0] || 'engineer',
+        roles,
+        permissions: permissions.map((p, index) => ({
+          id: `${index + 1}`,
+          name: p,
+          resource: p.split(':')[0],
+          action: p.split(':')[1]
+        })),
+        companyId: user.companyId?.toString(),
+        companyName: user.company?.name,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      };
+
+      logger.info(`User logged in successfully: ${email}`);
+      return { user: userResponse, tokens };
     } catch (error) {
-      logger.error('Database login error:', error);
+      if (error instanceof UnauthorizedError) {
+        throw error;
+      }
+      logger.error('Login error:', error);
+      throw new Error('ログイン処理中にエラーが発生しました');
     }
-
-    // モックデータでフォールバック
-    const mockUser = Array.from(mockUsers.values()).find(u => u.email === email);
-    if (!mockUser) {
-      throw new UnauthorizedError('メールアドレスまたはパスワードが正しくありません');
-    }
-
-    // モックユーザーのパスワード検証
-    if (!mockUser.passwordHash) {
-      throw new UnauthorizedError('パスワードが設定されていません');
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, mockUser.passwordHash);
-    if (!isPasswordValid) {
-      throw new UnauthorizedError('メールアドレスまたはパスワードが正しくありません');
-    }
-
-    // モックユーザーでのトークン生成
-    const expiresIn = rememberMe ? 30 * 24 * 60 * 60 : 8 * 60 * 60; // 30日 or 8時間
-    const tokens = this.generateTokens(mockUser, expiresIn);
-
-    const userWithoutPassword = { ...mockUser };
-    delete (userWithoutPassword as any).passwordHash;
-
-    return { user: userWithoutPassword, tokens };
   }
 
   /**
-   * ロール指定ログイン
+   * ユーザー登録処理
    */
-  async loginWithRole(loginRequest: LoginRequest, requiredRole: string): Promise<{ user: User; tokens: AuthTokens }> {
-    const result = await this.login(loginRequest);
-    
-    // ロールチェック
-    const userRole = result.user.roles?.[0]?.name || result.user.role;
-    if (userRole !== requiredRole) {
-      throw new UnauthorizedError(`このアカウントは${requiredRole}権限を持っていません`);
-    }
+  static async register(registerRequest: RegisterRequest): Promise<{ user: User; tokens: AuthTokens }> {
+    const { email, password, name, companyId, role = 'engineer' } = registerRequest;
 
-    return result;
+    try {
+      // 既存ユーザーのチェック
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+
+      if (existingUser) {
+        throw new Error('このメールアドレスは既に登録されています');
+      }
+
+      // パスワードのハッシュ化
+      const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+      // トランザクションでユーザー作成とロール割り当て
+      const result = await prisma.$transaction(async (tx) => {
+        // ユーザー作成
+        const user = await tx.users.create({
+          data: {
+            email,
+            passwordHash,
+            name,
+            companyId: companyId ? BigInt(companyId) : null,
+            isActive: true,
+            passwordChangedAt: new Date()
+          }
+        });
+
+        // ロールを取得
+        const roleRecord = await tx.roles.findUnique({
+          where: { name: role }
+        });
+
+        if (!roleRecord) {
+          throw new Error(`ロール ${role} が見つかりません`);
+        }
+
+        // ユーザーにロールを割り当て
+        await tx.user_roles.create({
+          data: {
+            userId: user.id,
+            roleId: roleRecord.id,
+            grantedBy: user.id // 自己登録の場合
+          }
+        });
+
+        return user;
+      });
+
+      // 権限とロールを取得
+      const permissions = await this.getUserPermissions(result.id.toString());
+      const roles = await this.getUserRoles(result.id.toString());
+
+      // 会社情報を取得
+      let company: Company | undefined;
+      if (companyId) {
+        const companyRecord = await prisma.company.findUnique({
+          where: { id: BigInt(companyId) }
+        });
+        if (companyRecord) {
+          company = {
+            id: companyRecord.id.toString(),
+            name: companyRecord.name,
+            companyType: companyRecord.companyType
+          };
+        }
+      }
+
+      // JWTトークンの生成
+      const tokens = this.generateTokens({
+        userId: result.id.toString(),
+        email: result.email,
+        roles,
+        companyId: companyId
+      });
+
+      // ユーザー情報の整形
+      const userResponse: User = {
+        id: result.id.toString(),
+        email: result.email,
+        name: result.name,
+        role: roles[0] || role,
+        roles,
+        permissions: permissions.map((p, index) => ({
+          id: `${index + 1}`,
+          name: p,
+          resource: p.split(':')[0],
+          action: p.split(':')[1]
+        })),
+        companyId,
+        companyName: company?.name,
+        isActive: result.isActive,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt
+      };
+
+      logger.info(`New user registered: ${email}`);
+      return { user: userResponse, tokens };
+    } catch (error) {
+      logger.error('Registration error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('ユーザー登録処理中にエラーが発生しました');
+    }
   }
 
   /**
-   * 登録処理
+   * リフレッシュトークンによるトークン更新
    */
-  async register(registerRequest: RegisterRequest): Promise<{ user: User; tokens: AuthTokens }> {
-    const { email, password, name, companyId } = registerRequest;
-
-    // 既存ユーザーチェック
-    const existingUser = Array.from(mockUsers.values()).find(u => u.email === email);
-    if (existingUser) {
-      throw new AuthenticationError('このメールアドレスは既に登録されています');
-    }
-
-    // パスワードハッシュ化
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    // 新規ユーザー作成
-    const newUser = {
-      id: crypto.randomUUID(),
-      email,
-      passwordHash,
-      name,
-      role: 'engineer' as const, // デフォルトロール
-      companyId,
-      companyName: 'デモSES企業', // TODO: 実際の会社名を取得
-      isActive: true,
-      permissions: ROLE_PERMISSIONS['engineer'].map((permission, index) => ({
-        id: `perm-new-${index + 1}`,
-        name: permission,
-        displayName: permission,
-        resource: permission.split(':')[0],
-        action: permission.split(':')[1]
-      })),
-      roles: [{
-        id: 'role-3',
-        name: 'engineer',
-        displayName: 'エンジニア',
-        permissions: ROLE_PERMISSIONS['engineer'].map((permission, index) => ({
-          id: `perm-new-${index + 1}`,
-          name: permission,
-          displayName: permission,
-          resource: permission.split(':')[0],
-          action: permission.split(':')[1]
-        }))
-      }],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    mockUsers.set(newUser.id, newUser);
-
-    // トークン生成
-    const tokens = this.generateTokens(newUser, 8 * 60 * 60); // 8時間
-
-    const userWithoutPassword = { ...newUser };
-    delete (userWithoutPassword as any).passwordHash;
-
-    return { user: userWithoutPassword, tokens };
-  }
-
-  /**
-   * トークンリフレッシュ
-   */
-  async refreshToken(request: RefreshTokenRequest): Promise<AuthTokens> {
+  static async refreshToken(request: RefreshTokenRequest): Promise<AuthTokens> {
     const { refreshToken } = request;
 
-    // リフレッシュトークンの検証
-    const tokenData = mockRefreshTokens.get(refreshToken);
-    if (!tokenData) {
-      throw new UnauthorizedError('無効なリフレッシュトークンです');
-    }
-
-    if (tokenData.expiresAt < new Date()) {
-      mockRefreshTokens.delete(refreshToken);
-      throw new UnauthorizedError('リフレッシュトークンの有効期限が切れています');
-    }
-
-    // ユーザー取得
-    const user = await this.getCurrentUser(tokenData.userId);
-    if (!user) {
-      throw new UnauthorizedError('ユーザーが見つかりません');
-    }
-
-    // 古いリフレッシュトークンを削除
-    mockRefreshTokens.delete(refreshToken);
-
-    // 新しいトークンを生成
-    const tokens = this.generateTokens(user, 8 * 60 * 60); // 8時間
-
-    return tokens;
-  }
-
-  /**
-   * ログアウト
-   */
-  async logout(refreshToken?: string): Promise<void> {
-    if (refreshToken) {
-      mockRefreshTokens.delete(refreshToken);
-    }
-  }
-
-  /**
-   * 現在のユーザー取得
-   */
-  async getCurrentUser(userId: string): Promise<User | null> {
-    // データベースからユーザーを検索
     try {
-      const dbUser = await prisma.user.findUnique({
-        where: { id: BigInt(userId) },
-        include: {
-          company: true
-        }
+      // リフレッシュトークンの検証
+      const decoded = jwt.verify(refreshToken, securityConfig.getJwtRefreshSecret()) as JWTPayload;
+      
+      // ストアから検証
+      const storedToken = refreshTokenStore.get(refreshToken);
+      if (!storedToken || storedToken.userId !== decoded.userId) {
+        throw new UnauthorizedError('無効なリフレッシュトークンです');
+      }
+
+      if (storedToken.expiresAt < new Date()) {
+        refreshTokenStore.delete(refreshToken);
+        throw new UnauthorizedError('リフレッシュトークンの有効期限が切れています');
+      }
+
+      // ユーザー情報を取得
+      const user = await prisma.user.findUnique({
+        where: { id: BigInt(decoded.userId) }
       });
 
-      if (dbUser) {
-        return {
-          id: dbUser.id.toString(),
-          email: dbUser.email,
-          name: dbUser.name || '',
-          role: 'admin', // TODO: ロール管理を実装
-          companyId: dbUser.companyId?.toString(),
-          companyName: dbUser.company?.name,
-          isActive: dbUser.isActive,
-          createdAt: dbUser.createdAt.toISOString(),
-          updatedAt: dbUser.updatedAt.toISOString()
-        };
+      if (!user || !user.isActive) {
+        throw new UnauthorizedError('ユーザーが見つからないか、無効化されています');
       }
+
+      // 新しいロールを取得（権限が変更されている可能性があるため）
+      const roles = await this.getUserRoles(decoded.userId);
+
+      // 古いリフレッシュトークンを削除
+      refreshTokenStore.delete(refreshToken);
+
+      // 新しいトークンを生成
+      const tokens = this.generateTokens({
+        userId: decoded.userId,
+        email: user.email,
+        roles,
+        companyId: user.companyId?.toString()
+      });
+
+      logger.info(`Token refreshed for user: ${user.email}`);
+      return tokens;
     } catch (error) {
-      // データベースエラーの場合はモックにフォールバック
-      logger.error('Database getCurrentUser error:', error);
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new UnauthorizedError('無効なリフレッシュトークンです');
+      }
+      if (error instanceof UnauthorizedError) {
+        throw error;
+      }
+      logger.error('Token refresh error:', error);
+      throw new Error('トークン更新処理中にエラーが発生しました');
     }
-
-    // モックデータにフォールバック
-    const user = mockUsers.get(userId);
-    if (!user) {
-      return null;
-    }
-
-    const userWithoutPassword = { ...user };
-    delete (userWithoutPassword as any).passwordHash;
-    return userWithoutPassword;
   }
 
   /**
-   * JWTトークン検証
+   * ログアウト処理
    */
-  verifyToken(token: string): JWTPayload {
+  static async logout(userId: string, refreshToken?: string): Promise<void> {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-jwt-secret') as JWTPayload;
-      return decoded;
+      if (refreshToken) {
+        refreshTokenStore.delete(refreshToken);
+      }
+      
+      // 全てのリフレッシュトークンを削除（オプション）
+      for (const [token, data] of refreshTokenStore.entries()) {
+        if (data.userId === userId) {
+          refreshTokenStore.delete(token);
+        }
+      }
+      
+      logger.info(`User logged out: ${userId}`);
     } catch (error) {
-      throw new UnauthorizedError('無効なトークンです');
+      logger.error('Logout error:', error);
+      throw new Error('ログアウト処理中にエラーが発生しました');
     }
   }
 
   /**
-   * トークン生成
+   * トークンの検証
    */
-  private generateTokens(user: User, expiresIn: number): AuthTokens {
-    const payload: JWTPayload = {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      companyId: user.companyId
-    };
+  static verifyToken(token: string): JWTPayload {
+    try {
+      return jwt.verify(token, securityConfig.getJwtSecret()) as JWTPayload;
+    } catch (error) {
+      if (error instanceof jwt.TokenExpiredError) {
+        throw new UnauthorizedError('トークンの有効期限が切れています');
+      }
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new UnauthorizedError('無効なトークンです');
+      }
+      throw new UnauthorizedError('トークンの検証に失敗しました');
+    }
+  }
 
-    const accessToken = jwt.sign(
-      payload,
-      process.env.JWT_SECRET || 'dev-jwt-secret',
-      { expiresIn }
-    );
+  /**
+   * トークンの生成
+   */
+  private static generateTokens(payload: Omit<JWTPayload, 'iat' | 'exp'>): AuthTokens {
+    const accessToken = jwt.sign(payload, securityConfig.getJwtSecret(), {
+      expiresIn: JWT_EXPIRES_IN
+    });
 
-    const refreshToken = crypto.randomBytes(32).toString('hex');
-    const refreshExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30日
+    const refreshToken = jwt.sign(payload, securityConfig.getJwtRefreshSecret(), {
+      expiresIn: REFRESH_TOKEN_EXPIRES_IN
+    });
 
-    // リフレッシュトークンを保存
-    mockRefreshTokens.set(refreshToken, {
-      userId: user.id,
-      expiresAt: refreshExpiresAt
+    // リフレッシュトークンをストアに保存
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+    refreshTokenStore.set(refreshToken, {
+      userId: payload.userId,
+      expiresAt
     });
 
     return {
       accessToken,
       refreshToken,
-      expiresIn
+      expiresIn: JWT_EXPIRES_IN,
+      tokenType: 'Bearer'
     };
   }
 
   /**
-   * 複数パーミッションチェック
+   * パスワードの変更
    */
-  hasAnyPermission(user: User, permissions: string[]): boolean {
-    return permissions.some(permission => this.hasPermission(user, permission));
-  }
-
-  /**
-   * 全パーミッションチェック
-   */
-  hasAllPermissions(user: User, permissions: string[]): boolean {
-    return permissions.every(permission => this.hasPermission(user, permission));
-  }
-
-  /**
-   * IDでユーザーを取得
-   */
-  async getUserById(userId: string): Promise<User | null> {
-    return this.getCurrentUser(userId);
-  }
-
-  /**
-   * パスワード変更
-   */
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
-    // データベースからユーザーを検索
+  static async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
     try {
-      const dbUser = await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: BigInt(userId) }
       });
 
-      if (dbUser && dbUser.passwordHash) {
-        // 現在のパスワードを検証
-        const isPasswordValid = await bcrypt.compare(currentPassword, dbUser.passwordHash);
-        if (!isPasswordValid) {
-          throw new UnauthorizedError('現在のパスワードが正しくありません');
-        }
-
-        // 新しいパスワードをハッシュ化して更新
-        const newPasswordHash = await bcrypt.hash(newPassword, 10);
-        await prisma.user.update({
-          where: { id: BigInt(userId) },
-          data: { passwordHash: newPasswordHash }
-        });
-        return;
+      if (!user) {
+        throw new UnauthorizedError('ユーザーが見つかりません');
       }
+
+      // 現在のパスワードの検証
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isPasswordValid) {
+        throw new UnauthorizedError('現在のパスワードが正しくありません');
+      }
+
+      // 新しいパスワードのハッシュ化
+      const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+      // パスワードの更新
+      await prisma.user.update({
+        where: { id: BigInt(userId) },
+        data: {
+          passwordHash: newPasswordHash,
+          passwordChangedAt: new Date()
+        }
+      });
+
+      // 全てのリフレッシュトークンを無効化
+      for (const [token, data] of refreshTokenStore.entries()) {
+        if (data.userId === userId) {
+          refreshTokenStore.delete(token);
+        }
+      }
+
+      logger.info(`Password changed for user: ${userId}`);
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         throw error;
       }
-      logger.error('Database changePassword error:', error);
+      logger.error('Password change error:', error);
+      throw new Error('パスワード変更処理中にエラーが発生しました');
     }
-
-    // モックユーザーの場合
-    const mockUser = mockUsers.get(userId);
-    if (!mockUser) {
-      throw new UnauthorizedError('ユーザーが見つかりません');
-    }
-
-    // 現在のパスワードを検証
-    const isPasswordValid = await bcrypt.compare(currentPassword, mockUser.passwordHash);
-    if (!isPasswordValid) {
-      throw new UnauthorizedError('現在のパスワードが正しくありません');
-    }
-
-    // 新しいパスワードをハッシュ化
-    const newPasswordHash = await bcrypt.hash(newPassword, 10);
-    mockUser.passwordHash = newPasswordHash;
   }
 
   /**
-   * リソース・アクション形式のパーミッションチェック（オーバーロード）
+   * ユーザー情報の取得
    */
-  hasPermission(user: User, resourceOrPermission: string, action?: string): boolean {
-    if (action) {
-      // リソースとアクションが分離されている場合
-      const permission = `${resourceOrPermission}:${action}`;
-      if (user.permissions) {
-        return user.permissions.some(p => p.name === permission);
+  static async getUserById(userId: string): Promise<User | null> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: BigInt(userId) },
+        include: {
+          company: true,
+          userRoles: {
+            include: {
+              role: true
+            }
+          }
+        }
+      });
+
+      if (!user) {
+        return null;
       }
-      const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
-      return rolePermissions.includes(permission);
-    } else {
-      // 結合された権限文字列の場合
-      if (user.permissions) {
-        return user.permissions.some(p => p.name === resourceOrPermission);
+
+      const permissions = await this.getUserPermissions(userId);
+      const roles = await this.getUserRoles(userId);
+
+      return {
+        id: user.id.toString(),
+        email: user.email,
+        name: user.name,
+        role: roles[0] || 'engineer',
+        roles,
+        permissions: permissions.map((p, index) => ({
+          id: `${index + 1}`,
+          name: p,
+          resource: p.split(':')[0],
+          action: p.split(':')[1]
+        })),
+        companyId: user.companyId?.toString(),
+        companyName: user.company?.name,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      };
+    } catch (error) {
+      logger.error('Error fetching user:', error);
+      return null;
+    }
+  }
+
+  /**
+   * ユーザーへのロール割り当て
+   */
+  static async assignRole(userId: string, roleName: string, grantedBy: string): Promise<void> {
+    try {
+      const role = await prisma.role.findUnique({
+        where: { name: roleName }
+      });
+
+      if (!role) {
+        throw new Error(`ロール ${roleName} が見つかりません`);
       }
-      const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
-      return rolePermissions.includes(resourceOrPermission);
+
+      // 既存のロール割り当てをチェック
+      const existing = await prisma.userRole.findFirst({
+        where: {
+          userId: BigInt(userId),
+          roleId: role.id
+        }
+      });
+
+      if (existing) {
+        throw new Error('このロールは既に割り当てられています');
+      }
+
+      await prisma.userRole.create({
+        data: {
+          userId: BigInt(userId),
+          roleId: role.id,
+          grantedBy: BigInt(grantedBy)
+        }
+      });
+
+      logger.info(`Role ${roleName} assigned to user ${userId} by ${grantedBy}`);
+    } catch (error) {
+      logger.error('Role assignment error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('ロール割り当て処理中にエラーが発生しました');
+    }
+  }
+
+  /**
+   * ユーザーからのロール削除
+   */
+  static async removeRole(userId: string, roleName: string): Promise<void> {
+    try {
+      const role = await prisma.role.findUnique({
+        where: { name: roleName }
+      });
+
+      if (!role) {
+        throw new Error(`ロール ${roleName} が見つかりません`);
+      }
+
+      const userRole = await prisma.userRole.findFirst({
+        where: {
+          userId: BigInt(userId),
+          roleId: role.id
+        }
+      });
+
+      if (!userRole) {
+        throw new Error('このロールは割り当てられていません');
+      }
+
+      await prisma.userRole.delete({
+        where: { id: userRole.id }
+      });
+
+      logger.info(`Role ${roleName} removed from user ${userId}`);
+    } catch (error) {
+      logger.error('Role removal error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('ロール削除処理中にエラーが発生しました');
     }
   }
 }
 
-export default new AuthService();
+export default AuthService;

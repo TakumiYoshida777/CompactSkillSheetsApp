@@ -22,7 +22,7 @@ export const createAuthenticationActions: StateCreator<
   login: async (email: string, password: string, rememberMe?: boolean) => {
     set({ isLoading: true, error: null });
     try {
-      const authResponse = await AuthService.performLogin('auth/login', {
+      const authResponse = await AuthService.performLogin('/auth/login', {
         email,
         password,
         rememberMe,
@@ -49,7 +49,7 @@ export const createAuthenticationActions: StateCreator<
   clientLogin: async (email: string, password: string, rememberMe?: boolean) => {
     set({ isLoading: true, error: null });
     try {
-      const authResponse = await AuthService.performLogin('client/auth/login', {
+      const authResponse = await AuthService.performLogin('/client/auth/login', {
         email,
         password,
         rememberMe,

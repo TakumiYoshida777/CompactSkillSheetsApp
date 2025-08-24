@@ -5,6 +5,7 @@ import { engineerValidation } from '../../validators/engineer.validator';
 import { companyMiddleware } from '../../middleware/company.middleware';
 import { paginationMiddleware } from '../../middleware/pagination.middleware';
 import { authMiddleware } from '../../middleware/auth.middleware';
+import { requirePermission } from '../../middleware/permissionMiddleware';
 
 const router = Router();
 const controller = new EngineerController();
@@ -14,30 +15,30 @@ router.use(authMiddleware);
 router.use(companyMiddleware);
 
 // 基本CRUD
-router.get('/', paginationMiddleware, controller.getAll);
-router.get('/check-email', controller.checkEmail);
-router.get('/:id', controller.getById);
-router.post('/', validateRequest(engineerValidation.create), controller.create);
-router.put('/:id', validateRequest(engineerValidation.update), controller.update);
-router.delete('/:id', controller.delete);
+router.get('/', requirePermission('engineer', 'view', 'company'), paginationMiddleware, controller.getAll);
+router.get('/check-email', requirePermission('engineer', 'view', 'company'), controller.checkEmail);
+router.get('/:id', requirePermission('engineer', 'view', 'company'), controller.getById);
+router.post('/', requirePermission('engineer', 'create'), validateRequest(engineerValidation.create), controller.create);
+router.put('/:id', requirePermission('engineer', 'update', 'company'), validateRequest(engineerValidation.update), controller.update);
+router.delete('/:id', requirePermission('engineer', 'delete'), controller.delete);
 
 // ステータス管理
-router.patch('/:id/status', validateRequest(engineerValidation.updateStatus), controller.updateStatus);
-router.patch('/:id/availability', validateRequest(engineerValidation.updateAvailability), controller.updateAvailability);
-router.patch('/:id/public', validateRequest(engineerValidation.updatePublicStatus), controller.updatePublicStatus);
+router.patch('/:id/status', requirePermission('engineer', 'update', 'company'), validateRequest(engineerValidation.updateStatus), controller.updateStatus);
+router.patch('/:id/availability', requirePermission('engineer', 'update', 'company'), validateRequest(engineerValidation.updateAvailability), controller.updateAvailability);
+router.patch('/:id/public', requirePermission('engineer', 'update', 'company'), validateRequest(engineerValidation.updatePublicStatus), controller.updatePublicStatus);
 
 // スキルシート
-router.get('/:id/skill-sheet', controller.getSkillSheet);
-router.put('/:id/skill-sheet', validateRequest(engineerValidation.skillSheet), controller.updateSkillSheet);
-router.post('/:id/skill-sheet/export', controller.exportSkillSheet);
+router.get('/:id/skill-sheet', requirePermission('skillsheet', 'view', 'company'), controller.getSkillSheet);
+router.put('/:id/skill-sheet', requirePermission('skillsheet', 'update', 'company'), validateRequest(engineerValidation.skillSheet), controller.updateSkillSheet);
+router.post('/:id/skill-sheet/export', requirePermission('skillsheet', 'export'), controller.exportSkillSheet);
 
 // 検索・フィルタリング
-router.post('/search', paginationMiddleware, controller.search);
-router.get('/waiting', paginationMiddleware, controller.getWaitingEngineers);
-router.get('/available', paginationMiddleware, controller.getAvailableEngineers);
+router.post('/search', requirePermission('engineer', 'view', 'company'), paginationMiddleware, controller.search);
+router.get('/waiting', requirePermission('engineer', 'view', 'company'), paginationMiddleware, controller.getWaitingEngineers);
+router.get('/available', requirePermission('engineer', 'view', 'company'), paginationMiddleware, controller.getAvailableEngineers);
 
 // 一括操作
-router.patch('/bulk/status', validateRequest(engineerValidation.bulkUpdateStatus), controller.bulkUpdateStatus);
-router.post('/bulk/export', validateRequest(engineerValidation.bulkExport), controller.bulkExport);
+router.patch('/bulk/status', requirePermission('engineer', 'update', 'company'), validateRequest(engineerValidation.bulkUpdateStatus), controller.bulkUpdateStatus);
+router.post('/bulk/export', requirePermission('engineer', 'export'), validateRequest(engineerValidation.bulkExport), controller.bulkExport);
 
 export default router;
