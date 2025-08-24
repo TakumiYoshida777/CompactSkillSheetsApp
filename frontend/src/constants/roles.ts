@@ -1,7 +1,12 @@
 /**
  * ユーザーロール定数
+ * @deprecated 新規実装では usePermissionCheck フックを使用してください
+ * このファイルは後方互換性のために残されていますが、段階的に廃止予定です
  */
 
+/**
+ * @deprecated Use usePermissionCheck() instead
+ */
 // SES企業側のロール
 export const SES_ROLES = {
   ADMIN: 'admin',

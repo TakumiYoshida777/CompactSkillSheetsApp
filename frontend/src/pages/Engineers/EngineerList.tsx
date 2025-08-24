@@ -7,10 +7,19 @@ import type { Engineer } from '../../components/EngineerSearch/EngineerSearchTab
 import { useEngineers, useDeleteEngineer, useBulkExport } from '../../hooks/useEngineers';
 import { engineerApi } from '../../api/engineers/engineerApi';
 import { useAuthStore } from '../../stores/authStore';
+import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import type { EngineerFilterParams } from '../../types/engineer';
 
 const EngineerList: React.FC = () => {
   const navigate = useNavigate();
+  const { 
+    canViewEngineer, 
+    canCreateEngineer, 
+    canEditEngineer, 
+    canDeleteEngineer,
+    canExportEngineer 
+  } = usePermissionCheck();
+  
   const [filters, setFilters] = useState<EngineerFilterParams>({
     page: 1,
     limit: 20,
@@ -229,22 +238,26 @@ const EngineerList: React.FC = () => {
   // カスタムアクションコンポーネント
   const CustomActions = () => (
     <Space>
-      <Button
-        type="primary"
-        icon={<UserAddOutlined />}
-        size="large"
-        onClick={handleAddEngineer}
-      >
-        新規登録
-      </Button>
-      <Button
-        icon={<DownloadOutlined />}
-        size="large"
-        onClick={() => handleExport()}
-        loading={isLoading}
-      >
-        エクスポート
-      </Button>
+      {canCreateEngineer() && (
+        <Button
+          type="primary"
+          icon={<UserAddOutlined />}
+          size="large"
+          onClick={handleAddEngineer}
+        >
+          新規登録
+        </Button>
+      )}
+      {canExportEngineer() && (
+        <Button
+          icon={<DownloadOutlined />}
+          size="large"
+          onClick={() => handleExport()}
+          loading={isLoading}
+        >
+          エクスポート
+        </Button>
+      )}
       <Button
         icon={<ReloadOutlined />}
         size="large"

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { businessPartnerApi } from '../../api/businessPartner';
 import type { BusinessPartner } from '../../api/businessPartner';
+import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import {
   Card,
   Table,
@@ -60,6 +61,13 @@ const { TabPane } = Tabs;
 
 const BusinessPartnerList: React.FC = () => {
   const navigate = useNavigate();
+  const { 
+    canViewPartner, 
+    canCreatePartner, 
+    canEditPartner, 
+    canDeletePartner,
+    canManagePartner 
+  } = usePermissionCheck();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [selectedPartner, setSelectedPartner] = useState<BusinessPartner | null>(null);

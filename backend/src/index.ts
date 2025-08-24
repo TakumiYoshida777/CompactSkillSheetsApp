@@ -18,6 +18,7 @@ import offerRoutes from './routes/client/offerRoutes';
 // ルートのインポート
 import analyticsRoutes from './routes/analytics.routes';
 import notificationsRoutes from './routes/notifications.routes';
+import permissionRoutes from './routes/permissionRoutes';
 
 // v1 APIルート
 import v1Routes from './routes/v1';
@@ -70,6 +71,7 @@ app.get('/health', (req, res) => {
 
 // APIルートの登録
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', permissionRoutes);  // 権限管理APIルート
 app.use('/api/companies', companyRoutes);
 app.use('/api/engineer/auth', engineerAuthRoutes);
 app.use('/api/engineers', engineerDashboardRoutes);

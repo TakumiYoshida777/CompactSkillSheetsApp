@@ -14,7 +14,8 @@ import {
   Permission
 } from '../types/auth';
 import { UnauthorizedError, AuthenticationError } from '../utils/errors';
-import { logger } from '../config/logger';
+import logger from '../config/logger';
+import permissionCache from './permissionCacheService';
 
 const prisma = new PrismaClient();
 
@@ -33,16 +34,22 @@ export class AuthService {
    */
   static async getUserPermissions(userId: string): Promise<string[]> {
     try {
-      const userWithRoles = await prisma.users.findUnique({
+      // キャッシュから取得を試みる
+      const cached = await permissionCache.getUserPermissions(userId);
+      if (cached) {
+        return cached;
+      }
+
+      const userWithRoles = await prisma.user.findUnique({
         where: { id: BigInt(userId) },
         include: {
-          user_roles: {
+          userRoles: {
             include: {
-              roles: {
+              role: {
                 include: {
-                  role_permissions: {
+                  rolePermissions: {
                     include: {
-                      permissions: true
+                      permission: true
                     }
                   }
                 }
@@ -58,13 +65,18 @@ export class AuthService {
 
       // 全ての権限を収集（重複を除去）
       const permissions = new Set<string>();
-      userWithRoles.user_roles.forEach(userRole => {
-        userRole.roles.role_permissions.forEach(rolePerm => {
-          permissions.add(rolePerm.permissions.name);
+      userWithRoles.userRoles.forEach(userRole => {
+        userRole.role.rolePermissions.forEach(rolePerm => {
+          permissions.add(rolePerm.permission.name);
         });
       });
 
-      return Array.from(permissions);
+      const permissionArray = Array.from(permissions);
+      
+      // キャッシュに保存
+      await permissionCache.setUserPermissions(userId, permissionArray);
+      
+      return permissionArray;
     } catch (error) {
       logger.error('Error fetching user permissions:', error);
       return [];
@@ -76,14 +88,25 @@ export class AuthService {
    */
   static async getUserRoles(userId: string): Promise<string[]> {
     try {
-      const userRoles = await prisma.user_roles.findMany({
+      // キャッシュから取得を試みる
+      const cached = await permissionCache.getUserRoles(userId);
+      if (cached) {
+        return cached;
+      }
+
+      const userRoles = await prisma.userRole.findMany({
         where: { userId: BigInt(userId) },
         include: {
-          roles: true
+          role: true
         }
       });
 
-      return userRoles.map(ur => ur.roles.name);
+      const roles = userRoles.map(ur => ur.role.name);
+      
+      // キャッシュに保存
+      await permissionCache.setUserRoles(userId, roles);
+      
+      return roles;
     } catch (error) {
       logger.error('Error fetching user roles:', error);
       return [];
@@ -127,13 +150,13 @@ export class AuthService {
       
       // 自社のリソースの場合
       if (scope === 'company') {
-        const user = await prisma.users.findUnique({
+        const user = await prisma.user.findUnique({
           where: { id: BigInt(userId) },
           select: { companyId: true }
         });
         
         if (targetId && user?.companyId) {
-          const target = await prisma.users.findUnique({
+          const target = await prisma.user.findUnique({
             where: { id: BigInt(targetId) },
             select: { companyId: true }
           });
@@ -175,13 +198,13 @@ export class AuthService {
 
     try {
       // ユーザーを検索
-      const user = await prisma.users.findUnique({
+      const user = await prisma.user.findUnique({
         where: { email },
         include: {
-          companies: true,
-          user_roles: {
+          company: true,
+          userRoles: {
             include: {
-              roles: true
+              role: true
             }
           }
         }
@@ -215,7 +238,7 @@ export class AuthService {
           accountLockedUntil = new Date('2099-12-31');
         }
 
-        await prisma.users.update({
+        await prisma.user.update({
           where: { id: user.id },
           data: {
             failedLoginCount: failedCount,
@@ -227,7 +250,7 @@ export class AuthService {
       }
 
       // ログイン成功時の処理
-      await prisma.users.update({
+      await prisma.user.update({
         where: { id: user.id },
         data: {
           failedLoginCount: 0,
@@ -262,7 +285,7 @@ export class AuthService {
           action: p.split(':')[1]
         })),
         companyId: user.companyId?.toString(),
-        companyName: user.companies?.name,
+        companyName: user.company?.name,
         isActive: user.isActive,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -287,7 +310,7 @@ export class AuthService {
 
     try {
       // 既存ユーザーのチェック
-      const existingUser = await prisma.users.findUnique({
+      const existingUser = await prisma.user.findUnique({
         where: { email }
       });
 
@@ -340,7 +363,7 @@ export class AuthService {
       // 会社情報を取得
       let company: Company | undefined;
       if (companyId) {
-        const companyRecord = await prisma.companies.findUnique({
+        const companyRecord = await prisma.company.findUnique({
           where: { id: BigInt(companyId) }
         });
         if (companyRecord) {
@@ -413,7 +436,7 @@ export class AuthService {
       }
 
       // ユーザー情報を取得
-      const user = await prisma.users.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: BigInt(decoded.userId) }
       });
 
@@ -522,7 +545,7 @@ export class AuthService {
    */
   static async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
     try {
-      const user = await prisma.users.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: BigInt(userId) }
       });
 
@@ -540,7 +563,7 @@ export class AuthService {
       const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
 
       // パスワードの更新
-      await prisma.users.update({
+      await prisma.user.update({
         where: { id: BigInt(userId) },
         data: {
           passwordHash: newPasswordHash,
@@ -570,13 +593,13 @@ export class AuthService {
    */
   static async getUserById(userId: string): Promise<User | null> {
     try {
-      const user = await prisma.users.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: BigInt(userId) },
         include: {
-          companies: true,
-          user_roles: {
+          company: true,
+          userRoles: {
             include: {
-              roles: true
+              role: true
             }
           }
         }
@@ -602,7 +625,7 @@ export class AuthService {
           action: p.split(':')[1]
         })),
         companyId: user.companyId?.toString(),
-        companyName: user.companies?.name,
+        companyName: user.company?.name,
         isActive: user.isActive,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
@@ -618,7 +641,7 @@ export class AuthService {
    */
   static async assignRole(userId: string, roleName: string, grantedBy: string): Promise<void> {
     try {
-      const role = await prisma.roles.findUnique({
+      const role = await prisma.role.findUnique({
         where: { name: roleName }
       });
 
@@ -627,7 +650,7 @@ export class AuthService {
       }
 
       // 既存のロール割り当てをチェック
-      const existing = await prisma.user_roles.findFirst({
+      const existing = await prisma.userRole.findFirst({
         where: {
           userId: BigInt(userId),
           roleId: role.id
@@ -638,7 +661,7 @@ export class AuthService {
         throw new Error('このロールは既に割り当てられています');
       }
 
-      await prisma.user_roles.create({
+      await prisma.userRole.create({
         data: {
           userId: BigInt(userId),
           roleId: role.id,
@@ -661,7 +684,7 @@ export class AuthService {
    */
   static async removeRole(userId: string, roleName: string): Promise<void> {
     try {
-      const role = await prisma.roles.findUnique({
+      const role = await prisma.role.findUnique({
         where: { name: roleName }
       });
 
@@ -669,7 +692,7 @@ export class AuthService {
         throw new Error(`ロール ${roleName} が見つかりません`);
       }
 
-      const userRole = await prisma.user_roles.findFirst({
+      const userRole = await prisma.userRole.findFirst({
         where: {
           userId: BigInt(userId),
           roleId: role.id
@@ -680,7 +703,7 @@ export class AuthService {
         throw new Error('このロールは割り当てられていません');
       }
 
-      await prisma.user_roles.delete({
+      await prisma.userRole.delete({
         where: { id: userRole.id }
       });
 
