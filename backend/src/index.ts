@@ -6,7 +6,6 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import logger from './config/logger';
 import { morganMiddleware, responseTimeMiddleware } from './middleware/httpLogger';
-import { generalRateLimiter, loginRateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/authRoutes';
 import companyRoutes from './routes/companyRoutes';
 import engineerAuthRoutes from './routes/engineer/authRoutes';
