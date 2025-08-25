@@ -22,7 +22,7 @@ interface HeaderProps {
   onMobileMenuClick: () => void
 }
 
-export const export const export const Header: React.FC<HeaderProps> = ({ onMenuClick, onMobileMenuClick }) => {
+export const Header: React.FC<HeaderProps> = ({ onMenuClick, onMobileMenuClick }) => {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [userMenuOpen, setUserMenuOpen] = useState(false)
