@@ -9,13 +9,11 @@ import {
   DollarOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
 import { useDashboardData, useEngineerStatistics, useApproachStatistics } from '../../hooks/queries/useDashboardQueries';
 import { useUnreadCount } from '../../hooks/queries/useNotificationQueries';
 import { useEffect } from 'react';
 
 const Dashboard: React.FC = () => {
-  const navigate = useNavigate();
   
   // API連携フック
   const { data: dashboardData, isLoading: dashboardLoading, error: dashboardError, refetch: refetchDashboard } = useDashboardData();
