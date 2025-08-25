@@ -1,4 +1,4 @@
-import { Row, Col, Card, Statistic, Progress, Button, Space, Spin, Alert, Badge, List, Tag } from 'antd';
+import { Row, Col, Card, Statistic, Progress, Spin, Alert, Badge, List, Tag } from 'antd';
 import {
   UserOutlined,
   TeamOutlined,
@@ -8,7 +8,6 @@ import {
   BellOutlined,
   DollarOutlined,
   CheckCircleOutlined,
-  SyncOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useDashboardData, useEngineerStatistics, useApproachStatistics } from '../../hooks/queries/useDashboardQueries';
@@ -245,46 +244,6 @@ const Dashboard: React.FC = () => {
           </Col>
         </Row>
       )}
-      
-      {/* クイックアクション */}
-      <Row gutter={[16, 16]} className="mt-6">
-        <Col xs={24}>
-          <Card title="クイックアクション">
-            <Space size="large" wrap>
-              <Button 
-                type="primary" 
-                icon={<UserOutlined />} 
-                size="large"
-                onClick={() => navigate('engineers/register')}
-              >
-                エンジニア登録
-              </Button>
-              <Button 
-                icon={<SendOutlined />} 
-                size="large"
-                onClick={() => navigate('approaches/create')}
-              >
-                アプローチ作成
-              </Button>
-              <Button 
-                icon={<TeamOutlined />} 
-                size="large"
-                onClick={() => navigate('engineers')}
-              >
-                エンジニア一覧
-              </Button>
-              <Button
-                icon={<SyncOutlined />}
-                size="large"
-                onClick={() => refetchDashboard()}
-                loading={loading}
-              >
-                データ更新
-              </Button>
-            </Space>
-          </Card>
-        </Col>
-      </Row>
     </div>
   );
 };
