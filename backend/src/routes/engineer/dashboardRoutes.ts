@@ -5,10 +5,12 @@ import { requireRole } from '../../middleware/roleAuth';
 
 const router = Router();
 
-// 一時的に認証を無効化（開発用）
-// TODO: 本番環境では必ず認証を有効にすること
-// router.use(authenticateToken);
-// router.use(requireRole('engineer'));
+// 認証ミドルウェアを適用
+// 開発環境では環境変数で無効化可能
+if (process.env.NODE_ENV !== 'development' || process.env.ENABLE_AUTH === 'true') {
+  router.use(authenticateToken);
+  router.use(requireRole('engineer'));
+}
 
 // ダッシュボードデータ取得
 router.get('/me', engineerDashboardController.getDashboardData);

@@ -8,10 +8,21 @@ import { API_CONFIG, HTTP_STATUS } from './config'
 import type { ApiResponse, ApiError } from '../types/api.types'
 import { toast } from 'react-hot-toast'
 
-// カンパニーID取得（認証担当者が実装予定のため暫定）
+// カンパニーID取得
 const getCompanyId = (): string => {
-  // TODO: 認証担当者が実装後、実際のカンパニーID取得ロジックに置き換え
-  return localStorage.getItem('companyId') || ''
+  // Zustandの認証ストアから取得
+  const authState = localStorage.getItem('auth-storage')
+  if (authState) {
+    try {
+      const parsedState = JSON.parse(authState)
+      const companyId = parsedState?.state?.user?.companyId
+      return companyId || ''
+    } catch (error) {
+      console.error('[ApiClient] Failed to get company ID:', error)
+      return ''
+    }
+  }
+  return ''
 }
 
 // カスタムAxiosインスタンスの作成
@@ -105,9 +116,14 @@ class ApiClient {
     // ステータスコード別の処理
     switch (status) {
       case HTTP_STATUS.UNAUTHORIZED:
-        // 認証エラー（認証担当者が詳細実装）
+        // 認証エラー
         toast.error('認証エラーが発生しました。再度ログインしてください。')
-        // ログイン画面へリダイレクトする必要がある
+        // 認証ストアをクリア
+        localStorage.removeItem('auth-storage')
+        // ログイン画面へリダイレクト
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 1000)
         break
 
       case HTTP_STATUS.FORBIDDEN:

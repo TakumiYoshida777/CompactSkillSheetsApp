@@ -178,11 +178,12 @@ class ErrorBoundaryClass extends Component<
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // エラーログをサーバーに送信（本番環境の場合）
     if (process.env.NODE_ENV === 'production') {
-      // TODO: エラー監視サービス（Sentry等）に送信
-      console.error('Error caught by boundary:', error, errorInfo);
-    } else {
-      console.error('Error caught by boundary:', error, errorInfo);
+      // Sentryにエラーを送信
+      import('@/utils/sentry').then(({ logError }) => {
+        logError(error, { errorInfo })
+      })
     }
+    console.error('Error caught by boundary:', error, errorInfo);
 
     this.setState({
       error,

@@ -200,7 +200,12 @@ export class ErrorHandler {
       };
 
       console.log('エラーログ:', errorLog);
-      // TODO: エラーログAPIに送信
+      // Sentryにエラーログを送信
+      if (process.env.NODE_ENV === 'production') {
+        import('./sentry').then(({ logError }) => {
+          logError(new Error(errorLog.message), errorLog)
+        })
+      }
     } catch (logError) {
       console.error('エラーログ送信失敗:', logError);
     }
