@@ -67,7 +67,7 @@ export class PartnerListService {
           }
         },
         receivedApproaches: {
-          orderBy: { approachDate: 'desc' },
+          orderBy: { sentAt: 'desc' },
           take: 5,
         }
       },

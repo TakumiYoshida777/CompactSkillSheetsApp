@@ -1,5 +1,41 @@
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/api/client';
+import axios from 'axios';
+
+// 認証API専用のクライアント
+const authApiClient = axios.create({
+  baseURL: 'http://localhost:8000',
+  timeout: 30000,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+// リクエストインターセプター
+authApiClient.interceptors.request.use(
+  (config) => {
+    const authState = localStorage.getItem('auth-storage');
+    if (authState) {
+      try {
+        const parsedState = JSON.parse(authState);
+        const token = parsedState?.state?.token;
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        const companyId = parsedState?.state?.user?.companyId;
+        if (companyId) {
+          config.headers['X-Company-ID'] = companyId;
+        }
+      } catch (error) {
+        console.error('Failed to parse auth state:', error);
+      }
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 interface Permission {
   id: string;
@@ -24,7 +60,7 @@ export const usePermissions = () => {
   return useQuery({
     queryKey: ['permissions'],
     queryFn: async () => {
-      const response = await apiClient.get('/api/auth/permissions');
+      const response = await authApiClient.get('/api/auth/permissions');
       return response.data;
     },
     enabled: isAuthenticated, // 認証済みの場合のみ実行
@@ -41,7 +77,7 @@ export const useUserRoles = () => {
   return useQuery({
     queryKey: ['userRoles'],
     queryFn: async () => {
-      const response = await apiClient.get('/api/auth/user-roles');
+      const response = await authApiClient.get('/api/auth/user-roles');
       return response.data;
     },
     enabled: isAuthenticated, // 認証済みの場合のみ実行
