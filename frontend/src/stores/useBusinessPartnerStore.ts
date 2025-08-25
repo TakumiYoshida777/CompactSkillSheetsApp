@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { 
-  businessPartnerService,
+import { businessPartnerService } from '../services/businessPartnerService';
+import type { 
   BusinessPartner,
   BusinessPartnerListResponse,
   BusinessPartnerDetailResponse,
@@ -15,7 +15,7 @@ import {
   UpdateAccessPermissionDto,
   NGListEngineer,
   AddNGListDto
-} from '../services/businessPartnerService';
+} from '../services/businessPartnerTypes';
 
 interface BusinessPartnerState {
   // 状態

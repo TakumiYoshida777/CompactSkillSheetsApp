@@ -229,6 +229,8 @@ export const useViewableEngineersSuspense = (partnerId: string, filters?: any) =
   });
 };
 
+console.log('useViewableEngineersSuspense', useViewableEngineersSuspense); 
+
 /**
  * 取引先企業を作成
  */

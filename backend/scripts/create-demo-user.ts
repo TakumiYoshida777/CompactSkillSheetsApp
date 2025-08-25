@@ -15,14 +15,26 @@ async function createDemoUser() {
       return;
     }
 
-    // Create demo user with company ID 1
+    // Get the first SES company
+    const sesCompany = await prisma.company.findFirst({
+      where: {
+        companyType: 'SES'
+      }
+    });
+
+    if (!sesCompany) {
+      console.log('No SES company found');
+      return;
+    }
+
+    // Create demo user with the SES company ID
     const hashedPassword = await bcrypt.hash('password123', 10);
     const demoUser = await prisma.user.create({
       data: {
         email: 'admin@demo-ses.example.com',
         passwordHash: hashedPassword,
         name: 'デモ管理者',
-        companyId: 1, // テックソリューション株式会社
+        companyId: sesCompany.id,
         isActive: true
       }
     });

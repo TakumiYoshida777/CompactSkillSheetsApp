@@ -138,6 +138,9 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
 
   // フィルタリング処理
   const filteredEngineers = React.useMemo(() => {
+    console.log('[EngineerSearchTable] Input engineers:', engineers);
+    console.log('[EngineerSearchTable] Engineers count:', engineers.length);
+    
     let filtered = [...engineers];
 
     // テキスト検索
@@ -162,15 +165,25 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
       );
     }
 
-    // 経験年数フィルター
-    filtered = filtered.filter(e => 
-      e.experience >= experienceRange[0] && e.experience <= experienceRange[1]
-    );
+    // 経験年数フィルター（経験年数がない場合はフィルターをスキップ）
+    filtered = filtered.filter(e => {
+      if (e.experience === undefined || e.experience === null) {
+        // 経験年数データがない場合はフィルターをパス
+        return true;
+      }
+      return e.experience >= experienceRange[0] && e.experience <= experienceRange[1];
+    });
+    console.log('[EngineerSearchTable] After experience filter:', filtered.length);
 
-    // 年齢フィルター
-    filtered = filtered.filter(e => 
-      e.age >= ageRange[0] && e.age <= ageRange[1]
-    );
+    // 年齢フィルター（年齢がない場合はフィルターをスキップ）
+    filtered = filtered.filter(e => {
+      if (e.age === undefined || e.age === null || e.age === 0) {
+        // 年齢データがない場合はフィルターをパス
+        return true;
+      }
+      return e.age >= ageRange[0] && e.age <= ageRange[1];
+    });
+    console.log('[EngineerSearchTable] After age filter:', filtered.length);
 
     // 単価フィルター
     if (showCompanyColumn) {
@@ -185,7 +198,11 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
     // ロール経験フィルター
     if (filterRoles.length > 0) {
       filtered = filtered.filter(engineer => {
-        if (!engineer.roleExperiences) return false;
+        // roleExperiencesがない場合はスキップ（フィルタリングしない）
+        if (!engineer.roleExperiences || engineer.roleExperiences.length === 0) {
+          console.log('[EngineerSearchTable] Engineer has no roleExperiences, skipping role filter for:', engineer.name);
+          return true;
+        }
         return filterRoles.every(filterRole => {
           const roleExp = engineer.roleExperiences?.find(
             exp => exp.role.toLowerCase() === filterRole.role.toLowerCase()
@@ -194,11 +211,16 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
         });
       });
     }
+    console.log('[EngineerSearchTable] After role filter:', filtered.length);
 
     // 業務経験フィルター
     if (filterTasks.length > 0) {
       filtered = filtered.filter(engineer => {
-        if (!engineer.workExperiences) return false;
+        // workExperiencesがない場合はスキップ（フィルタリングしない）
+        if (!engineer.workExperiences || engineer.workExperiences.length === 0) {
+          console.log('[EngineerSearchTable] Engineer has no workExperiences, skipping task filter for:', engineer.name);
+          return true;
+        }
         return filterTasks.every(task => 
           engineer.workExperiences?.some(
             exp => exp.task.toLowerCase().includes(task.toLowerCase())
@@ -206,7 +228,10 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
         );
       });
     }
+    console.log('[EngineerSearchTable] After task filter:', filtered.length);
 
+    console.log('[EngineerSearchTable] Final filtered result:', filtered);
+    console.log('[EngineerSearchTable] Final filtered count:', filtered.length);
     return filtered;
   }, [engineers, searchText, filterStatus, filterSkills, experienceRange, ageRange, rateRange, showCompanyColumn, filterRoles, filterTasks]);
 
@@ -243,33 +268,39 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
       dataIndex: 'age',
       key: 'age',
       width: 70,
-      sorter: (a, b) => a.age - b.age,
+      sorter: (a, b) => (a.age || 0) - (b.age || 0),
+      render: (age) => age ? `${age}歳` : '-',
     },
     {
       title: 'スキル',
       dataIndex: 'skills',
       key: 'skills',
       width: 300,
-      render: (skills: string[]) => (
-        <>
-          {skills.slice(0, 3).map((skill) => (
-            <Tag key={skill} color="blue">
-              {skill}
-            </Tag>
-          ))}
-          {skills.length > 3 && (
-            <Tag>+{skills.length - 3}</Tag>
-          )}
-        </>
-      ),
+      render: (skills: string[]) => {
+        if (!skills || skills.length === 0) {
+          return <span style={{ color: '#999' }}>-</span>;
+        }
+        return (
+          <>
+            {skills.slice(0, 3).map((skill) => (
+              <Tag key={skill} color="blue">
+                {skill}
+              </Tag>
+            ))}
+            {skills.length > 3 && (
+              <Tag>+{skills.length - 3}</Tag>
+            )}
+          </>
+        );
+      },
     },
     {
       title: '経験年数',
       dataIndex: 'experience',
       key: 'experience',
       width: 100,
-      sorter: (a, b) => a.experience - b.experience,
-      render: (exp) => `${exp}年`,
+      sorter: (a, b) => (a.experience || 0) - (b.experience || 0),
+      render: (exp) => exp !== undefined && exp !== null ? `${exp}年` : '-',
     },
     {
       title: '単価',

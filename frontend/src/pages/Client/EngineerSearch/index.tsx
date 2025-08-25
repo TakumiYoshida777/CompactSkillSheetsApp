@@ -8,6 +8,9 @@ const ClientEngineerSearch: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
+  // 注意: これはClientルート(/client/engineers/search)専用のコンポーネントです
+  // SES企業向けのルート(/engineers/list)では使用されません
+  // TODO: 将来的にはAPIからデータを取得するように変更予定
   // モックデータ（複数のSES企業のエンジニアを含む）
   const mockEngineers: Engineer[] = [
     {
