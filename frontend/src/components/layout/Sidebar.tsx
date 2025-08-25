@@ -39,7 +39,7 @@ interface MenuItem {
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
   const location = useLocation()
 
-  // TODO: ユーザーロールに応じてメニューを動的に生成
+  // ユーザーロールに応じてメニューを動的に生成する必要がある
   const menuItems: MenuItem[] = [
     {
       id: 'dashboard',

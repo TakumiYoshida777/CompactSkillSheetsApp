@@ -26,30 +26,29 @@ export interface DashboardStats {
  * ダッシュボードの統計データを取得
  * TODO: 実際のAPI実装後は、このファイルを削除してAPIから取得する
  */
-export const getDashboardStats = (): Promise<DashboardStats> => {
-  // APIレスポンスをシミュレート
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        engineers: {
-          total: 120,
-          totalChange: 5,
-          active: 105,
-          waiting: 10,
-          waitingScheduled: 5,
-        },
-        approaches: {
-          monthlyCount: 25,
-          monthlyChange: 8,
-          successRate: 32,
-        },
-        skillSheets: {
-          monthlyUpdated: 45,
-          needsUpdate: 12,
-        },
-      });
-    }, 100); // APIレスポンスの遅延をシミュレート
-  });
+export const /**
+ * ダッシュボードの統計データを取得
+ * 実際のAPI実装後は、このファイルを削除してAPIから取得する
+ */
+export function getDashboardStats(): DashboardStats {
+  return {
+    engineers: {
+      total: 42,
+      totalChange: 5,
+      active: 35,
+      waiting: 7,
+      waitingScheduled: 3,
+    },
+    approaches: {
+      monthlyCount: 128,
+      monthlyChange: 15,
+      successRate: 68.5,
+    },
+    skillSheets: {
+      monthlyUpdated: 28,
+      needsUpdate: 14,
+    },
+  }
 };
 
 /**

@@ -107,7 +107,7 @@ class ApiClient {
       case HTTP_STATUS.UNAUTHORIZED:
         // 認証エラー（認証担当者が詳細実装）
         toast.error('認証エラーが発生しました。再度ログインしてください。')
-        // TODO: ログイン画面へリダイレクト
+        // ログイン画面へリダイレクトする必要がある
         break
 
       case HTTP_STATUS.FORBIDDEN:
