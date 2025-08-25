@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import { apiClient } from '@/api/client';
 
 interface Permission {
   id: string;
@@ -17,34 +17,34 @@ interface Role {
 }
 
 export const usePermissions = () => {
+  // 認証ストアから認証状態を確認
+  const authState = localStorage.getItem('auth-storage');
+  const isAuthenticated = authState ? JSON.parse(authState)?.state?.isAuthenticated : false;
+
   return useQuery({
     queryKey: ['permissions'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/auth/permissions', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await apiClient.get('/api/auth/permissions');
       return response.data;
     },
+    enabled: isAuthenticated, // 認証済みの場合のみ実行
     staleTime: 5 * 60 * 1000, // 5分間キャッシュ
     retry: 1,
   });
 };
 
 export const useUserRoles = () => {
+  // 認証ストアから認証状態を確認
+  const authState = localStorage.getItem('auth-storage');
+  const isAuthenticated = authState ? JSON.parse(authState)?.state?.isAuthenticated : false;
+
   return useQuery({
     queryKey: ['userRoles'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/auth/user-roles', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await apiClient.get('/api/auth/user-roles');
       return response.data;
     },
+    enabled: isAuthenticated, // 認証済みの場合のみ実行
     staleTime: 5 * 60 * 1000, // 5分間キャッシュ
     retry: 1,
   });
