@@ -61,7 +61,7 @@ export const usePermissions = () => {
     queryKey: ['permissions'],
     queryFn: async () => {
       const response = await authApiClient.get('/api/auth/permissions');
-      return response.data;
+      return response.data?.data || response.data || [];
     },
     enabled: isAuthenticated, // 認証済みの場合のみ実行
     staleTime: 5 * 60 * 1000, // 5分間キャッシュ
@@ -78,7 +78,7 @@ export const useUserRoles = () => {
     queryKey: ['userRoles'],
     queryFn: async () => {
       const response = await authApiClient.get('/api/auth/user-roles');
-      return response.data;
+      return response.data?.data || response.data || [];
     },
     enabled: isAuthenticated, // 認証済みの場合のみ実行
     staleTime: 5 * 60 * 1000, // 5分間キャッシュ
@@ -90,7 +90,7 @@ export const useHasPermission = () => {
   const { data: permissions } = usePermissions();
   
   return (resource: string, action: string, scope?: string) => {
-    if (!permissions) return false;
+    if (!permissions || !Array.isArray(permissions)) return false;
     
     const permissionString = scope 
       ? `${resource}:${action}:${scope}`
