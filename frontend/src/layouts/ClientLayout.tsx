@@ -67,19 +67,19 @@ const ClientLayout: React.FC = () => {
       key: 'client/offer-board',
       icon: <AppstoreOutlined />,
       label: 'オファーボード',
-      onClick: () => handleMenuClick('client/offer-board'),
+      onClick: () => handleMenuClick('/client/offer-board'),
     },
     {
       key: 'client/offer-management',
       icon: <FileSearchOutlined />,
       label: 'オファー管理',
-      onClick: () => handleMenuClick('client/offer-management'),
+      onClick: () => handleMenuClick('/client/offer-management'),
     },
     {
       key: 'client/offer-history',
       icon: <HistoryOutlined />,
       label: 'オファー履歴',
-      onClick: () => handleMenuClick('client/offer-history'),
+      onClick: () => handleMenuClick('/client/offer-history'),
     },
     {
       type: 'divider',
@@ -93,7 +93,7 @@ const ClientLayout: React.FC = () => {
           key: 'client/engineers/search',
           icon: <SearchOutlined />,
           label: 'エンジニア検索',
-          onClick: () => handleMenuClick('client/engineers/search'),
+          onClick: () => handleMenuClick('/client/engineers/search'),
         },
       ],
     },
@@ -105,13 +105,13 @@ const ClientLayout: React.FC = () => {
       key: 'profile',
       icon: <UserOutlined />,
       label: 'プロフィール',
-      onClick: () => navigate('client/profile'),
+      onClick: () => navigate('/client/profile'),
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
       label: '設定',
-      onClick: () => navigate('client/settings'),
+      onClick: () => navigate('/client/settings'),
     },
     {
       type: 'divider',
@@ -124,7 +124,7 @@ const ClientLayout: React.FC = () => {
       onClick: () => {
         logout();
         message.success('ログアウトしました');
-        navigate('client/login');
+        navigate('/client/login');
       },
     },
   ];
@@ -203,7 +203,7 @@ const ClientLayout: React.FC = () => {
                 <Button
                   type="text"
                   icon={<BellOutlined />}
-                  onClick={() => navigate('client/notifications')}
+                  onClick={() => navigate('/client/notifications')}
                 />
               </Badge>
               <Dropdown

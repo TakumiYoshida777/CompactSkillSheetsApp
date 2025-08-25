@@ -33,7 +33,7 @@ const EngineerLayout: React.FC = () => {
       icon: <DashboardOutlined />,
       label: 'ダッシュボード',
       onClick: () => {
-        navigate('engineer/dashboard');
+        navigate('/engineer/dashboard');
         if (isMobile) setMobileMenuOpen(false);
       },
     },
@@ -42,7 +42,7 @@ const EngineerLayout: React.FC = () => {
       icon: <FileTextOutlined />,
       label: 'スキルシート編集',
       onClick: () => {
-        navigate('engineer/skill-sheet');
+        navigate('/engineer/skill-sheet');
         if (isMobile) setMobileMenuOpen(false);
       },
     },
@@ -51,7 +51,7 @@ const EngineerLayout: React.FC = () => {
       icon: <CheckCircleOutlined />,
       label: 'プレビュー',
       onClick: () => {
-        navigate('engineer/skill-sheet/preview');
+        navigate('/engineer/skill-sheet/preview');
         if (isMobile) setMobileMenuOpen(false);
       },
     },
@@ -67,7 +67,7 @@ const EngineerLayout: React.FC = () => {
         // ログアウト処理
         logout();
         message.success('ログアウトしました');
-        navigate('engineer/login');
+        navigate('/engineer/login');
       },
     },
   ];
