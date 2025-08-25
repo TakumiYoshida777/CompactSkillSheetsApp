@@ -13,19 +13,30 @@ const instance = axios.create({
 // リクエストインターセプター
 instance.interceptors.request.use(
   (config) => {
-    // Zustandストアから認証トークンを取得
+    // Zustandストアから認証トークンとユーザー情報を取得
     const token = useAuthStore.getState().token;
+    const user = useAuthStore.getState().user;
     console.log('[Axios Request] URL:', config.url);
     console.log('[Axios Request] Base URL:', config.baseURL);
     console.log('[Axios Request] Full URL:', `${config.baseURL}${config.url}`);
     console.log('[Axios Request] Method:', config.method);
     console.log('[Axios Request] Params:', config.params);
     console.log('[Axios Interceptor] Adding token to request:', token ? 'Token exists' : 'No token');
+    
+    config.headers = config.headers || {};
+    
+    // 認証トークンを設定
     if (token) {
-      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
       console.log('[Axios Interceptor] Authorization header set:', config.headers.Authorization);
     }
+    
+    // 企業IDヘッダーを設定
+    if (user?.companyId) {
+      config.headers['X-Company-ID'] = user.companyId;
+      console.log('[Axios Interceptor] X-Company-ID header set:', user.companyId);
+    }
+    
     return config;
   },
   (error) => {

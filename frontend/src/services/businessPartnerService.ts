@@ -134,6 +134,42 @@ export interface AddNGListDto {
   reason?: string;
 }
 
+// アクティビティログの型定義
+export interface ActivityLog {
+  id: string;
+  action: string;
+  performedBy: string;
+  timestamp: string;
+  details?: Record<string, unknown>;
+}
+
+// 利用分析の型定義
+export interface Analytics {
+  totalViews: number;
+  uniqueUsers: number;
+  averageSessionDuration: number;
+  topViewedEngineers: Array<{
+    engineerId: string;
+    engineerName: string;
+    viewCount: number;
+  }>;
+  monthlyStats: Array<{
+    month: string;
+    views: number;
+    users: number;
+  }>;
+}
+
+// エンゲージメントの型定義
+export interface Engagement {
+  totalInteractions: number;
+  favoriteCount: number;
+  inquiryCount: number;
+  downloadCount: number;
+  lastActiveDate: string;
+  engagementScore: number;
+}
+
 class BusinessPartnerService {
   private readonly baseUrl = '/api/business-partners';
 
@@ -394,7 +430,7 @@ class BusinessPartnerService {
   /**
    * アクセス履歴取得
    */
-  async getActivityLog(partnerId: string): Promise<any[]> {
+  async getActivityLog(partnerId: string): Promise<ActivityLog[]> {
     try {
       const response = await axios.get(
         `${this.baseUrl}/${partnerId}/activity`
@@ -409,7 +445,7 @@ class BusinessPartnerService {
   /**
    * 利用分析取得
    */
-  async getAnalytics(partnerId: string): Promise<any> {
+  async getAnalytics(partnerId: string): Promise<Analytics> {
     try {
       const response = await axios.get(
         `${this.baseUrl}/${partnerId}/analytics`
@@ -424,7 +460,7 @@ class BusinessPartnerService {
   /**
    * エンゲージメント取得
    */
-  async getEngagement(partnerId: string): Promise<any> {
+  async getEngagement(partnerId: string): Promise<Engagement> {
     try {
       const response = await axios.get(
         `${this.baseUrl}/${partnerId}/engagement`

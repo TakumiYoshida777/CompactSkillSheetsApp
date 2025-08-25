@@ -6,7 +6,6 @@ import { EngineerSearchTable } from '../../components/EngineerSearch/EngineerSea
 import type { Engineer } from '../../components/EngineerSearch/EngineerSearchTable';
 import { useEngineers, useDeleteEngineer, useBulkExport } from '../../hooks/useEngineers';
 import { engineerApi } from '../../api/engineers/engineerApi';
-import { useAuthStore } from '../../stores/authStore';
 import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import type { EngineerFilterParams } from '../../types/engineer';
 
@@ -196,45 +195,6 @@ const EngineerList: React.FC = () => {
     message.info('データを更新しました');
   };
 
-  // デバッグ用：直接APIを呼び出す
-  const testDirectApiCall = async () => {
-    console.log('=== Direct API Call Test ===');
-    
-    // Zustandストアから認証情報を取得
-    const authState = useAuthStore.getState();
-    console.log('Auth State:', {
-      isAuthenticated: authState.isAuthenticated,
-      user: authState.user,
-      token: authState.token ? 'Token exists' : 'No token',
-      tokenLength: authState.token?.length
-    });
-    
-    try {
-      const token = authState.token || localStorage.getItem('token');
-      console.log('Token from store/localStorage:', token ? `${token.substring(0, 20)}...` : 'No token');
-      
-      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/v1/engineers?page=1&limit=20&sortBy=updatedAt&sortOrder=desc`;
-      console.log('API URL:', apiUrl);
-      
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      console.log('Response status:', response.status);
-      const data = await response.json();
-      console.log('Response data:', data);
-      
-      if (!response.ok) {
-        console.error('API Error:', data);
-      }
-    } catch (err) {
-      console.error('Direct API call failed:', err);
-    }
-  };
-
   // カスタムアクションコンポーネント
   const CustomActions = () => (
     <Space>
@@ -265,13 +225,6 @@ const EngineerList: React.FC = () => {
         loading={isLoading}
       >
         更新
-      </Button>
-      {/* デバッグ用ボタン */}
-      <Button
-        danger
-        onClick={testDirectApiCall}
-      >
-        API Debug
       </Button>
     </Space>
   );
