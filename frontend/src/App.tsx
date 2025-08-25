@@ -285,8 +285,12 @@ function App() {
               </Suspense>
             } />
 
-            {/* エンジニア個人用画面（専用レイアウト付き） - 認証必鞈 */}
-            <Route path="/engineer" element={<EngineerLayout />}>
+            {/* エンジニア個人用画面（専用レイアウト付き） - 認証必須 */}
+            <Route path="/engineer" element={
+              <AuthGuard>
+                <EngineerLayout />
+              </AuthGuard>
+            }>
               <Route index element={<Navigate to="/engineer/dashboard" replace />} />
               <Route path="dashboard" element={
                 <Suspense fallback={<PageLoader />}>
