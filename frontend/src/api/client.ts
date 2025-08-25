@@ -6,7 +6,6 @@ import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios'
 import { API_CONFIG, HTTP_STATUS } from './config'
 import type { ApiResponse, ApiError } from '../types/api.types'
-import { toast } from 'react-hot-toast'
 
 // カンパニーID取得
 const getCompanyId = (): string => {
@@ -107,7 +106,7 @@ class ApiClient {
   private async handleError(error: AxiosError<ApiError>): Promise<never> {
     // ネットワークエラー
     if (!error.response) {
-      toast.error('ネットワークエラーが発生しました。接続を確認してください。')
+      // ErrorHandlerで処理される
       return Promise.reject(error)
     }
 
@@ -116,46 +115,35 @@ class ApiClient {
     // ステータスコード別の処理
     switch (status) {
       case HTTP_STATUS.UNAUTHORIZED:
-        // 認証エラー
-        toast.error('認証エラーが発生しました。再度ログインしてください。')
+        // 認証エラー - ErrorHandlerで処理されるため、ここでは最小限の処理のみ
         // 認証ストアをクリア
         localStorage.removeItem('auth-storage')
-        // ログイン画面へリダイレクト
-        setTimeout(() => {
-          window.location.href = '/login'
-        }, 1000)
         break
 
       case HTTP_STATUS.FORBIDDEN:
-        toast.error('この操作を実行する権限がありません。')
+        // ErrorHandlerで処理される
         break
 
       case HTTP_STATUS.NOT_FOUND:
-        toast.error('リクエストされたリソースが見つかりません。')
+        // ErrorHandlerで処理される
         break
 
       case HTTP_STATUS.UNPROCESSABLE_ENTITY:
-        // バリデーションエラー
-        if (data?.details && Array.isArray(data.details)) {
-          data.details.forEach((detail) => {
-            toast.error(`${detail.field}: ${detail.message}`)
-          })
-        } else {
-          toast.error(data?.message || '入力内容を確認してください。')
-        }
+        // バリデーションエラー - ErrorHandlerで処理される
         break
 
       case HTTP_STATUS.TOO_MANY_REQUESTS:
-        toast.error('リクエストが多すぎます。しばらく待ってから再試行してください。')
+        // ErrorHandlerで処理される
         break
 
       case HTTP_STATUS.INTERNAL_SERVER_ERROR:
       case HTTP_STATUS.SERVICE_UNAVAILABLE:
-        toast.error('サーバーエラーが発生しました。しばらく待ってから再試行してください。')
+        // ErrorHandlerで処理される
         break
 
       default:
-        toast.error(data?.message || 'エラーが発生しました。')
+        // ErrorHandlerで処理される
+        break
     }
 
     return Promise.reject(error)

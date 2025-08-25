@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // 認証API専用のクライアント
 const authApiClient = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_AUTH_API_URL || 'http://localhost:8000',
   timeout: 30000,
   withCredentials: true,
   headers: {
