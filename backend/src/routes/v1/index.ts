@@ -6,12 +6,12 @@ import authRoutes from './auth.routes';
 import engineerRoutes from './engineer.routes';
 import projectRoutes from './project.routes';
 import partnerRoutes from './partner.routes';
-import partnerListRoutes from './partnerList.routes'; // 暫定実装（段階的移行中）
+// import partnerListRoutes from './partnerList.routes'; // 暫定実装（削除済み）
 import approachRoutes from './approach.routes';
 import skillSheetRoutes from './skillsheet.routes';
 import analyticsRoutes from './analytics.routes';
 import notificationRoutes from './notification.routes';
-import testRoutes from './test.routes'; // 開発環境用
+// import testRoutes from './test.routes'; // 開発環境用（本番では無効）
 // import skillRoutes from './skill.routes';
 // import searchRoutes from './search.routes';
 // import exportRoutes from './export.routes';
@@ -47,7 +47,7 @@ router.use('/engineers', engineerRoutes);
 router.use('/projects', projectRoutes);
 router.use('/approaches', approachRoutes);
 router.use('/business-partners', partnerRoutes);
-router.use('/partner-list', partnerListRoutes); // 暫定実装（段階的移行中）
+// router.use('/partner-list', partnerListRoutes); // 暫定実装（削除済み）
 router.use('/skill-sheets', skillSheetRoutes);
 
 // 分析・統計API
@@ -56,10 +56,10 @@ router.use('/analytics', analyticsRoutes);
 // 通知API
 router.use('/notifications', notificationRoutes);
 
-// 開発環境用テストルート（認証不要）
-if (process.env.NODE_ENV === 'development') {
-  router.use('/test', testRoutes);
-}
+// 開発環境用テストルート（本番環境では無効）
+// if (process.env.NODE_ENV === 'development') {
+//   router.use('/test', testRoutes);
+// }
 
 // 共通API（一時的に無効化）
 // router.use('/skills', skillRoutes);
