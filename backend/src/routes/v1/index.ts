@@ -11,6 +11,7 @@ import approachRoutes from './approach.routes';
 import skillSheetRoutes from './skillsheet.routes';
 import analyticsRoutes from './analytics.routes';
 import notificationRoutes from './notification.routes';
+import testRoutes from './test.routes'; // 開発環境用
 // import skillRoutes from './skill.routes';
 // import searchRoutes from './search.routes';
 // import exportRoutes from './export.routes';
@@ -54,6 +55,11 @@ router.use('/analytics', analyticsRoutes);
 
 // 通知API
 router.use('/notifications', notificationRoutes);
+
+// 開発環境用テストルート（認証不要）
+if (process.env.NODE_ENV === 'development') {
+  router.use('/test', testRoutes);
+}
 
 // 共通API（一時的に無効化）
 // router.use('/skills', skillRoutes);
