@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { isFeatureEnabled } from '../config/featureFlags';
+import { businessPartnerService2 } from './businessPartnerService2';
 
 const prisma = new PrismaClient();
 
@@ -46,6 +48,28 @@ export class PartnerListService {
     page?: number;
     limit?: number;
   }): Promise<{ data: PartnerListItem[]; total: number }> {
+    // Feature Flagによる新実装への切り替え
+    if (isFeatureEnabled('useNewBusinessPartnerAPI')) {
+      console.log('🔄 Feature Flag: 新しいBusinessPartnerServiceを使用');
+      
+      // 新実装を使用（暫定実装形式のレスポンスを返す）
+      const result = await businessPartnerService2.getBusinessPartners({
+        page: params.page || 1,
+        limit: params.limit || 10,
+        search: params.search,
+        status: params.status as any,
+        industry: params.industry,
+      });
+      
+      // 暫定実装の形式に変換済みのレスポンスを返す
+      return {
+        data: result as PartnerListItem[],
+        total: result.length
+      };
+    }
+    
+    // 既存の実装（暫定）
+    console.log('📌 Feature Flag: 暫定実装を使用');
     const { page = 1, limit = 10 } = params;
     const skip = (page - 1) * limit;
 
