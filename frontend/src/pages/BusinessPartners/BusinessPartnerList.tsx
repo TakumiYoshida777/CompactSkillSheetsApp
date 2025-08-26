@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { businessPartnerApi } from '../../api/businessPartner';
-import type { BusinessPartner } from '../../api/businessPartner';
+import { 
+  useBusinessPartners,
+  useDeleteBusinessPartner 
+} from '../../hooks/useBusinessPartners';
+import type { BusinessPartner } from '../../types/businessPartner';
 import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import {
   Card,
@@ -78,28 +80,29 @@ const BusinessPartnerList: React.FC = () => {
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  // APIからデータ取得
-  const { data: partnersData, isLoading, refetch } = useQuery({
-    queryKey: ['businessPartners', searchText, selectedStatus, selectedIndustries, currentPage, pageSize],
-    queryFn: () => businessPartnerApi.getList({
-      search: searchText || undefined,
-      status: selectedStatus !== 'all' ? selectedStatus : undefined,
-      industry: selectedIndustries.length > 0 ? selectedIndustries[0] : undefined,
-      page: currentPage,
-      limit: pageSize,
-    }),
+  // TanStack Queryカスタムフックを使用してAPIからデータ取得
+  const { data: partnersData, isLoading, refetch } = useBusinessPartners({
+    search: searchText || undefined,
+    status: selectedStatus !== 'all' ? selectedStatus : undefined,
+    // industry: selectedIndustries.length > 0 ? selectedIndustries[0] : undefined,
+    page: currentPage,
+    limit: pageSize,
   });
 
+  // 削除用のmutationフック
+  const deletePartnerMutation = useDeleteBusinessPartner();
+
   // APIレスポンスの型を正しく処理
-  const partners = Array.isArray(partnersData) 
-    ? partnersData 
-    : (partnersData?.data || []);
-  const total = Array.isArray(partnersData) 
-    ? partnersData.length 
-    : (partnersData?.total || 0);
+  const partners = partnersData?.data || [];
+  const total = partnersData?.pagination?.total || 0;
 
 
   const filteredPartners = partners.filter((partner: BusinessPartner) => {
+    // companyNameが存在しない場合はフィルタリング対象外
+    if (!partner || !partner.companyName) {
+      return false;
+    }
+    
     const matchesSearch = partner.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
                          (partner.companyNameKana?.toLowerCase().includes(searchText.toLowerCase()) || false);
     const matchesStatus = selectedStatus === 'all' || partner.status === selectedStatus;
@@ -124,13 +127,8 @@ const BusinessPartnerList: React.FC = () => {
       okText: '削除',
       okType: 'danger',
       cancelText: 'キャンセル',
-      onOk: async () => {
-        try {
-          await businessPartnerApi.delete(partner.id);
-          refetch();
-        } catch {
-          // エラーはAPIで処理済み
-        }
+      onOk: () => {
+        deletePartnerMutation.mutate(partner.id);
       },
     });
   };
@@ -203,7 +201,7 @@ const BusinessPartnerList: React.FC = () => {
       title: '企業名',
       dataIndex: 'companyName',
       key: 'companyName',
-      sorter: (a, b) => a.companyName.localeCompare(b.companyName),
+      sorter: (a, b) => (a.companyName || '').localeCompare(b.companyName || ''),
       render: (name: string, record: BusinessPartner) => (
         <Space direction="vertical" size={0}>
           <Button
@@ -262,7 +260,7 @@ const BusinessPartnerList: React.FC = () => {
       key: 'primaryContact',
       width: 200,
       render: (_, record) => {
-        const primary = record.contacts.find(c => c.isPrimary);
+        const primary = record.contacts?.find(c => c.isPrimary);
         return primary ? (
           <Space direction="vertical" size={0}>
             <Text>{primary.name}</Text>
@@ -418,7 +416,7 @@ const BusinessPartnerList: React.FC = () => {
             <Card size="small">
               <Statistic
                 title="取引先企業数"
-                value={partners.filter(p => p.status === 'active').length}
+                value={partners.filter(p => p && p.status === 'active').length}
                 suffix={`/ ${partners.length}`}
                 prefix={<BankOutlined />}
               />
@@ -428,7 +426,7 @@ const BusinessPartnerList: React.FC = () => {
             <Card size="small">
               <Statistic
                 title="稼働エンジニア"
-                value={partners.reduce((sum, p) => sum + p.currentEngineers, 0)}
+                value={partners.reduce((sum, p) => sum + (p?.currentEngineers || 0), 0)}
                 suffix="名"
                 prefix={<TeamOutlined />}
                 valueStyle={{ color: '#3f8600' }}
@@ -439,7 +437,7 @@ const BusinessPartnerList: React.FC = () => {
             <Card size="small">
               <Statistic
                 title="月間売上"
-                value={partners.reduce((sum, p) => sum + (p.monthlyRevenue || 0), 0) / 10000}
+                value={partners.reduce((sum, p) => sum + (p?.monthlyRevenue || 0), 0) / 10000}
                 suffix="万円"
                 prefix={<DollarOutlined />}
                 valueStyle={{ color: '#cf1322' }}
@@ -450,10 +448,14 @@ const BusinessPartnerList: React.FC = () => {
             <Card size="small">
               <Statistic
                 title="提案成功率"
-                value={Math.round(
-                  (partners.reduce((sum, p) => sum + p.acceptedProposals, 0) /
-                   partners.reduce((sum, p) => sum + p.totalProposals, 0)) * 100
-                )}
+                value={
+                  partners.length > 0 && partners.reduce((sum, p) => sum + (p?.totalProposals || 0), 0) > 0
+                    ? Math.round(
+                        (partners.reduce((sum, p) => sum + (p?.acceptedProposals || 0), 0) /
+                         partners.reduce((sum, p) => sum + (p?.totalProposals || 0), 0)) * 100
+                      )
+                    : 0
+                }
                 suffix="%"
                 prefix={<CheckCircleOutlined />}
               />
@@ -601,7 +603,7 @@ const BusinessPartnerList: React.FC = () => {
 
             <TabPane tab="担当者" key="contacts">
               <Space direction="vertical" style={{ width: '100%' }}>
-                {selectedPartner.contacts.map(contact => (
+                {(selectedPartner.contacts || []).map(contact => (
                   <Card key={contact.id} size="small">
                     <Row justify="space-between">
                       <Col>

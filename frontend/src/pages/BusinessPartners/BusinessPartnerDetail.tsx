@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { businessPartnerApi, BusinessPartner as BusinessPartnerType, ProposedEngineer, Project, ApproachHistory, ContactPerson } from '../../api/businessPartner';
+import { useBusinessPartnerDetail } from '../../hooks/useBusinessPartners';
+import type { BusinessPartner as BusinessPartnerType, ProposedEngineer, Project, ApproachHistory, ContactPerson } from '../../types/businessPartner';
 import {
   Card,
   Row,
@@ -68,12 +68,8 @@ const BusinessPartnerDetail: React.FC = () => {
   const [form] = Form.useForm();
   const [noteForm] = Form.useForm();
 
-  // APIからデータ取得
-  const { data: partnerData, isLoading, error } = useQuery({
-    queryKey: ['businessPartner', id],
-    queryFn: () => businessPartnerApi.getById(id || ''),
-    enabled: !!id,
-  });
+  // TanStack Queryカスタムフックを使用してAPIからデータ取得
+  const { data: partnerData, isLoading, error } = useBusinessPartnerDetail(id || '');
 
   useEffect(() => {
     if (partnerData) {

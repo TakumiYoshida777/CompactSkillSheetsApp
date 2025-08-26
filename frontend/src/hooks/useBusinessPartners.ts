@@ -149,9 +149,26 @@ export const useInfiniteBusinessPartners = (filters?: Omit<BusinessPartnerFilter
 };
 
 /**
- * 取引先企業詳細を取得（Suspense版）
+ * 取引先企業詳細を取得（通常版）
  */
 export const useBusinessPartnerDetail = (id: string) => {
+  return useQuery({
+    queryKey: QUERY_KEYS.businessPartner(id),
+    queryFn: async () => {
+      const { data } = await apiClient.get<BusinessPartner>(
+        `/business-partners/${id}`
+      );
+      return data;
+    },
+    enabled: !!id,
+    ...queryOptions.user, // ユーザー情報用の設定を適用
+  });
+};
+
+/**
+ * 取引先企業詳細を取得（Suspense版）
+ */
+export const useBusinessPartnerDetailSuspense = (id: string) => {
   return useSuspenseQuery({
     queryKey: QUERY_KEYS.businessPartner(id),
     queryFn: async () => {
