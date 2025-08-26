@@ -8,8 +8,10 @@ declare global {
     interface Request {
       user?: {
         id: string;
+        userId?: string;
         email: string;
         companyId: string;
+        username?: string;
         role: string;
       };
     }
@@ -48,15 +50,22 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     console.log('[Auth Middleware] JWT verification successful, user:', decoded);
 
     // JWTペイロードからreq.userを構築
-    const decodedToken = decoded as any;
+    const decodedToken = decoded as jwt.JwtPayload & {
+      userId?: string;
+      id?: string;
+      email: string;
+      companyId: string;
+      username?: string;
+      role: string;
+    };
     req.user = {
-      id: decodedToken.userId || decodedToken.id,
+      id: decodedToken.userId || decodedToken.id || '',
       userId: decodedToken.userId || decodedToken.id,
       email: decodedToken.email,
       companyId: decodedToken.companyId,
       username: decodedToken.username,
       role: decodedToken.role
-    } as any;
+    };
 
     next();
   });

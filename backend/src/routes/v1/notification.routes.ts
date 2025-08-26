@@ -16,7 +16,7 @@ router.use(authMiddleware);
 router.get('/', paginationMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { page = 1, limit = 20, unreadOnly = false } = req.query;
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     
     if (!userId) {
       return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
@@ -43,7 +43,7 @@ router.get('/', paginationMiddleware, async (req: Request, res: Response, next: 
 // 未読件数取得
 router.get('/unread-count', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     
     if (!userId) {
       return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
@@ -61,7 +61,7 @@ router.get('/unread-count', async (req: Request, res: Response, next: NextFuncti
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     
     if (!userId) {
       return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
@@ -95,7 +95,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { type, title, message, targetUserId } = req.body;
-    const currentUserId = (req as any).user?.id;
+    const currentUserId = req.user?.id;
     
     if (!currentUserId) {
       return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
@@ -135,7 +135,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 router.patch('/:id/read', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     
     if (!userId) {
       return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
@@ -153,7 +153,7 @@ router.patch('/:id/read', async (req: Request, res: Response, next: NextFunction
 router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     
     if (!userId) {
       return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
@@ -175,7 +175,7 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
 // 全既読設定
 router.patch('/mark-all-read', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     
     if (!userId) {
       return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
@@ -192,7 +192,7 @@ router.patch('/mark-all-read', async (req: Request, res: Response, next: NextFun
 // 既読通知削除
 router.delete('/clear-read', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     
     if (!userId) {
       return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
@@ -214,7 +214,7 @@ router.delete('/clear-read', async (req: Request, res: Response, next: NextFunct
 // 通知設定取得
 router.get('/settings', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     
     if (!userId) {
       return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
@@ -256,7 +256,7 @@ router.get('/settings', async (req: Request, res: Response, next: NextFunction) 
 // 通知設定更新
 router.put('/settings', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = req.user?.id;
     const settings = req.body;
     
     if (!userId) {
