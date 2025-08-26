@@ -5,6 +5,7 @@ import authRoutes from './auth.routes';
 import engineerRoutes from './engineer.routes';
 import projectRoutes from './project.routes';
 import businessPartnerRoutes from './businessPartner.routes';
+import partnerRoutes from './partner.routes';
 import approachRoutes from './approach.routes';
 import skillSheetRoutes from './skillsheet.routes';
 import analyticsRoutes from './analytics.routes';
@@ -39,7 +40,7 @@ router.use('/auth', authRoutes);
 router.use('/engineers', engineerRoutes);
 router.use('/projects', projectRoutes);
 router.use('/approaches', approachRoutes);
-router.use('/business-partners', businessPartnerRoutes);
+router.use('/business-partners', partnerRoutes);  // パートナー管理ルート
 router.use('/skill-sheets', skillSheetRoutes);
 
 // 分析・統計API

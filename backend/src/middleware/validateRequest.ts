@@ -7,7 +7,14 @@ import * as yup from 'yup';
 export const validateRequest = (schema: yup.AnySchema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await schema.validate(req.body, { abortEarly: false });
+      // スキーマがbodyプロパティを持つ場合は、{ body: req.body }として検証
+      const dataToValidate = {
+        body: req.body,
+        params: req.params,
+        query: req.query
+      };
+      
+      await schema.validate(dataToValidate, { abortEarly: false });
       next();
     } catch (error) {
       if (error instanceof yup.ValidationError) {

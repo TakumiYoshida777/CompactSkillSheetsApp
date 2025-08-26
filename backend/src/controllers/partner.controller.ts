@@ -312,6 +312,29 @@ export class PartnerController {
       next(error);
     }
   };
+  resetUserPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { newPassword } = req.body;
+      
+      const result = await this.service.resetPartnerUserPassword(
+        parseInt(req.params.id),
+        parseInt(req.params.userId),
+        newPassword,
+        req.companyId!
+      );
+      
+      if (!result) {
+        return res.status(404).json(
+          ApiResponse.error('NOT_FOUND', 'ユーザーが見つかりません')
+        );
+      }
+      
+      res.json(ApiResponse.success({ message: 'パスワードをリセットしました' }));
+    } catch (error) {
+      logger.error('取引先ユーザーパスワードリセットエラー:', error);
+      next(error);
+    }
+  };
   
   getStatistics = async (req: Request, res: Response, next: NextFunction) => {
     try {

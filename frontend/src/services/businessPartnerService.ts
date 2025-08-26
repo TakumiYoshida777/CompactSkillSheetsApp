@@ -308,6 +308,20 @@ class BusinessPartnerService {
   }
 
   /**
+   * 取引先ユーザーパスワードリセット
+   */
+  async resetClientUserPassword(partnerId: string, userId: string, newPassword: string): Promise<void> {
+    try {
+      await axios.post(`${this.baseUrl}/${partnerId}/users/${userId}/reset-password`, {
+        newPassword
+      });
+    } catch (error) {
+      console.error('パスワードリセットエラー:', error);
+      throw error;
+    }
+  }
+
+  /**
    * アクセス権限取得
    */
   async getAccessPermissions(partnerId: string): Promise<AccessPermission> {

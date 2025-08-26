@@ -289,12 +289,12 @@ export class PartnerService {
     
     // ユーザー作成
     return this.userRepo.create({
-      partner_id: partnerId,
+      businessPartnerId: partnerId,
       name: userData.name,
       email: userData.email,
-      password: hashedPassword,
-      role: userData.role || 'viewer',
-      is_active: true
+      passwordHash: hashedPassword,
+      isActive: true,
+      updatedAt: new Date()
     });
   }
 
@@ -311,7 +311,8 @@ export class PartnerService {
 
     // パスワード変更時はハッシュ化
     if (userData.password) {
-      userData.password = await bcrypt.hash(userData.password, config.security.bcryptRounds);
+      userData.passwordHash = await bcrypt.hash(userData.password, config.security.bcryptRounds);
+      delete userData.password;
     }
 
     return this.userRepo.update(userId, userData, partnerId);
@@ -329,6 +330,28 @@ export class PartnerService {
     }
 
     return this.userRepo.delete(userId, partnerId);
+  }
+
+  async resetPartnerUserPassword(partnerId: number, userId: number, newPassword: string, companyId: number) {
+    // 取引先の存在確認
+    const partner = await this.partnerRepo.findById(partnerId, companyId);
+    if (!partner) {
+      throw new Error('取引先企業が見つかりません');
+    }
+
+    // ユーザーの存在確認
+    const user = await this.userRepo.findById(userId, partnerId);
+    if (!user) {
+      return null;
+    }
+
+    // パスワードのハッシュ化
+    const hashedPassword = await bcrypt.hash(newPassword, config.security.bcryptRounds);
+
+    // パスワード更新
+    return this.userRepo.update(userId, {
+      passwordHash: hashedPassword
+    }, partnerId);
   }
   
   async getPartnerStatistics(partnerId: number, companyId: number) {

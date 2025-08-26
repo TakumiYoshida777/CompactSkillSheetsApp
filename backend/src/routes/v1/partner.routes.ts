@@ -39,6 +39,7 @@ router.get('/:id/users', controller.getUsers);
 router.post('/:id/users', validateRequest(partnerValidation.user), controller.createUser);
 router.put('/:id/users/:userId', validateRequest(partnerValidation.user), controller.updateUser);
 router.delete('/:id/users/:userId', controller.deleteUser);
+router.post('/:id/users/:userId/reset-password', validateRequest(partnerValidation.resetPassword), controller.resetUserPassword);
 
 // 統計
 router.get('/:id/statistics', controller.getStatistics);
