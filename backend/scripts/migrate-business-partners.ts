@@ -10,7 +10,7 @@
  * npx ts-node scripts/migrate-business-partners.ts
  */
 
-import { PrismaClient, CompanyType, Prisma } from '@prisma/client';
+import { PrismaClient, CompanyType } from '@prisma/client';
 import * as crypto from 'crypto';
 
 const prisma = new PrismaClient();
@@ -22,7 +22,7 @@ const SYSTEM_USER_ID = 1n; // システムユーザーID
 /**
  * アクセスURL生成
  */
-function generateAccessUrl(companyName: string): string {
+function generateAccessUrl(): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(7);
   return `partner-${timestamp}-${random}`;
@@ -89,7 +89,7 @@ async function countProposals(clientCompanyId: bigint): Promise<{ total: number;
   });
 
   const total = approaches.length;
-  const accepted = approaches.filter(a => a.status === 'ACCEPTED').length;
+  const accepted = approaches.filter(a => a.status === 'ACCEPTED' as any).length;
 
   return { total, accepted };
 }
@@ -122,19 +122,19 @@ function getContractTypes(companyName: string): string[] {
   return contractMap[companyName] || ['準委任契約'];
 }
 
-/**
- * 求めるスキルマッピング
- */
-function getPreferredSkills(companyName: string): string[] {
-  const skillsMap: { [key: string]: string[] } = {
-    '株式会社ABC商事': ['React', 'TypeScript', 'AWS'],
-    'XYZ株式会社': ['Java', 'Spring', 'Oracle'],
-    '株式会社テックコーポレーション': ['Python', 'Django', 'PostgreSQL'],
-    'グローバルソリューションズ株式会社': ['C#', '.NET', 'Azure'],
-    '株式会社イノベーションラボ': ['Go', 'Kubernetes', 'GCP'],
-  };
-  return skillsMap[companyName] || ['JavaScript', 'SQL'];
-}
+// /**
+//  * 求めるスキルマッピング
+//  */
+// function getPreferredSkills(companyName: string): string[] {
+//   const skillsMap: { [key: string]: string[] } = {
+//     '株式会社ABC商事': ['React', 'TypeScript', 'AWS'],
+//     'XYZ株式会社': ['Java', 'Spring', 'Oracle'],
+//     '株式会社テックコーポレーション': ['Python', 'Django', 'PostgreSQL'],
+//     'グローバルソリューションズ株式会社': ['C#', '.NET', 'Azure'],
+//     '株式会社イノベーションラボ': ['Go', 'Kubernetes', 'GCP'],
+//   };
+//   return skillsMap[companyName] || ['JavaScript', 'SQL'];
+// }
 
 /**
  * メインマイグレーション処理
@@ -178,7 +178,7 @@ async function migrateBusinessPartners() {
           data: {
             sesCompanyId: DEFAULT_SES_COMPANY_ID,
             clientCompanyId: company.id,
-            accessUrl: generateAccessUrl(company.name),
+            accessUrl: generateAccessUrl(),
             urlToken: generateUrlToken(),
             isActive: true,
             createdBy: SYSTEM_USER_ID
