@@ -27,7 +27,7 @@
 - [x] エンドポイントを暫定実装に戻す
 
 ### Phase 2: 正式実装の修正（1週間以内）
-- [ ] Prismaスキーマの確認と更新
+- [x] Prismaスキーマの確認と更新
 - [ ] businessPartnerServiceのデバッグと修正
 - [ ] 認証ミドルウェアとの整合性確保
 - [ ] データマイグレーションスクリプトの作成
@@ -119,9 +119,10 @@ const industry = await getIndustryFromDatabase(companyId);
 1. **即時対応** ✅
    - 暫定実装への切り戻し（完了）
 
-2. **今週中**
-   - Prismaスキーマの詳細調査
+2. **今週中** 🔄 進行中
+   - Prismaスキーマの詳細調査 ✅
    - businessPartnerServiceのデバッグ
+   - データベース構造の分析
 
 3. **来週**
    - データマイグレーション計画の詳細化
