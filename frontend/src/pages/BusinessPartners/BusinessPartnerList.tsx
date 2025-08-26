@@ -90,12 +90,16 @@ const BusinessPartnerList: React.FC = () => {
     }),
   });
 
+  // APIレスポンスの型を正しく処理
+  const partners = Array.isArray(partnersData) 
+    ? partnersData 
+    : (partnersData?.data || []);
+  const total = Array.isArray(partnersData) 
+    ? partnersData.length 
+    : (partnersData?.total || 0);
 
-  const partners = partnersData || [];
-  const total = partnersData?.total || 0;
 
-
-  const filteredPartners = partners.filter(partner => {
+  const filteredPartners = partners.filter((partner: BusinessPartner) => {
     const matchesSearch = partner.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
                          (partner.companyNameKana?.toLowerCase().includes(searchText.toLowerCase()) || false);
     const matchesStatus = selectedStatus === 'all' || partner.status === selectedStatus;
@@ -707,8 +711,8 @@ const BusinessPartnerList: React.FC = () => {
         <Card size="small" title="送信先企業">
           <Space direction="vertical" style={{ width: '100%' }}>
             {partners
-              .filter(p => selectedRowKeys.includes(p.id))
-              .map(partner => (
+              .filter((p: BusinessPartner) => selectedRowKeys.includes(p.id))
+              .map((partner: BusinessPartner) => (
                 <div key={partner.id}>
                   <Text>{partner.companyName}</Text>
                   <Text type="secondary" style={{ marginLeft: 8 }}>
