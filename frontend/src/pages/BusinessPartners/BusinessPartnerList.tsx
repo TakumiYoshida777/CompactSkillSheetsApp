@@ -78,7 +78,7 @@ const BusinessPartnerList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [emailModalVisible, setEmailModalVisible] = useState(false);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'inactive' | 'prospective'>('all');
 
   // TanStack Queryカスタムフックを使用してAPIからデータ取得
   const { data: partnersData, isLoading, refetch } = useBusinessPartners({

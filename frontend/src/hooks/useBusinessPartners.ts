@@ -6,61 +6,13 @@ import {
   useQueryClient 
 } from '@tanstack/react-query';
 import { message } from 'antd';
-import axios from 'axios';
+import axiosInstance from '../lib/axios';  // 既存の認証済みaxiosインスタンスを使用
 import { queryOptions, infiniteQueryOptions } from '../config/queryClient';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-
-// APIクライアント設定
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  withCredentials: true,
-});
-
-// リクエストインターセプター（認証トークン追加）
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// レスポンスインターセプター（エラーハンドリング）
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    // 401エラーの場合はトークンをクリア
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-    }
-    return Promise.reject(error);
-  }
-);
-
-// 型定義
-interface BusinessPartner {
-  id: string;
-  clientCompany: {
-    name: string;
-    email: string;
-    phone: string;
-  };
-  contractType: string;
-  contractStartDate: string;
-  contractEndDate?: string;
-  monthlyFee?: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { BusinessPartner } from '../types/businessPartner';
 
 interface BusinessPartnerFilters {
   search?: string;
-  status?: 'active' | 'inactive' | 'all';
+  status?: 'active' | 'inactive' | 'prospective' | 'all';
   contractType?: string;
   sortBy?: string;
   order?: 'asc' | 'desc';
@@ -98,8 +50,8 @@ export const useBusinessPartners = (filters?: BusinessPartnerFilters) => {
   return useQuery({
     queryKey: [QUERY_KEYS.businessPartners, filters],
     queryFn: async () => {
-      const { data } = await apiClient.get<PaginatedResponse<BusinessPartner>>(
-        '/business-partners',
+      const { data } = await axiosInstance.get<PaginatedResponse<BusinessPartner>>(
+        '/v1/business-partners',  // v1プレフィックスを追加
         { params: filters }
       );
       return data;
@@ -116,8 +68,8 @@ export const useBusinessPartnersSuspense = (filters?: BusinessPartnerFilters) =>
   return useSuspenseQuery({
     queryKey: [QUERY_KEYS.businessPartners, filters],
     queryFn: async () => {
-      const { data } = await apiClient.get<PaginatedResponse<BusinessPartner>>(
-        '/business-partners',
+      const { data } = await axiosInstance.get<PaginatedResponse<BusinessPartner>>(
+        '/v1/business-partners',
         { params: filters }
       );
       return data;
@@ -133,14 +85,15 @@ export const useBusinessPartnersSuspense = (filters?: BusinessPartnerFilters) =>
 export const useInfiniteBusinessPartners = (filters?: Omit<BusinessPartnerFilters, 'page'>) => {
   return useInfiniteQuery({
     queryKey: [QUERY_KEYS.businessPartners, 'infinite', filters],
-    queryFn: async ({ pageParam = 1 }) => {
-      const { data } = await apiClient.get<PaginatedResponse<BusinessPartner>>(
-        '/business-partners',
+    queryFn: async ({ pageParam }) => {
+      const { data } = await axiosInstance.get<PaginatedResponse<BusinessPartner>>(
+        '/v1/business-partners',
         { params: { ...filters, page: pageParam } }
       );
       return data;
     },
     ...infiniteQueryOptions,
+    initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       const { page, totalPages } = lastPage.pagination;
       return page < totalPages ? page + 1 : undefined;
@@ -155,8 +108,8 @@ export const useBusinessPartnerDetail = (id: string) => {
   return useQuery({
     queryKey: QUERY_KEYS.businessPartner(id),
     queryFn: async () => {
-      const { data } = await apiClient.get<BusinessPartner>(
-        `/business-partners/${id}`
+      const { data } = await axiosInstance.get<BusinessPartner>(
+        `/v1/business-partners/${id}`
       );
       return data;
     },
@@ -172,8 +125,8 @@ export const useBusinessPartnerDetailSuspense = (id: string) => {
   return useSuspenseQuery({
     queryKey: QUERY_KEYS.businessPartner(id),
     queryFn: async () => {
-      const { data } = await apiClient.get<BusinessPartner>(
-        `/business-partners/${id}`
+      const { data } = await axiosInstance.get<BusinessPartner>(
+        `/v1/business-partners/${id}`
       );
       return data;
     },
@@ -188,7 +141,7 @@ export const useBusinessPartnerStats = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.businessPartnerStats],
     queryFn: async () => {
-      const { data } = await apiClient.get('/business-partners/stats');
+      const { data } = await axiosInstance.get('/v1/business-partners/stats');
       return data;
     },
     ...queryOptions.static, // 静的データ用の設定を適用
@@ -202,8 +155,8 @@ export const useEngineerPermissions = (partnerId: string) => {
   return useQuery({
     queryKey: QUERY_KEYS.engineerPermissions(partnerId),
     queryFn: async () => {
-      const { data } = await apiClient.get(
-        `/business-partners/${partnerId}/permissions`
+      const { data } = await axiosInstance.get(
+        `/v1/business-partners/${partnerId}/permissions`
       );
       return data;
     },
@@ -219,8 +172,8 @@ export const useNgList = (partnerId: string) => {
   return useQuery({
     queryKey: QUERY_KEYS.ngList(partnerId),
     queryFn: async () => {
-      const { data } = await apiClient.get(
-        `/business-partners/${partnerId}/ng-list`
+      const { data } = await axiosInstance.get(
+        `/v1/business-partners/${partnerId}/ng-list`
       );
       return data;
     },
@@ -232,12 +185,12 @@ export const useNgList = (partnerId: string) => {
 /**
  * 閲覧可能なエンジニア一覧を取得（Suspense版）
  */
-export const useViewableEngineersSuspense = (partnerId: string, filters?: any) => {
+export const useViewableEngineersSuspense = (partnerId: string, filters?: Record<string, any>) => {
   return useSuspenseQuery({
     queryKey: [QUERY_KEYS.viewableEngineers(partnerId), filters],
     queryFn: async () => {
-      const { data } = await apiClient.get(
-        `/business-partners/${partnerId}/engineers`,
+      const { data } = await axiosInstance.get(
+        `/v1/business-partners/${partnerId}/engineers`,
         { params: filters }
       );
       return data;
@@ -254,7 +207,7 @@ export const useCreateBusinessPartner = () => {
 
   return useMutation({
     mutationFn: async (data: Partial<BusinessPartner>) => {
-      const response = await apiClient.post('/business-partners', data);
+      const response = await axiosInstance.post('/v1/business-partners', data);
       return response.data;
     },
     onSuccess: () => {
@@ -267,7 +220,7 @@ export const useCreateBusinessPartner = () => {
         queryKey: [QUERY_KEYS.businessPartnerStats] 
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       const errorMessage = error.response?.data?.message || '取引先企業の登録に失敗しました';
       message.error(errorMessage);
     },
@@ -282,7 +235,7 @@ export const useUpdateBusinessPartner = () => {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<BusinessPartner> }) => {
-      const response = await apiClient.put(`/business-partners/${id}`, data);
+      const response = await axiosInstance.put(`/v1/business-partners/${id}`, data);
       return response.data;
     },
     onSuccess: (_, variables) => {
@@ -296,7 +249,7 @@ export const useUpdateBusinessPartner = () => {
         queryKey: [QUERY_KEYS.businessPartners] 
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       const errorMessage = error.response?.data?.message || '取引先企業の更新に失敗しました';
       message.error(errorMessage);
     },
@@ -311,7 +264,7 @@ export const useDeleteBusinessPartner = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const response = await apiClient.delete(`/business-partners/${id}`);
+      const response = await axiosInstance.delete(`/v1/business-partners/${id}`);
       return response.data;
     },
     onSuccess: () => {
@@ -323,7 +276,7 @@ export const useDeleteBusinessPartner = () => {
         queryKey: [QUERY_KEYS.businessPartnerStats] 
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       const errorMessage = error.response?.data?.message || '取引先企業の削除に失敗しました';
       message.error(errorMessage);
     },
@@ -344,8 +297,8 @@ export const useUpdateEngineerPermissions = () => {
       partnerId: string; 
       permissions: Array<{ engineerId: string; isAllowed: boolean }> 
     }) => {
-      const response = await apiClient.put(
-        `/business-partners/${partnerId}/permissions`,
+      const response = await axiosInstance.put(
+        `/v1/business-partners/${partnerId}/permissions`,
         { permissions }
       );
       return response.data;
@@ -359,7 +312,7 @@ export const useUpdateEngineerPermissions = () => {
         queryKey: QUERY_KEYS.viewableEngineers(variables.partnerId) 
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       const errorMessage = error.response?.data?.message || '権限の更新に失敗しました';
       message.error(errorMessage);
     },
@@ -382,8 +335,8 @@ export const useUpdateNgList = () => {
       engineerIds: string[];
       action: 'add' | 'remove';
     }) => {
-      const response = await apiClient.put(
-        `/business-partners/${partnerId}/ng-list`,
+      const response = await axiosInstance.put(
+        `/v1/business-partners/${partnerId}/ng-list`,
         { engineerIds, action }
       );
       return response.data;
@@ -398,7 +351,7 @@ export const useUpdateNgList = () => {
         queryKey: QUERY_KEYS.viewableEngineers(variables.partnerId) 
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error & { response?: { data?: { message?: string } } }) => {
       const errorMessage = error.response?.data?.message || 'NGリストの更新に失敗しました';
       message.error(errorMessage);
     },
@@ -413,8 +366,8 @@ export const useToggleBusinessPartnerStatus = () => {
 
   return useMutation({
     mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
-      const response = await apiClient.patch(
-        `/business-partners/${id}/status`,
+      const response = await axiosInstance.patch(
+        `/v1/business-partners/${id}/status`,
         { isActive }
       );
       return response.data;
@@ -428,10 +381,6 @@ export const useToggleBusinessPartnerStatus = () => {
       queryClient.invalidateQueries({ 
         queryKey: [QUERY_KEYS.businessPartners] 
       });
-    },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'ステータスの変更に失敗しました';
-      message.error(errorMessage);
     },
     // 楽観的更新を実装
     onMutate: async ({ id, isActive }) => {
@@ -447,16 +396,21 @@ export const useToggleBusinessPartnerStatus = () => {
       // 楽観的に更新
       queryClient.setQueryData(
         QUERY_KEYS.businessPartner(id),
-        (old: any) => ({
-          ...old,
-          isActive,
-        })
+        (old: BusinessPartner | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            isActive,
+          };
+        }
       );
       
       return { previousData };
     },
     // エラー時はロールバック
-    onError: (err, variables, context) => {
+    onError: (error: Error & { response?: { data?: { message?: string } } }, variables, context) => {
+      const errorMessage = error.response?.data?.message || 'ステータスの変更に失敗しました';
+      message.error(errorMessage);
       if (context?.previousData) {
         queryClient.setQueryData(
           QUERY_KEYS.businessPartner(variables.id),

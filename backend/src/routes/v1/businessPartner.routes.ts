@@ -1,49 +1,49 @@
 import { Router } from 'express';
 import { businessPartnerController } from '../../controllers/businessPartnerController';
-import { authenticateToken } from '../../middleware/auth';
+import { authMiddleware } from '../../middleware/auth.middleware';
 
 const router = Router();
 
 // 取引先一覧取得
 router.get(
   '/',
-  authenticateToken,
-  businessPartnerController.getList
+  authMiddleware,
+  (req, res) => businessPartnerController.getBusinessPartners(req, res)
+);
+
+// 取引先統計取得
+router.get(
+  '/stats',
+  authMiddleware,
+  (req, res) => businessPartnerController.getBusinessPartnerStats(req, res)
 );
 
 // 取引先詳細取得
 router.get(
   '/:id',
-  authenticateToken,
-  businessPartnerController.getById
+  authMiddleware,
+  (req, res) => businessPartnerController.getBusinessPartnerById(req, res)
 );
 
 // 取引先作成
 router.post(
   '/',
-  authenticateToken,
-  businessPartnerController.create
+  authMiddleware,
+  (req, res) => businessPartnerController.createBusinessPartner(req, res)
 );
 
 // 取引先更新
 router.put(
   '/:id',
-  authenticateToken,
-  businessPartnerController.update
+  authMiddleware,
+  (req, res) => businessPartnerController.updateBusinessPartner(req, res)
 );
 
 // 取引先削除
 router.delete(
   '/:id',
-  authenticateToken,
-  businessPartnerController.delete
-);
-
-// アプローチ履歴追加
-router.post(
-  '/:id/approaches',
-  authenticateToken,
-  businessPartnerController.addApproach
+  authMiddleware,
+  (req, res) => businessPartnerController.deleteBusinessPartner(req, res)
 );
 
 export default router;
