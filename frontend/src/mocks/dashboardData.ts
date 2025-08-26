@@ -26,10 +26,6 @@ export interface DashboardStats {
  * ダッシュボードの統計データを取得
  * TODO: 実際のAPI実装後は、このファイルを削除してAPIから取得する
  */
-export const /**
- * ダッシュボードの統計データを取得
- * 実際のAPI実装後は、このファイルを削除してAPIから取得する
- */
 export function getDashboardStats(): DashboardStats {
   return {
     engineers: {
