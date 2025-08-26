@@ -16,7 +16,6 @@ import * as crypto from 'crypto';
 const prisma = new PrismaClient();
 
 // 定数
-const DEFAULT_SES_COMPANY_ID = 1n; // デフォルトのSES企業ID
 const SYSTEM_USER_ID = 1n; // システムユーザーID
 
 /**
@@ -143,6 +142,26 @@ async function migrateBusinessPartners() {
   console.log('🚀 取引先企業データマイグレーション開始...\n');
 
   try {
+    // 0. SES企業の確認と作成
+    let sesCompany = await prisma.company.findFirst({
+      where: { companyType: CompanyType.SES }
+    });
+    
+    if (!sesCompany) {
+      console.log('⚠️  SES企業が存在しません。デフォルトSES企業を作成します...');
+      sesCompany = await prisma.company.create({
+        data: {
+          name: 'デフォルトSES企業',
+          companyType: CompanyType.SES
+        }
+      });
+      console.log(`✅ デフォルトSES企業を作成しました (ID: ${sesCompany.id})\n`);
+    } else {
+      console.log(`✅ 既存のSES企業を使用します (ID: ${sesCompany.id}, Name: ${sesCompany.name})\n`);
+    }
+    
+    const SES_COMPANY_ID = sesCompany.id;
+
     // 1. CLIENT企業を取得
     const clientCompanies = await prisma.company.findMany({
       where: { 
@@ -164,7 +183,7 @@ async function migrateBusinessPartners() {
         const existing = await prisma.businessPartner.findFirst({
           where: {
             clientCompanyId: company.id,
-            sesCompanyId: DEFAULT_SES_COMPANY_ID
+            sesCompanyId: SES_COMPANY_ID
           }
         });
 
@@ -176,7 +195,7 @@ async function migrateBusinessPartners() {
         // BusinessPartnerレコード作成
         const businessPartner = await prisma.businessPartner.create({
           data: {
-            sesCompanyId: DEFAULT_SES_COMPANY_ID,
+            sesCompanyId: SES_COMPANY_ID,
             clientCompanyId: company.id,
             accessUrl: generateAccessUrl(),
             urlToken: generateUrlToken(),
@@ -197,6 +216,20 @@ async function migrateBusinessPartners() {
             viewType: 'all',
             showWaitingOnly: false,
             autoApprove: false
+          }
+        });
+
+        // BusinessPartnerDetail作成（暫定実装互換用）
+        await prisma.businessPartnerDetail.create({
+          data: {
+            businessPartnerId: businessPartner.id,
+            companyNameKana: '', // 後で更新可能
+            industry: getIndustry(company.name),
+            contractTypes: getContractTypes(company.name),
+            currentEngineers,
+            monthlyRevenue,
+            totalProposals: proposals.total,
+            acceptedProposals: proposals.accepted
           }
         });
 
@@ -261,6 +294,19 @@ async function dryRun() {
   console.log('🔍 ドライラン実行中...\n');
 
   try {
+    // SES企業の確認
+    let sesCompany = await prisma.company.findFirst({
+      where: { companyType: CompanyType.SES }
+    });
+    
+    if (!sesCompany) {
+      console.log('⚠️  SES企業が存在しません。実行時に作成されます。\n');
+      // ドライランなので実際には作成しない
+      sesCompany = { id: 1n } as any; // 仮のID
+    }
+    
+    const SES_COMPANY_ID = sesCompany!.id;
+
     const clientCompanies = await prisma.company.findMany({
       where: { 
         companyType: CompanyType.CLIENT,
@@ -273,7 +319,7 @@ async function dryRun() {
       const existing = await prisma.businessPartner.findFirst({
         where: {
           clientCompanyId: company.id,
-          sesCompanyId: DEFAULT_SES_COMPANY_ID
+          sesCompanyId: SES_COMPANY_ID
         }
       });
 
