@@ -32,7 +32,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://skillsheet:password@host.docker.internal:5433/skillsheet_dev2
+      - DATABASE_URL=postgresql://skillsheet:password@postgres:5432/skillsheet_dev
       - REDIS_URL=redis://redis:6379
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - JWT_SECRET=dev-jwt-secret-change-in-production
