@@ -116,8 +116,8 @@ export const partnerApi = {
     await apiClient.delete(`/business-partners/${partnerId}/users/${userId}`)
   },
 
-  resetUserPassword: async (partnerId: string, userId: string): Promise<{ temporaryPassword: string }> => {
-    const response = await apiClient.post(`/business-partners/${partnerId}/users/${userId}/reset-password`)
+  resetUserPassword: async (partnerId: string, userId: string, newPassword: string): Promise<{ message: string }> => {
+    const response = await apiClient.post(`/business-partners/${partnerId}/users/${userId}/reset-password`, { newPassword })
     return response.data.data
   },
 
