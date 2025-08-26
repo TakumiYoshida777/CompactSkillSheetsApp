@@ -39,8 +39,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // トークンリフレッシュ処理
-      // TODO: リフレッシュトークンを使用した再認証実装
+      // 401エラー時はログイン画面にリダイレクト
       localStorage.removeItem('access_token')
       window.location.href = 'login'
     }
