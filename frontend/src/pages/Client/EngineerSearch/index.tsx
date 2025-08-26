@@ -98,10 +98,17 @@ const ClientEngineerSearch: React.FC = () => {
       phone: eng.phone,
       // 取引先企業向けには企業名も表示
       companyName: eng.company?.name || 'テックソリューション株式会社',
-      // 取引先企業向けの追加フィールド（将来的に実装）
-      rate: undefined, // TODO: 単価情報をAPIから取得
-      roleExperiences: undefined, // TODO: ロール経験をAPIから取得
-      workExperiences: undefined, // TODO: 業務経験をAPIから取得
+      // 追加フィールド - 実データから取得
+      rate: eng.engineerProjects?.[0]?.project?.monthlyRate || 
+            eng.currentProject?.monthlyRate,
+      roleExperiences: eng.skillSheet?.possibleRoles || 
+                      eng.engineerProjects?.map((ep: any) => ep.role).filter(Boolean),
+      workExperiences: eng.engineerProjects?.map((ep: any) => ({
+        projectName: ep.project?.name,
+        role: ep.role,
+        period: `${ep.startDate} ~ ${ep.endDate || '現在'}`,
+        technologies: ep.technologies
+      })) || [],
     }));
   }, [response]);
 
