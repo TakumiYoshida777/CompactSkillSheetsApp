@@ -92,9 +92,30 @@ export const businessPartnerApi = {
     limit?: number;
   }): Promise<{ data: BusinessPartner[]; total: number }> {
     try {
-      const response = await api.get('/partner-list', { params });
-      return response.data;
-    } catch (error: any) {
+      // 暫定的に元のエンドポイントに戻す（正式実装に問題があるため）
+      const response = await api.get<any>('/partner-list', { params });
+      // レスポンス形式の調整（正式実装のレスポンス形式に合わせる）
+      const data = response.data;
+      
+      // 正式実装のレスポンス構造に応じて調整
+      if (data.partners && Array.isArray(data.partners)) {
+        return {
+          data: data.partners,
+          total: data.total || data.partners.length
+        };
+      }
+      
+      // 配列が直接返ってくる場合
+      if (Array.isArray(data)) {
+        return {
+          data: data,
+          total: data.length
+        };
+      }
+      
+      // すでに正しい形式の場合
+      return data;
+    } catch (error: unknown) {
       message.error('取引先一覧の取得に失敗しました');
       throw error;
     }
@@ -103,9 +124,9 @@ export const businessPartnerApi = {
   // 取引先詳細取得
   async getById(id: string): Promise<BusinessPartner> {
     try {
-      const response = await api.get(`/partner-list/${id}`);
-      return response.data.data;
-    } catch (error: any) {
+      const response = await api.get<any>(`/partner-list/${id}`);
+      return response.data.data || response.data;
+    } catch (error: unknown) {
       message.error('取引先情報の取得に失敗しました');
       throw error;
     }
@@ -114,10 +135,10 @@ export const businessPartnerApi = {
   // 取引先作成
   async create(data: Partial<BusinessPartner>): Promise<BusinessPartner> {
     try {
-      const response = await api.post('/business-partners', data);
+      const response = await api.post<any>('/business-partners', data);
       message.success('取引先を登録しました');
-      return response.data.data;
-    } catch (error: any) {
+      return response.data.data || response.data.partner;
+    } catch (error: unknown) {
       message.error('取引先の登録に失敗しました');
       throw error;
     }
@@ -126,10 +147,10 @@ export const businessPartnerApi = {
   // 取引先更新
   async update(id: string, data: Partial<BusinessPartner>): Promise<BusinessPartner> {
     try {
-      const response = await api.put(`/business-partners/${id}`, data);
+      const response = await api.put<any>(`/business-partners/${id}`, data);
       message.success('取引先情報を更新しました');
-      return response.data.data;
-    } catch (error: any) {
+      return response.data.data || response.data.partner;
+    } catch (error: unknown) {
       message.error('取引先情報の更新に失敗しました');
       throw error;
     }
@@ -138,9 +159,9 @@ export const businessPartnerApi = {
   // 取引先削除
   async delete(id: string): Promise<void> {
     try {
-      await api.delete(`/business-partners/${id}`);
+      await api.delete(`/partner-list/${id}`);
       message.success('取引先を削除しました');
-    } catch (error: any) {
+    } catch (error: unknown) {
       message.error('取引先の削除に失敗しました');
       throw error;
     }
@@ -149,10 +170,10 @@ export const businessPartnerApi = {
   // アプローチ履歴追加
   async addApproach(partnerId: string, approach: Partial<ApproachHistory>): Promise<ApproachHistory> {
     try {
-      const response = await api.post(`/business-partners/${partnerId}/approaches`, approach);
+      const response = await api.post<any>(`/partner-list/${partnerId}/approaches`, approach);
       message.success('アプローチ履歴を追加しました');
       return response.data.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       message.error('アプローチ履歴の追加に失敗しました');
       throw error;
     }
