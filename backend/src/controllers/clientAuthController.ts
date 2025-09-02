@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { debugLog } from '../utils/logger';
+import { debugLog, errorLog } from '../utils/logger';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -183,7 +183,7 @@ export class ClientAuthController {
         }
       });
     } catch (error) {
-      console.error('取引先企業ログインエラー:', error);
+      errorLog('取引先企業ログインエラー:', error);
       res.status(500).json({ error: 'サーバーエラーが発生しました' });
     }
   }
@@ -281,7 +281,7 @@ export class ClientAuthController {
         refreshToken // 既存のリフレッシュトークンを返す
       });
     } catch (error) {
-      console.error('トークン更新エラー:', error);
+      errorLog('トークン更新エラー:', error);
       res.status(401).json({ error: 'トークンの更新に失敗しました' });
     }
   }
@@ -295,7 +295,7 @@ export class ClientAuthController {
       // サーバー側では成功レスポンスを返すのみ
       res.json({ message: 'ログアウトしました' });
     } catch (error) {
-      console.error('ログアウトエラー:', error);
+      errorLog('ログアウトエラー:', error);
       res.status(500).json({ error: 'サーバーエラーが発生しました' });
     }
   }
@@ -405,7 +405,7 @@ export class ClientAuthController {
         }
       });
     } catch (error) {
-      console.error('ユーザー情報取得エラー:', error);
+      errorLog('ユーザー情報取得エラー:', error);
       res.status(500).json({ error: 'サーバーエラーが発生しました' });
     }
   }
