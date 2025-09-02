@@ -1,4 +1,4 @@
-import { errorLog } from '../../utils/logger';
+import { errorLog } from '../../../utils/logger';
 import { Request, Response } from 'express';
 import { offerService } from '../../../services/offerService';
 
