@@ -1,4 +1,4 @@
-import { debugLog, errorLog } from '../../utils/logger';
+import { errorLog } from '../../utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
   Row,
@@ -187,7 +187,6 @@ const EngineerDashboard: React.FC = () => {
           </Button>
           <Button
             icon={<ExportOutlined />}
-            onClick={() => debugLog('Export PDF')}
           >
             PDF出力
           </Button>
@@ -399,7 +398,6 @@ const EngineerDashboard: React.FC = () => {
               block
               size="large"
               icon={<ExportOutlined />}
-              onClick={() => debugLog('Export')}
             >
               データエクスポート
             </Button>

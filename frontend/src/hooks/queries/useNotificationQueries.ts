@@ -1,4 +1,4 @@
-import { debugLog, errorLog } from '../../utils/logger';
+import { errorLog } from '../../utils/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationAPI } from '../../api/common/notificationApi';
 import { message } from 'antd';
@@ -88,7 +88,6 @@ export const useNotificationWebSocket = () => {
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      debugLog('WebSocket接続が確立されました');
     };
 
     ws.onmessage = (event) => {
@@ -107,7 +106,6 @@ export const useNotificationWebSocket = () => {
     };
 
     ws.onclose = () => {
-      debugLog('WebSocket接続が閉じられました');
       // 再接続ロジック
       setTimeout(() => connect(), 5000);
     };

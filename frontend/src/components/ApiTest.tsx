@@ -1,4 +1,4 @@
-import { debugLog, errorLog } from '../utils/logger';
+import { errorLog } from '../utils/logger';
 import { useState } from 'react';
 import axios from 'axios';
 
@@ -16,7 +16,6 @@ export const ApiTest = () => {
     try {
       const response = await axios.get('http://localhost:8000/health');
       setHealthStatus(response.data);
-      debugLog('Health check success:', response.data);
     } catch (err: any) {
       setError(`Health check failed: ${err.message}`);
       errorLog('Health check error:', err);
@@ -31,7 +30,6 @@ export const ApiTest = () => {
     try {
       const response = await axios.get(API_URL);
       setApiInfo(response.data);
-      debugLog('API info success:', response.data);
     } catch (err: any) {
       setError(`API info failed: ${err.message}`);
       errorLog('API info error:', err);
@@ -52,7 +50,6 @@ export const ApiTest = () => {
         mode: 'cors',
       });
       const data = await response.json();
-      debugLog('CORS test success:', data);
       setHealthStatus(data);
     } catch (err: any) {
       setError(`CORS test failed: ${err.message}`);

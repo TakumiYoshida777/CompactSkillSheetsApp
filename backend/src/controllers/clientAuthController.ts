@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { debugLog, errorLog } from '../utils/logger';
+import { errorLog } from '../utils/logger';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
@@ -305,17 +305,13 @@ export class ClientAuthController {
    */
   async me(req: Request, res: Response) {
     try {
-      debugLog('[clientAuthController.me] Request received');
-      debugLog('[clientAuthController.me] req.clientUser:', (req as any).clientUser);
       
       const clientUserId = (req as any).clientUser?.id;
 
       if (!clientUserId) {
-        debugLog('[clientAuthController.me] No clientUserId found in request');
         return res.status(401).json({ error: '認証が必要です' });
       }
       
-      debugLog('[clientAuthController.me] ClientUserId:', clientUserId);
 
       const clientUser = await prisma.clientUser.findUnique({
         where: { id: BigInt(clientUserId) },

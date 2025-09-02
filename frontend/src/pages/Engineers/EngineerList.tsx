@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Space, message, Spin, Alert } from 'antd';
 import { UserAddOutlined, DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
 import { EngineerSearchTable } from '../../components/EngineerSearch/EngineerSearchTable';
-import { debugLog, errorLog } from '../../utils/logger';
+import { errorLog } from '../../utils/logger';
 import type { Engineer } from '../../components/EngineerSearch/EngineerSearchTable';
 import { useEngineers, useDeleteEngineer, useBulkExport } from '../../hooks/useEngineers';
 import { engineerApi } from '../../api/engineers/engineerApi';
@@ -34,13 +34,6 @@ const EngineerList: React.FC = () => {
 
   // デバッグ用ログ
   React.useEffect(() => {
-    debugLog('=== EngineerList Debug ===');
-    debugLog('Filters:', filters);
-    debugLog('Loading:', isLoading);
-    debugLog('Error:', error);
-    debugLog('Response:', response);
-    debugLog('Response Data:', response?.data);
-    debugLog('Response Meta:', response?.meta);
   }, [filters, isLoading, error, response]);
 
   // 年齢計算ヘルパー
@@ -104,11 +97,9 @@ const EngineerList: React.FC = () => {
   // APIレスポンスをコンポーネントの形式に変換
   const engineers: Engineer[] = React.useMemo(() => {
     if (!response?.data) {
-      debugLog('No response data, returning empty array');
       return [];
     }
     
-    debugLog('Transforming engineers data:', response.data);
     return response.data.map((eng: any) => ({
       key: eng.id,
       engineerId: eng.id,

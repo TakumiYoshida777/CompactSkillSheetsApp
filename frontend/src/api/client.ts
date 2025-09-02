@@ -2,7 +2,7 @@
  * APIクライアント基盤
  */
 
-import { debugLog, errorLog } from '../utils/logger';
+import { errorLog } from '../utils/logger';
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios'
 import { API_CONFIG, HTTP_STATUS } from './config'
@@ -65,7 +65,6 @@ class ApiClient {
             const token = parsedState?.state?.token
             if (token) {
               config.headers['Authorization'] = `Bearer ${token}`
-              debugLog('[ApiClient] Authorization header set:', config.headers['Authorization'])
             }
           } catch (error) {
             errorLog('[ApiClient] Failed to parse auth state:', error)

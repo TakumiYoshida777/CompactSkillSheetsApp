@@ -1,4 +1,3 @@
-import { debugLog } from '../../utils/logger';
 import React, { useState, useEffect } from 'react';
 import { useBusinessPartnerDetail } from '../../hooks/useBusinessPartners';
 import type { BusinessPartner as BusinessPartnerType, ProposedEngineer, Project, ApproachHistory, ContactPerson } from '../../types/businessPartner';
@@ -85,7 +84,6 @@ const BusinessPartnerDetail: React.FC = () => {
 
   const handleSendProposal = () => {
     form.validateFields().then(values => {
-      debugLog('Proposal data:', values);
       message.success('エンジニアの提案を送信しました');
       setProposalModalVisible(false);
       form.resetFields();
@@ -94,7 +92,6 @@ const BusinessPartnerDetail: React.FC = () => {
 
   const handleAddNote = () => {
     noteForm.validateFields().then(values => {
-      debugLog('Note data:', values);
       message.success('メモを追加しました');
       setNoteModalVisible(false);
       noteForm.resetFields();

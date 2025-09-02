@@ -88,14 +88,6 @@ export const stream = {
 };
 
 // 環境に応じてconsole.logを制御するラッパー関数
-export const debugLog = (...args: any[]) => {
-  if (process.env.NODE_ENV === 'development') {
-    logger.debug(args.map(arg => 
-      typeof arg === 'object' ? JSON.stringify(arg) : arg
-    ).join(' '));
-  }
-};
-
 export const infoLog = (...args: any[]) => {
   if (process.env.NODE_ENV === 'development') {
     logger.info(args.map(arg => 

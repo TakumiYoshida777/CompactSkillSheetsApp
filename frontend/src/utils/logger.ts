@@ -20,15 +20,6 @@ export enum LogLevel {
 const currentLogLevel = isProduction ? LogLevel.ERROR : LogLevel.DEBUG;
 
 /**
- * デバッグログ（開発環境でのみ出力）
- */
-export const debugLog = (...args: any[]): void => {
-  if (currentLogLevel <= LogLevel.DEBUG) {
-    console.log(...args);
-  }
-};
-
-/**
  * 情報ログ（開発環境でのみ出力）
  */
 export const infoLog = (...args: any[]): void => {
@@ -104,7 +95,6 @@ export const assertLog = (condition: boolean, ...args: any[]): void => {
 
 // デフォルトエクスポート
 const logger = {
-  debug: debugLog,
   info: infoLog,
   warn: warnLog,
   error: errorLog,

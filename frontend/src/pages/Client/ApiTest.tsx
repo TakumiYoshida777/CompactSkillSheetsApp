@@ -1,4 +1,4 @@
-import { debugLog, errorLog } from '../../utils/logger';
+import { errorLog } from '../../utils/logger';
 import React, { useState } from 'react';
 import { Card, Button, Space, Typography, Alert, Input, message } from 'antd';
 import axios from 'axios';
@@ -18,9 +18,6 @@ const ApiTest: React.FC = () => {
     setResult(null);
     
     try {
-      debugLog('Testing login with:', { email, password });
-      debugLog('API Base URL:', axios.defaults.baseURL);
-      debugLog('Full URL:', `${axios.defaults.baseURL}/api/client/auth/login`);
       
       const response = await axios.post('client/auth/login', {
         email,

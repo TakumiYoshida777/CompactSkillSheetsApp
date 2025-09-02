@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiResponse } from '../utils/response.util';
-import { debugLog } from '../utils/logger';
 
 /**
  * 企業IDミドルウェア
@@ -13,10 +12,6 @@ export const companyMiddleware = (req: Request, res: Response, next: NextFunctio
   // JWTトークンから企業IDを取得する場合（認証済みユーザー）
   const tokenCompanyId = (req as any).user?.companyId;
   
-  debugLog('[Company Middleware] Headers:', req.headers);
-  debugLog('[Company Middleware] User from token:', (req as any).user);
-  debugLog('[Company Middleware] Company ID from header:', companyId);
-  debugLog('[Company Middleware] Company ID from token:', tokenCompanyId);
   
   // 企業IDの決定（ヘッダー優先、なければトークンから）
   const finalCompanyId = companyId || tokenCompanyId;
@@ -31,7 +26,6 @@ export const companyMiddleware = (req: Request, res: Response, next: NextFunctio
   // リクエストオブジェクトに企業IDを設定
   req.companyId = finalCompanyId;
   (req as any).user = { ...(req as any).user, companyId: finalCompanyId };
-  debugLog('[Company Middleware] Final company ID:', finalCompanyId);
   next();
 };
 

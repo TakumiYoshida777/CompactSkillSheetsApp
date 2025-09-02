@@ -1,4 +1,4 @@
-import { debugLog, errorLog } from '../../utils/logger';
+import { errorLog } from '../../utils/logger';
 import { useState, useEffect } from 'react';
 import {
   Form,
@@ -68,9 +68,6 @@ const EngineerRegister: React.FC = () => {
 
   // 権限チェック
   useEffect(() => {
-    debugLog('EngineerRegister - User:', user);
-    debugLog('EngineerRegister - User roles:', user?.roles);
-    debugLog('EngineerRegister - Can register:', user ? canCreateEngineer() : false);
     
     if (user && !canCreateEngineer()) {
       message.error('この機能にアクセスする権限がありません');
@@ -1130,7 +1127,6 @@ const EngineerRegister: React.FC = () => {
                           setCurrentStep(currentStep + 1);
                         })
                         .catch((info) => {
-                          debugLog('Validate Failed:', info);
                         });
                     }}
                   >
