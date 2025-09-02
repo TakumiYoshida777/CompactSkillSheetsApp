@@ -1,3 +1,4 @@
+import { debugLog } from '../utils/logger';
 import { AuthService } from './authService';
 import { getUserTypeFromToken } from '../utils/jwtHelper';
 
@@ -21,7 +22,7 @@ export class AuthCheckService {
    */
   static validateToken(context: AuthCheckContext): boolean {
     if (!context.token) {
-      console.log('[checkAuth] No token found, setting isAuthenticated to false');
+      debugLog('[checkAuth] No token found, setting isAuthenticated to false');
       return false;
     }
     return true;
@@ -32,11 +33,11 @@ export class AuthCheckService {
    */
   static determineEndpoint(token: string, user?: any): string {
     const userTypeFromToken = getUserTypeFromToken(token);
-    console.log('[checkAuth] UserType from token:', userTypeFromToken);
+    debugLog('[checkAuth] UserType from token:', userTypeFromToken);
     
     const userType = userTypeFromToken || user?.userType;
     const endpoint = userType === 'client' ? 'client/auth/me' : 'auth/me';
-    console.log('[checkAuth] Using endpoint:', endpoint, 'UserType:', userType);
+    debugLog('[checkAuth] Using endpoint:', endpoint, 'UserType:', userType);
     
     return endpoint;
   }
@@ -50,13 +51,13 @@ export class AuthCheckService {
       const endpoint = this.determineEndpoint(token, user);
       const userData = await AuthService.fetchUserInfo(endpoint);
       
-      console.log('[checkAuth] Success - Response:', userData);
+      debugLog('[checkAuth] Success - Response:', userData);
       return {
         success: true,
         user: userData,
       };
     } catch (error: any) {
-      console.log('[checkAuth] Request failed:', error.message);
+      debugLog('[checkAuth] Request failed:', error.message);
       return {
         success: false,
         needsRefresh: true,
@@ -80,7 +81,7 @@ export class AuthCheckService {
       }
       
       const endpoint = this.determineEndpoint(newToken);
-      console.log('[checkAuth] After refresh, using endpoint:', endpoint);
+      debugLog('[checkAuth] After refresh, using endpoint:', endpoint);
       
       const userData = await AuthService.fetchUserInfo(endpoint);
       return {
@@ -88,7 +89,7 @@ export class AuthCheckService {
         user: userData,
       };
     } catch (refreshError: any) {
-      console.log('[checkAuth] Refresh also failed:', refreshError.message);
+      debugLog('[checkAuth] Refresh also failed:', refreshError.message);
       return { success: false };
     }
   }

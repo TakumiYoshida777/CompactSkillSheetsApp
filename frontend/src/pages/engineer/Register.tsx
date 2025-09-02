@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Form, Input, Button, Card, message, Typography, InputNumber } from 'antd';
@@ -44,7 +45,7 @@ const EngineerRegister: React.FC = () => {
         navigate('engineer/skill-sheet');
       }
     } catch (error: any) {
-      console.error('Register error:', error);
+      errorLog('Register error:', error);
       message.error(error.response?.data?.message || '登録に失敗しました');
     } finally {
       setLoading(false);

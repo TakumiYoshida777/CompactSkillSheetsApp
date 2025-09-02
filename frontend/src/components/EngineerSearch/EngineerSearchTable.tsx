@@ -138,8 +138,8 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
 
   // フィルタリング処理
   const filteredEngineers = React.useMemo(() => {
-    console.log('[EngineerSearchTable] Input engineers:', engineers);
-    console.log('[EngineerSearchTable] Engineers count:', engineers.length);
+    debugLog('[EngineerSearchTable] Input engineers:', engineers);
+    debugLog('[EngineerSearchTable] Engineers count:', engineers.length);
     
     let filtered = [...engineers];
 
@@ -173,7 +173,7 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
       }
       return e.experience >= experienceRange[0] && e.experience <= experienceRange[1];
     });
-    console.log('[EngineerSearchTable] After experience filter:', filtered.length);
+    debugLog('[EngineerSearchTable] After experience filter:', filtered.length);
 
     // 年齢フィルター（年齢がない場合はフィルターをスキップ）
     filtered = filtered.filter(e => {
@@ -183,7 +183,7 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
       }
       return e.age >= ageRange[0] && e.age <= ageRange[1];
     });
-    console.log('[EngineerSearchTable] After age filter:', filtered.length);
+    debugLog('[EngineerSearchTable] After age filter:', filtered.length);
 
     // 単価フィルター
     if (showCompanyColumn) {
@@ -200,7 +200,7 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
       filtered = filtered.filter(engineer => {
         // roleExperiencesがない場合はスキップ（フィルタリングしない）
         if (!engineer.roleExperiences || engineer.roleExperiences.length === 0) {
-          console.log('[EngineerSearchTable] Engineer has no roleExperiences, skipping role filter for:', engineer.name);
+          debugLog('[EngineerSearchTable] Engineer has no roleExperiences, skipping role filter for:', engineer.name);
           return true;
         }
         return filterRoles.every(filterRole => {
@@ -211,14 +211,14 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
         });
       });
     }
-    console.log('[EngineerSearchTable] After role filter:', filtered.length);
+    debugLog('[EngineerSearchTable] After role filter:', filtered.length);
 
     // 業務経験フィルター
     if (filterTasks.length > 0) {
       filtered = filtered.filter(engineer => {
         // workExperiencesがない場合はスキップ（フィルタリングしない）
         if (!engineer.workExperiences || engineer.workExperiences.length === 0) {
-          console.log('[EngineerSearchTable] Engineer has no workExperiences, skipping task filter for:', engineer.name);
+          debugLog('[EngineerSearchTable] Engineer has no workExperiences, skipping task filter for:', engineer.name);
           return true;
         }
         return filterTasks.every(task => 
@@ -228,10 +228,10 @@ export const EngineerSearchTable: React.FC<EngineerSearchTableProps> = ({
         );
       });
     }
-    console.log('[EngineerSearchTable] After task filter:', filtered.length);
+    debugLog('[EngineerSearchTable] After task filter:', filtered.length);
 
-    console.log('[EngineerSearchTable] Final filtered result:', filtered);
-    console.log('[EngineerSearchTable] Final filtered count:', filtered.length);
+    debugLog('[EngineerSearchTable] Final filtered result:', filtered);
+    debugLog('[EngineerSearchTable] Final filtered count:', filtered.length);
     return filtered;
   }, [engineers, searchText, filterStatus, filterSkills, experienceRange, ageRange, rateRange, showCompanyColumn, filterRoles, filterTasks]);
 

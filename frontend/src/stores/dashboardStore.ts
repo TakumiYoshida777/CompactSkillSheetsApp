@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { dashboardAPI } from '../api/ses/dashboardApi';
@@ -54,7 +55,7 @@ export const useDashboardStore = create<DashboardState>()(
             error: errorMessage, 
             isLoading: false 
           });
-          console.error('ダッシュボードデータ取得エラー:', error);
+          errorLog('ダッシュボードデータ取得エラー:', error);
         }
       },
 
@@ -74,7 +75,7 @@ export const useDashboardStore = create<DashboardState>()(
             error: errorMessage, 
             isLoading: false 
           });
-          console.error('エンジニア統計取得エラー:', error);
+          errorLog('エンジニア統計取得エラー:', error);
         }
       },
 
@@ -94,7 +95,7 @@ export const useDashboardStore = create<DashboardState>()(
             error: errorMessage, 
             isLoading: false 
           });
-          console.error('アプローチ統計取得エラー:', error);
+          errorLog('アプローチ統計取得エラー:', error);
         }
       },
 
@@ -111,7 +112,7 @@ export const useDashboardStore = create<DashboardState>()(
             fetchApproachStatistics()
           ]);
         } catch (error) {
-          console.error('データ更新エラー:', error);
+          errorLog('データ更新エラー:', error);
         } finally {
           set({ isLoading: false });
         }

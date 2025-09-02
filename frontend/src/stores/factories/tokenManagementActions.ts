@@ -33,10 +33,8 @@ export const createTokenManagementActions: StateCreator<
 
     try {
       const userType = token ? getUserTypeFromToken(token) : null;
-      console.log('[refreshAccessToken] UserType from token:', userType);
       
       const endpoint = userType === 'client' ? 'client/auth/refresh' : 'auth/refresh';
-      console.log('[refreshAccessToken] Using endpoint:', endpoint);
       
       const tokens = await AuthService.refreshToken(endpoint, refreshToken);
       
@@ -45,7 +43,6 @@ export const createTokenManagementActions: StateCreator<
         refreshToken: tokens.refreshToken,
       });
     } catch (error: any) {
-      console.log('[refreshAccessToken] Failed:', error.message);
       get().logout();
       throw error;
     }

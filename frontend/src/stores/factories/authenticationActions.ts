@@ -55,8 +55,6 @@ export const createAuthenticationActions: StateCreator<
         rememberMe,
       });
       
-      console.log('Client Login Response:', authResponse);
-      console.log('User data:', authResponse.user);
       
       set({
         user: authResponse.user,
@@ -67,9 +65,6 @@ export const createAuthenticationActions: StateCreator<
         error: null,
       });
       
-      if (authResponse.message) {
-        console.log(authResponse.message);
-      }
     } catch (error: any) {
       const errorMessage = error.message || 'ログインに失敗しました';
       set({
@@ -128,7 +123,6 @@ export const createAuthenticationActions: StateCreator<
 
   checkAuth: async () => {
     const { token, user } = get();
-    console.log('[checkAuth] Starting - Token exists:', !!token, 'User:', user);
     
     if (!AuthCheckService.validateToken({ token, user })) {
       set({ isAuthenticated: false });

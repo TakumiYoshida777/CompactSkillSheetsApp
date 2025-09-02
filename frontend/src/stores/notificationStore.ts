@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { notificationAPI } from '../api/common/notificationApi';
@@ -85,7 +86,7 @@ export const useNotificationStore = create<NotificationState>()(
             error: errorMessage, 
             isLoading: false 
           });
-          console.error('通知取得エラー:', error);
+          errorLog('通知取得エラー:', error);
         }
       },
 
@@ -95,7 +96,7 @@ export const useNotificationStore = create<NotificationState>()(
           const count = await notificationAPI.getUnreadCount();
           set({ unreadCount: count });
         } catch (error) {
-          console.error('未読数取得エラー:', error);
+          errorLog('未読数取得エラー:', error);
         }
       },
 
@@ -105,7 +106,7 @@ export const useNotificationStore = create<NotificationState>()(
           const announcements = await notificationAPI.getAnnouncements();
           set({ announcements });
         } catch (error) {
-          console.error('アナウンス取得エラー:', error);
+          errorLog('アナウンス取得エラー:', error);
         }
       },
 
@@ -133,7 +134,7 @@ export const useNotificationStore = create<NotificationState>()(
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : '既読処理に失敗しました';
           set({ error: errorMessage });
-          console.error('既読処理エラー:', error);
+          errorLog('既読処理エラー:', error);
         }
       },
 
@@ -157,7 +158,7 @@ export const useNotificationStore = create<NotificationState>()(
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'すべて既読処理に失敗しました';
           set({ error: errorMessage });
-          console.error('すべて既読処理エラー:', error);
+          errorLog('すべて既読処理エラー:', error);
         }
       },
 

@@ -1,3 +1,4 @@
+import { warnLog } from '../../utils/logger';
 import axios from '@/lib/axios';
 import type {
   OfferBoardData,
@@ -100,7 +101,7 @@ export const offerApi = {
       return response.data;
     } catch (error) {
       // エラー時はモックデータを返す（フォールバック）
-      console.warn('API call failed, returning mock data:', error);
+      warnLog('API call failed, returning mock data:', error);
       return mockOfferBoardData;
     }
   },
@@ -183,7 +184,7 @@ export const offerApi = {
       const response = await axios.get(`${BASE_URL}/engineers/available`, { params });
       return response.data;
     } catch (error) {
-      console.warn('Failed to search engineers:', error);
+      warnLog('Failed to search engineers:', error);
       return { engineers: [], totalCount: 0 };
     }
   },
@@ -193,7 +194,7 @@ export const offerApi = {
       const response = await axios.get(`${BASE_URL}/engineers/${engineerId}`);
       return response.data;
     } catch (error) {
-      console.warn('Failed to get engineer detail:', error);
+      warnLog('Failed to get engineer detail:', error);
       throw error;
     }
   },

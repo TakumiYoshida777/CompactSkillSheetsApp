@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -150,7 +151,7 @@ const NGListManagement: React.FC = () => {
       setSelectedEngineer(null);
     } catch (error: any) {
       if (error.errorFields) {
-        console.error('Validation failed:', error);
+        errorLog('Validation failed:', error);
       } else {
         message.error(error.response?.data?.message || 'NGリストへの追加に失敗しました');
       }

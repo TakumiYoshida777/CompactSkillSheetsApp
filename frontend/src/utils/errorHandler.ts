@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { message, notification } from 'antd';
 import { AxiosError } from 'axios';
 
@@ -21,7 +22,7 @@ export enum ErrorLevel {
 export class ErrorHandler {
   // APIエラーハンドリング
   static handleAPIError(error: AxiosError<APIErrorResponse>) {
-    console.error('APIエラー:', error);
+    errorLog('APIエラー:', error);
 
     // ネットワークエラー
     if (!error.response) {
@@ -110,7 +111,7 @@ export class ErrorHandler {
 
   // 一般的なエラーハンドリング
   static handleError(error: Error | unknown, level: ErrorLevel = ErrorLevel.ERROR) {
-    console.error('エラー:', error);
+    errorLog('エラー:', error);
 
     const errorMessage = error instanceof Error ? error.message : '予期しないエラーが発生しました';
 
@@ -199,17 +200,16 @@ export class ErrorHandler {
         url: window.location.href
       };
 
-      console.log('エラーログ:', errorLog);
       // Sentryにエラーログを送信
       if (process.env.NODE_ENV === 'production') {
         import('./sentry').then(({ logError }) => {
           logError(new Error(errorLog.message), errorLog)
         }).catch(err => {
-          console.error('Sentry import error:', err);
+          errorLog('Sentry import error:', err);
         })
       }
     } catch (logError) {
-      console.error('エラーログ送信失敗:', logError);
+      errorLog('エラーログ送信失敗:', logError);
     }
   }
 }
@@ -218,14 +218,14 @@ export class ErrorHandler {
 export const setupGlobalErrorHandler = () => {
   // 未処理のPromiseエラーをキャッチ
   window.addEventListener('unhandledrejection', (event) => {
-    console.error('未処理のPromiseエラー:', event.reason);
+    errorLog('未処理のPromiseエラー:', event.reason);
     ErrorHandler.handleError(event.reason);
     event.preventDefault();
   });
 
   // 一般的なJavaScriptエラーをキャッチ
   window.addEventListener('error', (event) => {
-    console.error('JavaScriptエラー:', event.error);
+    errorLog('JavaScriptエラー:', event.error);
     ErrorHandler.handleError(event.error, ErrorLevel.CRITICAL);
     event.preventDefault();
   });

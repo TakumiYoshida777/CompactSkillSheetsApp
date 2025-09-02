@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import { useState, useEffect } from 'react';
 import {
   Form,
@@ -115,7 +116,7 @@ const SkillSheetEdit: React.FC = () => {
       await saveSkillSheet(values);
       message.success('自動保存しました', 1);
     } catch (error) {
-      console.error('Auto save failed:', error);
+      errorLog('Auto save failed:', error);
     } finally {
       setAutoSaving(false);
     }

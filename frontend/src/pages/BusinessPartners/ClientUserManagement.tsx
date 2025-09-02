@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -146,7 +147,7 @@ const ClientUserManagement: React.FC = () => {
       form.resetFields();
       setEditingUser(null);
     } catch (error: any) {
-      console.error('保存エラー:', error);
+      errorLog('保存エラー:', error);
       message.error(error.response?.data?.message || '保存に失敗しました');
     }
   };

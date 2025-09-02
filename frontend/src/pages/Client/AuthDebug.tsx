@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React, { useEffect, useState } from 'react';
 import { Card, Button, Space, Typography, Alert, Descriptions, Tag } from 'antd';
 import { useAuthStore } from '../../stores/authStore';
@@ -18,7 +19,7 @@ const AuthDebug: React.FC = () => {
         const parsed = JSON.parse(storageData);
         setLocalStorageData(parsed);
       } catch (e) {
-        console.error('Failed to parse localStorage data:', e);
+        errorLog('Failed to parse localStorage data:', e);
       }
     }
 

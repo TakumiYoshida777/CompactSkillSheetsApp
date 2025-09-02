@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import axiosInstance from '../../lib/axios';
 import type { 
   DashboardData, 
@@ -40,7 +41,7 @@ export const dashboardAPI = {
       const response = await apiClient.get(`/engineers?status=waiting&limit=${limit}`);
       return response.data.data;
     } catch (error) {
-      console.error('待機中エンジニア取得エラー:', error);
+      errorLog('待機中エンジニア取得エラー:', error);
       return [];
     }
   },
@@ -51,7 +52,7 @@ export const dashboardAPI = {
       const response = await apiClient.get(`/engineers?status=upcoming&limit=${limit}`);
       return response.data.data;
     } catch (error) {
-      console.error('稼働予定エンジニア取得エラー:', error);
+      errorLog('稼働予定エンジニア取得エラー:', error);
       return [];
     }
   }

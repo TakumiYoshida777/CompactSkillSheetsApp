@@ -1,3 +1,4 @@
+import { debugLog } from '../../utils/logger';
 import React from 'react';
 import {
   Card,
@@ -59,7 +60,7 @@ const SkillSheetPreview: React.FC = () => {
 
   const handleDownload = () => {
     // PDF出力処理
-    console.log('Download PDF');
+    debugLog('Download PDF');
   };
 
   const handlePrint = () => {

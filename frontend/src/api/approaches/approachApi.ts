@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -166,7 +167,7 @@ class ApproachAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('アプローチ履歴の取得に失敗しました:', error);
+      errorLog('アプローチ履歴の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -179,7 +180,7 @@ class ApproachAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('アプローチ詳細の取得に失敗しました:', error);
+      errorLog('アプローチ詳細の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -198,7 +199,7 @@ class ApproachAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('アプローチ統計の取得に失敗しました:', error);
+      errorLog('アプローチ統計の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -210,7 +211,7 @@ class ApproachAPI {
         headers: this.getHeaders(),
       });
     } catch (error) {
-      console.error('アプローチの削除に失敗しました:', error);
+      errorLog('アプローチの削除に失敗しました:', error);
       throw error;
     }
   }
@@ -225,7 +226,7 @@ class ApproachAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('アプローチの作成に失敗しました:', error);
+      errorLog('アプローチの作成に失敗しました:', error);
       throw error;
     }
   }
@@ -240,7 +241,7 @@ class ApproachAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('一括アプローチの送信に失敗しました:', error);
+      errorLog('一括アプローチの送信に失敗しました:', error);
       throw error;
     }
   }
@@ -253,7 +254,7 @@ class ApproachAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('メールテンプレート一覧の取得に失敗しました:', error);
+      errorLog('メールテンプレート一覧の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -268,7 +269,7 @@ class ApproachAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('メールテンプレートの作成に失敗しました:', error);
+      errorLog('メールテンプレートの作成に失敗しました:', error);
       throw error;
     }
   }
@@ -283,7 +284,7 @@ class ApproachAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('メールテンプレートの更新に失敗しました:', error);
+      errorLog('メールテンプレートの更新に失敗しました:', error);
       throw error;
     }
   }
@@ -296,7 +297,7 @@ class ApproachAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('定期アプローチ一覧の取得に失敗しました:', error);
+      errorLog('定期アプローチ一覧の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -311,7 +312,7 @@ class ApproachAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('定期アプローチの作成に失敗しました:', error);
+      errorLog('定期アプローチの作成に失敗しました:', error);
       throw error;
     }
   }
@@ -326,7 +327,7 @@ class ApproachAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('定期アプローチの更新に失敗しました:', error);
+      errorLog('定期アプローチの更新に失敗しました:', error);
       throw error;
     }
   }
@@ -338,7 +339,7 @@ class ApproachAPI {
         headers: this.getHeaders(),
       });
     } catch (error) {
-      console.error('定期アプローチの削除に失敗しました:', error);
+      errorLog('定期アプローチの削除に失敗しました:', error);
       throw error;
     }
   }
@@ -353,7 +354,7 @@ class ApproachAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('定期アプローチの一時停止/再開に失敗しました:', error);
+      errorLog('定期アプローチの一時停止/再開に失敗しました:', error);
       throw error;
     }
   }
@@ -384,7 +385,7 @@ class ApproachAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('フリーランス一覧の取得に失敗しました:', error);
+      errorLog('フリーランス一覧の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -404,7 +405,7 @@ class ApproachAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('フリーランスアプローチの送信に失敗しました:', error);
+      errorLog('フリーランスアプローチの送信に失敗しました:', error);
       throw error;
     }
   }
@@ -419,7 +420,7 @@ class ApproachAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('フリーランスアプローチ履歴の取得に失敗しました:', error);
+      errorLog('フリーランスアプローチ履歴の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -439,7 +440,7 @@ class ApproachAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('フリーランス一括アプローチの送信に失敗しました:', error);
+      errorLog('フリーランス一括アプローチの送信に失敗しました:', error);
       throw error;
     }
   }

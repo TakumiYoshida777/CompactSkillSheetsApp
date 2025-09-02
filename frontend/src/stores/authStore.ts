@@ -68,8 +68,6 @@ const useAuthStore = create<AuthState>()(
             rememberMe,
           });
           
-          console.log('Client Login Response:', authResponse);
-          console.log('User data:', authResponse.user);
           
           set({
             user: authResponse.user,
@@ -80,9 +78,6 @@ const useAuthStore = create<AuthState>()(
             error: null,
           });
           
-          if (authResponse.message) {
-            console.log(authResponse.message); // ログインに成功しました
-          }
         } catch (error: any) {
           const errorMessage = error.message || 'ログインに失敗しました';
           set({
@@ -141,11 +136,9 @@ const useAuthStore = create<AuthState>()(
         try {
           // 現在のトークンからuserTypeを取得
           const userType = token ? getUserTypeFromToken(token) : null;
-          console.log('[refreshAccessToken] UserType from token:', userType);
           
           // ユーザータイプに応じて適切なエンドポイントを使用
           const endpoint = userType === 'client' ? 'client/auth/refresh' : 'auth/refresh';
-          console.log('[refreshAccessToken] Using endpoint:', endpoint);
           
           const tokens = await AuthService.refreshToken(endpoint, refreshToken);
           
@@ -154,7 +147,6 @@ const useAuthStore = create<AuthState>()(
             refreshToken: tokens.refreshToken,
           });
         } catch (error: any) {
-          console.log('[refreshAccessToken] Failed:', error.message);
           // リフレッシュトークンが無効な場合はログアウト
           get().logout();
           throw error;
@@ -182,7 +174,6 @@ const useAuthStore = create<AuthState>()(
 
       checkAuth: async () => {
         const { token, user } = get();
-        console.log('[checkAuth] Starting - Token exists:', !!token, 'User:', user);
         
         // トークンの初期検証
         if (!AuthCheckService.validateToken({ token, user })) {

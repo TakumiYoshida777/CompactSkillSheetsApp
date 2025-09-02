@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -105,7 +106,7 @@ class ProjectAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('プロジェクト一覧の取得に失敗しました:', error);
+      errorLog('プロジェクト一覧の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -120,7 +121,7 @@ class ProjectAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('プロジェクト検索に失敗しました:', error);
+      errorLog('プロジェクト検索に失敗しました:', error);
       throw error;
     }
   }
@@ -133,7 +134,7 @@ class ProjectAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('カレンダー用プロジェクトの取得に失敗しました:', error);
+      errorLog('カレンダー用プロジェクトの取得に失敗しました:', error);
       throw error;
     }
   }
@@ -146,7 +147,7 @@ class ProjectAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('プロジェクト詳細の取得に失敗しました:', error);
+      errorLog('プロジェクト詳細の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -161,7 +162,7 @@ class ProjectAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('プロジェクトの作成に失敗しました:', error);
+      errorLog('プロジェクトの作成に失敗しました:', error);
       throw error;
     }
   }
@@ -176,7 +177,7 @@ class ProjectAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('プロジェクトの更新に失敗しました:', error);
+      errorLog('プロジェクトの更新に失敗しました:', error);
       throw error;
     }
   }
@@ -188,7 +189,7 @@ class ProjectAPI {
         headers: this.getHeaders(),
       });
     } catch (error) {
-      console.error('プロジェクトの削除に失敗しました:', error);
+      errorLog('プロジェクトの削除に失敗しました:', error);
       throw error;
     }
   }
@@ -203,7 +204,7 @@ class ProjectAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('プロジェクトステータスの更新に失敗しました:', error);
+      errorLog('プロジェクトステータスの更新に失敗しました:', error);
       throw error;
     }
   }
@@ -217,7 +218,7 @@ class ProjectAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('アサイン一覧の取得に失敗しました:', error);
+      errorLog('アサイン一覧の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -232,7 +233,7 @@ class ProjectAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('アサインの作成に失敗しました:', error);
+      errorLog('アサインの作成に失敗しました:', error);
       throw error;
     }
   }
@@ -251,7 +252,7 @@ class ProjectAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('アサインの更新に失敗しました:', error);
+      errorLog('アサインの更新に失敗しました:', error);
       throw error;
     }
   }
@@ -264,7 +265,7 @@ class ProjectAPI {
         { headers: this.getHeaders() }
       );
     } catch (error) {
-      console.error('アサインの削除に失敗しました:', error);
+      errorLog('アサインの削除に失敗しました:', error);
       throw error;
     }
   }
@@ -279,7 +280,7 @@ class ProjectAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('利用可能なエンジニアの取得に失敗しました:', error);
+      errorLog('利用可能なエンジニアの取得に失敗しました:', error);
       throw error;
     }
   }
@@ -292,7 +293,7 @@ class ProjectAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('タイムラインの取得に失敗しました:', error);
+      errorLog('タイムラインの取得に失敗しました:', error);
       throw error;
     }
   }
@@ -305,7 +306,7 @@ class ProjectAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('稼働率の取得に失敗しました:', error);
+      errorLog('稼働率の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -319,7 +320,7 @@ class ProjectAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('プロジェクトタイムラインの取得に失敗しました:', error);
+      errorLog('プロジェクトタイムラインの取得に失敗しました:', error);
       throw error;
     }
   }
@@ -334,7 +335,7 @@ class ProjectAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('プロジェクトの延長に失敗しました:', error);
+      errorLog('プロジェクトの延長に失敗しました:', error);
       throw error;
     }
   }

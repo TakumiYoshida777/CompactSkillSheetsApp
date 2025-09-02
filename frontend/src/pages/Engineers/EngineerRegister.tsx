@@ -1,3 +1,4 @@
+import { debugLog, errorLog } from '../../utils/logger';
 import { useState, useEffect } from 'react';
 import {
   Form,
@@ -67,9 +68,9 @@ const EngineerRegister: React.FC = () => {
 
   // 権限チェック
   useEffect(() => {
-    console.log('EngineerRegister - User:', user);
-    console.log('EngineerRegister - User roles:', user?.roles);
-    console.log('EngineerRegister - Can register:', user ? canCreateEngineer() : false);
+    debugLog('EngineerRegister - User:', user);
+    debugLog('EngineerRegister - User roles:', user?.roles);
+    debugLog('EngineerRegister - Can register:', user ? canCreateEngineer() : false);
     
     if (user && !canCreateEngineer()) {
       message.error('この機能にアクセスする権限がありません');
@@ -184,7 +185,7 @@ const EngineerRegister: React.FC = () => {
         ]);
       }
     } catch (error) {
-      console.error('Email check failed:', error);
+      errorLog('Email check failed:', error);
       setEmailAvailable(null);
     } finally {
       setEmailChecking(false);
@@ -279,7 +280,7 @@ const EngineerRegister: React.FC = () => {
       // 詳細画面へ遷移
       navigate(`/engineers/${engineer.id}`);
     } catch (error: any) {
-      console.error('Registration failed:', error);
+      errorLog('Registration failed:', error);
       const errorMessage = error.response?.data?.message || 
                           error.message || 
                           '登録に失敗しました。もう一度お試しください。';
@@ -321,7 +322,7 @@ const EngineerRegister: React.FC = () => {
       
       await axios.put(`/api/v1/engineers/${engineerId}/skill-sheet`, skillData);
     } catch (error) {
-      console.error('Failed to update skills:', error);
+      errorLog('Failed to update skills:', error);
       throw error;
     }
   };
@@ -331,7 +332,7 @@ const EngineerRegister: React.FC = () => {
     try {
       await axios.patch(`/api/v1/engineers/${engineerId}`, info);
     } catch (error) {
-      console.error('Failed to update additional info:', error);
+      errorLog('Failed to update additional info:', error);
       // エラーは握りつぶす（メインの登録は成功しているため）
     }
   };
@@ -358,7 +359,7 @@ const EngineerRegister: React.FC = () => {
     try {
       await Promise.all(promises);
     } catch (error) {
-      console.error('Failed to upload documents:', error);
+      errorLog('Failed to upload documents:', error);
       // エラーは握りつぶす
     }
   };
@@ -439,7 +440,7 @@ const EngineerRegister: React.FC = () => {
           localStorage.removeItem('engineer_register_draft');
         }
       } catch (error) {
-        console.error('Failed to restore draft:', error);
+        errorLog('Failed to restore draft:', error);
         localStorage.removeItem('engineer_register_draft');
       }
     }
@@ -1129,7 +1130,7 @@ const EngineerRegister: React.FC = () => {
                           setCurrentStep(currentStep + 1);
                         })
                         .catch((info) => {
-                          console.log('Validate Failed:', info);
+                          debugLog('Validate Failed:', info);
                         });
                     }}
                   >

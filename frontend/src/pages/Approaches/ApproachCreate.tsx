@@ -1,3 +1,4 @@
+import { debugLog } from '../../utils/logger';
 import React, { useState } from 'react';
 import {
   Form,
@@ -379,7 +380,7 @@ ABC人材サービスの〇〇です。
                 <Input.Search
                   placeholder="エンジニア名で検索"
                   style={{ width: 300 }}
-                  onSearch={(value) => console.log('Search:', value)}
+                  onSearch={(value) => debugLog('Search:', value)}
                 />
                 <Select placeholder="ステータス" style={{ width: 120 }}>
                   <Option value="all">すべて</Option>
@@ -425,7 +426,7 @@ ABC人材サービスの〇〇です。
                 <Input.Search
                   placeholder="企業名で検索"
                   style={{ width: 300 }}
-                  onSearch={(value) => console.log('Search:', value)}
+                  onSearch={(value) => debugLog('Search:', value)}
                 />
                 <Select placeholder="ステータス" style={{ width: 120 }}>
                   <Option value="all">すべて</Option>
@@ -674,7 +675,7 @@ ABC人材サービスの〇〇です。
   const handleSend = async () => {
     try {
       const values = await form.validateFields();
-      console.log('Sending approach:', {
+      debugLog('Sending approach:', {
         engineers: selectedEngineers,
         companies: selectedCompanies,
         message: values,
@@ -696,7 +697,7 @@ ABC人材サービスの〇〇です。
   // 下書き保存
   const handleSaveDraft = () => {
     const values = form.getFieldsValue();
-    console.log('Saving draft:', {
+    debugLog('Saving draft:', {
       engineers: selectedEngineers,
       companies: selectedCompanies,
       message: values,

@@ -3,6 +3,7 @@
  * 本番環境でのエラー追跡とパフォーマンス監視
  */
 
+import { errorLog } from '../utils/logger';
 import * as Sentry from '@sentry/react'
 import { BrowserTracing } from '@sentry/tracing'
 
@@ -75,7 +76,7 @@ export const setSentryUser = (user: { id: string; email: string; role?: string }
  * カスタムエラーログ送信
  */
 export const logError = (error: Error, context?: Record<string, any>) => {
-  console.error('Error:', error, context)
+  errorLog('Error:', error, context)
   
   if (process.env.NODE_ENV === 'production') {
     Sentry.captureException(error, {

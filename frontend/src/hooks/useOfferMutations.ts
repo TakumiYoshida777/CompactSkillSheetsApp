@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { offerApi } from '@/api/client/offerApi';
@@ -16,7 +17,7 @@ export const useCreateOffer = () => {
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || 'オファーの送信に失敗しました';
       message.error(errorMessage);
-      console.error('Offer creation error:', error);
+      errorLog('Offer creation error:', error);
     },
   });
 };
@@ -35,7 +36,7 @@ export const useUpdateOfferStatus = () => {
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || 'ステータスの更新に失敗しました';
       message.error(errorMessage);
-      console.error('Status update error:', error);
+      errorLog('Status update error:', error);
     },
   });
 };
@@ -52,7 +53,7 @@ export const useSendReminder = () => {
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || 'リマインドメールの送信に失敗しました';
       message.error(errorMessage);
-      console.error('Reminder send error:', error);
+      errorLog('Reminder send error:', error);
     },
   });
 };
@@ -71,7 +72,7 @@ export const useWithdrawOffer = () => {
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || 'オファーの取り下げに失敗しました';
       message.error(errorMessage);
-      console.error('Offer withdrawal error:', error);
+      errorLog('Offer withdrawal error:', error);
     },
   });
 };
@@ -90,7 +91,7 @@ export const useBulkOfferAction = () => {
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || '一括操作に失敗しました';
       message.error(errorMessage);
-      console.error('Bulk action error:', error);
+      errorLog('Bulk action error:', error);
     },
   });
 };

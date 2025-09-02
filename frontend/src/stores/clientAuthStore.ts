@@ -82,7 +82,6 @@ const useClientAuthStore = create<ClientAuthState>()(
             error: null,
           });
           
-          console.log('[ClientAuth] Login successful:', message);
         } catch (error: any) {
           set({
             isLoading: false,
@@ -126,7 +125,6 @@ const useClientAuthStore = create<ClientAuthState>()(
             isLoading: false,
           });
         } catch (error: any) {
-          console.log('[ClientAuth] Check auth failed:', error.response?.status);
           
           // 401エラーの場合、リフレッシュトークンで再試行
           if (error.response?.status === 401 && refreshToken) {
@@ -141,7 +139,6 @@ const useClientAuthStore = create<ClientAuthState>()(
                 isLoading: false,
               });
             } catch (refreshError) {
-              console.log('[ClientAuth] Refresh also failed');
               get().logout();
               set({ isLoading: false });
             }

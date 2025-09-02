@@ -1,3 +1,4 @@
+import { debugLog } from '../../utils/logger';
 import React, { useState } from 'react';
 import {
   Card,
@@ -150,7 +151,7 @@ const UserProfile: React.FC = () => {
   const handleSaveProfile = async (values: any) => {
     setLoading(true);
     try {
-      console.log('Profile values:', values);
+      debugLog('Profile values:', values);
       message.success('プロフィール情報を更新しました');
       setIsEditing(false);
     } catch (error) {
@@ -164,7 +165,7 @@ const UserProfile: React.FC = () => {
   const handlePasswordChange = async (values: any) => {
     setLoading(true);
     try {
-      console.log('Password change:', values);
+      debugLog('Password change:', values);
       message.success('パスワードを変更しました');
       setIsPasswordModalVisible(false);
       passwordForm.resetFields();

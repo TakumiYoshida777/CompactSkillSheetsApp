@@ -49,8 +49,6 @@ const PermissionRoute: React.FC<PermissionRouteProps> = ({ children, path }) => 
     );
     
     if (!hasAllPermissions) {
-      console.log(`[PermissionRoute] Access denied to ${targetPath}`);
-      console.log('Required permissions:', requiredPermissions);
       
       return (
         <div style={{

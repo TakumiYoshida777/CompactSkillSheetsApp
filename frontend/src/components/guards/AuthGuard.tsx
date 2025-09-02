@@ -39,7 +39,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     // 初回マウント時に認証状態をチェック
     // トークンが存在する場合は認証チェックを実行
     if (!hasChecked && !isChecking && requireAuth && token) {
-      console.log('[AuthGuard] Token exists, checking authentication...');
       setIsChecking(true);
       checkAuth().finally(() => {
         setIsChecking(false);
@@ -53,7 +52,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // ローディング中またはチェック中
   if (isLoading || isChecking || (requireAuth && token && !hasChecked)) {
-    console.log('[AuthGuard] Loading state - isLoading:', isLoading, 'isChecking:', isChecking, 'hasChecked:', hasChecked);
     return (
       <div style={{
         display: 'flex',
@@ -68,7 +66,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // 認証が必要な場合
   if (requireAuth && !isAuthenticated) {
-    console.log('[AuthGuard] Not authenticated, redirecting to:', redirectTo);
     return (
       <Navigate 
         to={redirectTo} 
@@ -80,12 +77,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // ロールのチェック
   if (requireRoles.length > 0 && user) {
-    console.log('AuthGuard - Required roles:', requireRoles);
-    console.log('AuthGuard - User roles:', user.roles);
-    console.log('AuthGuard - User type:', user.userType);
-    
     const hasRequiredRole = requireRoles.some(role => hasRole(role));
-    console.log('AuthGuard - Has required role:', hasRequiredRole);
     
     if (!hasRequiredRole) {
       return (

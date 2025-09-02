@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import axios from 'axios';
 
 export interface LoginRequest {
@@ -138,7 +139,7 @@ class EngineerAuthService {
     try {
       await axios.post(`${this.apiUrl}/logout`, { refreshToken });
     } catch (error) {
-      console.error('Logout error:', error);
+      errorLog('Logout error:', error);
     } finally {
       // トークンを削除
       localStorage.removeItem('accessToken');
