@@ -89,7 +89,6 @@ export class AuthService {
    * @returns 正規化された認証レスポンス
    */
   private static normalizeAuthResponse(data: ApiLoginResponse): AuthResponse {
-    console.log('[AuthService] Normalizing auth response:', data);
     
     // バックエンドの標準レスポンス形式（success: true, data: {...}）
     if (data.success && data.data) {
@@ -127,7 +126,6 @@ export class AuthService {
    */
   static setAuthorizationHeader(token: string): void {
     // トークンが設定されていることを確認（インターセプターで自動的に処理される）
-    console.log('[AuthService] Token set in store for interceptor:', token ? 'Token exists' : 'No token');
   }
 
   /**
@@ -135,7 +133,6 @@ export class AuthService {
    */
   static removeAuthorizationHeader(): void {
     // トークンがクリアされたことを確認（インターセプターで自動的に処理される）
-    console.log('[AuthService] Token cleared from store');
   }
 
   /**
@@ -179,10 +176,7 @@ export class AuthService {
    */
   static async fetchUserInfo(endpoint: string): Promise<any> {
     try {
-      console.log('[AuthService] Fetching user info from:', endpoint);
-      console.log('[AuthService] Current Authorization header:', axiosInstance.defaults.headers.common['Authorization']);
       const response = await axiosInstance.get(endpoint);
-      console.log('[AuthService] User info response:', response.data);
       
       // APIレスポンスの形式に応じて適切にデータを返す
       if (response.data.success && response.data.data) {

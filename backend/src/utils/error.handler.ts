@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Response } from 'express';
 import { Prisma } from '@prisma/client';
 
@@ -16,7 +17,7 @@ export class AppError extends Error {
 }
 
 export const handleError = (res: Response, error: any) => {
-  console.error('エラー詳細:', error);
+  errorLog('エラー詳細:', error);
 
   // Prismaエラーの処理
   if (error instanceof Prisma.PrismaClientKnownRequestError) {

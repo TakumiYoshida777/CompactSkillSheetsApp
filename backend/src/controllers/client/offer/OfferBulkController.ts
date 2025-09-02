@@ -1,3 +1,4 @@
+import { errorLog } from '../../../utils/logger';
 import { Request, Response } from 'express';
 import { offerService } from '../../../services/offerService';
 
@@ -28,7 +29,7 @@ export class OfferBulkController {
         result
       });
     } catch (error) {
-      console.error('Bulk action error:', error);
+      errorLog('Bulk action error:', error);
       res.status(500).json({ error: '一括操作に失敗しました' });
     }
   }
@@ -51,7 +52,7 @@ export class OfferBulkController {
         failed: result.failed
       });
     } catch (error) {
-      console.error('Bulk remind error:', error);
+      errorLog('Bulk remind error:', error);
       res.status(500).json({ error: '一括リマインドの送信に失敗しました' });
     }
   }
@@ -74,7 +75,7 @@ export class OfferBulkController {
         failed: result.failed
       });
     } catch (error) {
-      console.error('Bulk withdraw error:', error);
+      errorLog('Bulk withdraw error:', error);
       res.status(500).json({ error: '一括撤回に失敗しました' });
     }
   }
@@ -98,7 +99,7 @@ export class OfferBulkController {
         failed: result.failed
       });
     } catch (error) {
-      console.error('Bulk update status error:', error);
+      errorLog('Bulk update status error:', error);
       res.status(500).json({ error: 'ステータスの一括更新に失敗しました' });
     }
   }

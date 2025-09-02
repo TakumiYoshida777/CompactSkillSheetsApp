@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import axios from '@/lib/axios';
 import type { AxiosResponse } from 'axios';
 
@@ -184,7 +185,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('取引先企業一覧取得エラー:', error);
+      errorLog('取引先企業一覧取得エラー:', error);
       throw error;
     }
   }
@@ -199,7 +200,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('取引先企業詳細取得エラー:', error);
+      errorLog('取引先企業詳細取得エラー:', error);
       throw error;
     }
   }
@@ -215,7 +216,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('取引先企業作成エラー:', error);
+      errorLog('取引先企業作成エラー:', error);
       throw error;
     }
   }
@@ -231,7 +232,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('取引先企業更新エラー:', error);
+      errorLog('取引先企業更新エラー:', error);
       throw error;
     }
   }
@@ -243,7 +244,7 @@ class BusinessPartnerService {
     try {
       await axios.delete(`${this.baseUrl}/${partnerId}`);
     } catch (error) {
-      console.error('取引先企業削除エラー:', error);
+      errorLog('取引先企業削除エラー:', error);
       throw error;
     }
   }
@@ -258,7 +259,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('取引先ユーザー一覧取得エラー:', error);
+      errorLog('取引先ユーザー一覧取得エラー:', error);
       throw error;
     }
   }
@@ -274,7 +275,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('取引先ユーザー作成エラー:', error);
+      errorLog('取引先ユーザー作成エラー:', error);
       throw error;
     }
   }
@@ -290,7 +291,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('取引先ユーザー更新エラー:', error);
+      errorLog('取引先ユーザー更新エラー:', error);
       throw error;
     }
   }
@@ -302,7 +303,7 @@ class BusinessPartnerService {
     try {
       await axios.delete(`${this.baseUrl}/${partnerId}/users/${userId}`);
     } catch (error) {
-      console.error('取引先ユーザー削除エラー:', error);
+      errorLog('取引先ユーザー削除エラー:', error);
       throw error;
     }
   }
@@ -316,7 +317,7 @@ class BusinessPartnerService {
         newPassword
       });
     } catch (error) {
-      console.error('パスワードリセットエラー:', error);
+      errorLog('パスワードリセットエラー:', error);
       throw error;
     }
   }
@@ -331,7 +332,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('アクセス権限取得エラー:', error);
+      errorLog('アクセス権限取得エラー:', error);
       throw error;
     }
   }
@@ -347,7 +348,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('アクセス権限更新エラー:', error);
+      errorLog('アクセス権限更新エラー:', error);
       throw error;
     }
   }
@@ -362,7 +363,7 @@ class BusinessPartnerService {
         { engineerIds }
       );
     } catch (error) {
-      console.error('公開エンジニア設定エラー:', error);
+      errorLog('公開エンジニア設定エラー:', error);
       throw error;
     }
   }
@@ -377,7 +378,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('NGリスト取得エラー:', error);
+      errorLog('NGリスト取得エラー:', error);
       throw error;
     }
   }
@@ -392,7 +393,7 @@ class BusinessPartnerService {
         data
       );
     } catch (error) {
-      console.error('NGリスト追加エラー:', error);
+      errorLog('NGリスト追加エラー:', error);
       throw error;
     }
   }
@@ -406,7 +407,7 @@ class BusinessPartnerService {
         `${this.baseUrl}/${partnerId}/ng-list/${engineerId}`
       );
     } catch (error) {
-      console.error('NGリスト削除エラー:', error);
+      errorLog('NGリスト削除エラー:', error);
       throw error;
     }
   }
@@ -421,7 +422,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('アクセスURL生成エラー:', error);
+      errorLog('アクセスURL生成エラー:', error);
       throw error;
     }
   }
@@ -436,7 +437,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('アクセスURL更新エラー:', error);
+      errorLog('アクセスURL更新エラー:', error);
       throw error;
     }
   }
@@ -451,7 +452,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('アクセス履歴取得エラー:', error);
+      errorLog('アクセス履歴取得エラー:', error);
       throw error;
     }
   }
@@ -466,7 +467,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('利用分析取得エラー:', error);
+      errorLog('利用分析取得エラー:', error);
       throw error;
     }
   }
@@ -481,7 +482,7 @@ class BusinessPartnerService {
       );
       return response.data;
     } catch (error) {
-      console.error('エンゲージメント取得エラー:', error);
+      errorLog('エンゲージメント取得エラー:', error);
       throw error;
     }
   }

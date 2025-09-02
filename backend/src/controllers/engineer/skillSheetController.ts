@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import { Request, Response } from 'express';
 import { engineerService } from '../../services/engineerService';
 import { authService } from '../../services/authService';
@@ -30,7 +31,7 @@ class SkillSheetController {
         data: skillSheet,
       });
     } catch (error) {
-      console.error('Get skill sheet error:', error);
+      errorLog('Get skill sheet error:', error);
       res.status(500).json({
         success: false,
         message: 'スキルシート取得中にエラーが発生しました',
@@ -66,7 +67,7 @@ class SkillSheetController {
         data: updatedSkillSheet,
       });
     } catch (error) {
-      console.error('Update skill sheet error:', error);
+      errorLog('Update skill sheet error:', error);
       res.status(500).json({
         success: false,
         message: 'スキルシート更新中にエラーが発生しました',
@@ -105,7 +106,7 @@ class SkillSheetController {
         data: preview,
       });
     } catch (error) {
-      console.error('Preview skill sheet error:', error);
+      errorLog('Preview skill sheet error:', error);
       res.status(500).json({
         success: false,
         message: 'プレビュー生成中にエラーが発生しました',
@@ -166,7 +167,7 @@ class SkillSheetController {
         data: projects,
       });
     } catch (error) {
-      console.error('Get projects error:', error);
+      errorLog('Get projects error:', error);
       res.status(500).json({
         success: false,
         message: 'プロジェクト履歴取得中にエラーが発生しました',
@@ -205,7 +206,7 @@ class SkillSheetController {
         data: newProject,
       });
     } catch (error) {
-      console.error('Add project error:', error);
+      errorLog('Add project error:', error);
       res.status(500).json({
         success: false,
         message: 'プロジェクト追加中にエラーが発生しました',
@@ -244,7 +245,7 @@ class SkillSheetController {
         data: updatedProject,
       });
     } catch (error) {
-      console.error('Update project error:', error);
+      errorLog('Update project error:', error);
       res.status(500).json({
         success: false,
         message: 'プロジェクト更新中にエラーが発生しました',
@@ -277,7 +278,7 @@ class SkillSheetController {
         message: 'プロジェクトを削除しました',
       });
     } catch (error) {
-      console.error('Delete project error:', error);
+      errorLog('Delete project error:', error);
       res.status(500).json({
         success: false,
         message: 'プロジェクト削除中にエラーが発生しました',

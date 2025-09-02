@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React, { useState } from 'react';
 import { Card, Button, Space, Typography, Alert, Input, message } from 'antd';
 import axios from 'axios';
@@ -17,9 +18,6 @@ const ApiTest: React.FC = () => {
     setResult(null);
     
     try {
-      console.log('Testing login with:', { email, password });
-      console.log('API Base URL:', axios.defaults.baseURL);
-      console.log('Full URL:', `${axios.defaults.baseURL}/api/client/auth/login`);
       
       const response = await axios.post('client/auth/login', {
         email,
@@ -29,7 +27,7 @@ const ApiTest: React.FC = () => {
       setResult(response.data);
       message.success('ログイン成功！');
     } catch (err: any) {
-      console.error('Login error:', err);
+      errorLog('Login error:', err);
       setError(err.response?.data?.error || err.message);
       message.error('ログイン失敗');
     } finally {

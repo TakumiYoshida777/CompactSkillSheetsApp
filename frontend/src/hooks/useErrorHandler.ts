@@ -2,6 +2,7 @@
  * エラーハンドリングフック
  */
 
+import { errorLog, groupLog } from '../utils/logger';
 import React, { useCallback } from 'react';
 import { message, notification, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -24,18 +25,17 @@ export const useErrorHandler = () => {
    */
   const logError = useCallback((error: Error | AppError, context?: string) => {
     if (process.env.NODE_ENV === 'development') {
-      console.group(`🔴 Error${context ? ` in ${context}` : ''}`);
-      console.error('Message:', error.message);
+      groupLog(`🔴 Error${context ? ` in ${context}` : ''}`, () => {errorLog('Message:', error.message);
       
       if (error instanceof AppError) {
-        console.error('Code:', error.code);
-        console.error('Status:', error.statusCode);
-        console.error('Details:', error.details);
-        console.error('Timestamp:', error.timestamp);
+        errorLog('Code:', error.code);
+        errorLog('Status:', error.statusCode);
+        errorLog('Details:', error.details);
+        errorLog('Timestamp:', error.timestamp);
       }
       
-      console.error('Stack:', error.stack);
-      console.groupEnd();
+      errorLog('Stack:', error.stack);
+      });
     }
   }, []);
 

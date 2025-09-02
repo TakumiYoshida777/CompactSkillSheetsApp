@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { engineerApi } from '../api/engineers/engineerApi';
 import type { EngineerFilterParams } from '../types/engineer';
+import { errorLog } from '../utils/logger';
 
 /**
  * エンジニア一覧を取得するカスタムフック
@@ -10,13 +11,11 @@ export const useEngineers = (filters: EngineerFilterParams) => {
   return useQuery({
     queryKey: ['engineers', filters],
     queryFn: async () => {
-      console.log('[useEngineers] Fetching with filters:', filters);
       try {
         const result = await engineerApi.fetchList(filters);
-        console.log('[useEngineers] Fetch success:', result);
         return result;
       } catch (error) {
-        console.error('[useEngineers] Fetch error:', error);
+        errorLog('[useEngineers] Fetch error:', error);
         throw error;
       }
     },

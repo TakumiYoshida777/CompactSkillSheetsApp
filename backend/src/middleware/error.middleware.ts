@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
 import { ApiResponse } from '../utils/response.util';
 import { config } from '../config/environment';
@@ -62,9 +63,9 @@ export const errorHandler = (
 ): void => {
   // ログ出力（開発環境のみ詳細表示）
   if (config.env === 'development') {
-    console.error('Error:', err);
+    errorLog('Error:', err);
   } else {
-    console.error('Error:', err.message);
+    errorLog('Error:', err.message);
   }
   
   // AppErrorの場合

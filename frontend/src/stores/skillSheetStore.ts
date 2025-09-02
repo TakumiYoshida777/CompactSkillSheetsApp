@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { create } from 'zustand';
 import { skillSheetApi, skillMasterApi } from '../api/engineers/skillSheetApi';
 import type { 
@@ -119,7 +120,7 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
       const skillMasters = await skillMasterApi.fetchAll();
       set({ skillMasters });
     } catch (error: any) {
-      console.error('スキルマスタの取得に失敗しました:', error);
+      errorLog('スキルマスタの取得に失敗しました:', error);
     }
   },
 
@@ -180,7 +181,7 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
       });
     } catch (error: any) {
       set({ isAutoSaving: false });
-      console.error('自動保存に失敗しました:', error);
+      errorLog('自動保存に失敗しました:', error);
     }
   },
 

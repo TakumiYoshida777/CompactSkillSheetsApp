@@ -1,3 +1,5 @@
+import { errorLog } from '../utils/logger';
+
 /**
  * JWTトークンをデコードしてペイロードを取得
  */
@@ -23,7 +25,7 @@ export function decodeJWT(token: string): any {
     
     return JSON.parse(jsonPayload);
   } catch (error) {
-    console.error('Failed to decode JWT:', error);
+    errorLog('Failed to decode JWT:', error);
     return null;
   }
 }

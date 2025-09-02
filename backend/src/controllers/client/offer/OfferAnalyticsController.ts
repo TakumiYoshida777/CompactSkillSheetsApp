@@ -1,3 +1,4 @@
+import { errorLog } from '../../../utils/logger';
 import { Request, Response } from 'express';
 import { offerService } from '../../../services/offerService';
 
@@ -14,7 +15,7 @@ export class OfferAnalyticsController {
       
       res.json(boardData);
     } catch (error) {
-      console.error('Get offer board error:', error);
+      errorLog('Get offer board error:', error);
       res.status(500).json({ error: 'オファーボード情報の取得に失敗しました' });
     }
   }
@@ -37,7 +38,7 @@ export class OfferAnalyticsController {
       
       res.json(history);
     } catch (error) {
-      console.error('Get offer history error:', error);
+      errorLog('Get offer history error:', error);
       res.status(500).json({ error: 'オファー履歴の取得に失敗しました' });
     }
   }
@@ -51,7 +52,7 @@ export class OfferAnalyticsController {
       
       res.json(statistics);
     } catch (error) {
-      console.error('Get statistics error:', error);
+      errorLog('Get statistics error:', error);
       res.status(500).json({ error: '統計情報の取得に失敗しました' });
     }
   }
@@ -71,7 +72,7 @@ export class OfferAnalyticsController {
       
       res.json(report);
     } catch (error) {
-      console.error('Get monthly report error:', error);
+      errorLog('Get monthly report error:', error);
       res.status(500).json({ error: '月次レポートの取得に失敗しました' });
     }
   }
@@ -90,7 +91,7 @@ export class OfferAnalyticsController {
       
       res.json(statistics);
     } catch (error) {
-      console.error('Get engineer statistics error:', error);
+      errorLog('Get engineer statistics error:', error);
       res.status(500).json({ error: 'エンジニア統計の取得に失敗しました' });
     }
   }
@@ -109,7 +110,7 @@ export class OfferAnalyticsController {
       
       res.json(trends);
     } catch (error) {
-      console.error('Get trend analysis error:', error);
+      errorLog('Get trend analysis error:', error);
       res.status(500).json({ error: 'トレンド分析データの取得に失敗しました' });
     }
   }
@@ -131,7 +132,7 @@ export class OfferAnalyticsController {
       res.setHeader('Content-Disposition', 'attachment; filename="offers.csv"');
       res.send(csvData);
     } catch (error) {
-      console.error('Export CSV error:', error);
+      errorLog('Export CSV error:', error);
       res.status(500).json({ error: 'CSVエクスポートに失敗しました' });
     }
   }

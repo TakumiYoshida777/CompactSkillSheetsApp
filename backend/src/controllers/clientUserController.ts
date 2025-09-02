@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -105,7 +106,7 @@ export class ClientUserController {
         clientUser
       });
     } catch (error) {
-      console.error('取引先企業ユーザー作成エラー:', error);
+      errorLog('取引先企業ユーザー作成エラー:', error);
       res.status(500).json({ error: 'サーバーエラーが発生しました' });
     }
   }
@@ -172,7 +173,7 @@ export class ClientUserController {
 
       res.json({ clientUsers });
     } catch (error) {
-      console.error('取引先企業ユーザー一覧取得エラー:', error);
+      errorLog('取引先企業ユーザー一覧取得エラー:', error);
       res.status(500).json({ error: 'サーバーエラーが発生しました' });
     }
   }
@@ -245,7 +246,7 @@ export class ClientUserController {
         clientUser: updatedUser
       });
     } catch (error) {
-      console.error('取引先企業ユーザー更新エラー:', error);
+      errorLog('取引先企業ユーザー更新エラー:', error);
       res.status(500).json({ error: 'サーバーエラーが発生しました' });
     }
   }
@@ -284,7 +285,7 @@ export class ClientUserController {
 
       res.json({ message: '取引先企業ユーザーを無効化しました' });
     } catch (error) {
-      console.error('取引先企業ユーザー削除エラー:', error);
+      errorLog('取引先企業ユーザー削除エラー:', error);
       res.status(500).json({ error: 'サーバーエラーが発生しました' });
     }
   }
@@ -351,7 +352,7 @@ export class ClientUserController {
 
       res.json({ message: 'アクセス権限を設定しました' });
     } catch (error) {
-      console.error('アクセス権限設定エラー:', error);
+      errorLog('アクセス権限設定エラー:', error);
       res.status(500).json({ error: 'サーバーエラーが発生しました' });
     }
   }
@@ -414,7 +415,7 @@ export class ClientUserController {
         allowedEngineers
       });
     } catch (error) {
-      console.error('アクセス権限取得エラー:', error);
+      errorLog('アクセス権限取得エラー:', error);
       res.status(500).json({ error: 'サーバーエラーが発生しました' });
     }
   }

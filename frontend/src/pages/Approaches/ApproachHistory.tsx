@@ -256,7 +256,6 @@ const ApproachHistory: React.FC = () => {
 
   const handleSendFollowUp = () => {
     form.validateFields().then(values => {
-      console.log('Follow up data:', values);
       message.success('フォローアップを送信しました');
       setFollowUpModalVisible(false);
       form.resetFields();

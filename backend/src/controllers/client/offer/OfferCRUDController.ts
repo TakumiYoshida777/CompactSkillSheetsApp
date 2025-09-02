@@ -1,3 +1,4 @@
+import { errorLog } from '../../../utils/logger';
 import { Request, Response } from 'express';
 import { offerService } from '../../../services/offerService';
 import { offerValidator } from '../../../validators/offerValidator';
@@ -33,7 +34,7 @@ export class OfferCRUDController {
       
       res.status(201).json(offer);
     } catch (error) {
-      console.error('Create offer error:', error);
+      errorLog('Create offer error:', error);
       res.status(500).json({ error: 'オファーの作成に失敗しました' });
     }
   }
@@ -54,7 +55,7 @@ export class OfferCRUDController {
       
       res.json(offers);
     } catch (error) {
-      console.error('Get offers error:', error);
+      errorLog('Get offers error:', error);
       res.status(500).json({ error: 'オファー一覧の取得に失敗しました' });
     }
   }
@@ -75,7 +76,7 @@ export class OfferCRUDController {
       
       res.json(offer);
     } catch (error) {
-      console.error('Get offer by id error:', error);
+      errorLog('Get offer by id error:', error);
       res.status(500).json({ error: 'オファー詳細の取得に失敗しました' });
     }
   }
@@ -102,7 +103,7 @@ export class OfferCRUDController {
       
       res.json(updatedOffer);
     } catch (error) {
-      console.error('Update offer status error:', error);
+      errorLog('Update offer status error:', error);
       res.status(500).json({ error: 'ステータスの更新に失敗しました' });
     }
   }

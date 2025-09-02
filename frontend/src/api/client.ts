@@ -2,6 +2,7 @@
  * APIクライアント基盤
  */
 
+import { errorLog } from '../utils/logger';
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios'
 import { API_CONFIG, HTTP_STATUS } from './config'
@@ -17,7 +18,7 @@ const getCompanyId = (): string => {
       const companyId = parsedState?.state?.user?.companyId
       return companyId || ''
     } catch (error) {
-      console.error('[ApiClient] Failed to get company ID:', error)
+      errorLog('[ApiClient] Failed to get company ID:', error)
       return ''
     }
   }
@@ -64,10 +65,9 @@ class ApiClient {
             const token = parsedState?.state?.token
             if (token) {
               config.headers['Authorization'] = `Bearer ${token}`
-              console.log('[ApiClient] Authorization header set:', config.headers['Authorization'])
             }
           } catch (error) {
-            console.error('[ApiClient] Failed to parse auth state:', error)
+            errorLog('[ApiClient] Failed to parse auth state:', error)
           }
         }
 
@@ -82,7 +82,7 @@ class ApiClient {
         return config
       },
       (error) => {
-        console.error('Request interceptor error:', error)
+        errorLog('Request interceptor error:', error)
         return Promise.reject(error)
       }
     )

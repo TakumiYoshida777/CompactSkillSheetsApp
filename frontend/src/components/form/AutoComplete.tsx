@@ -2,6 +2,7 @@
  * オートコンプリートコンポーネント
  */
 
+import { errorLog } from '../../utils/logger';
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, X, Loader2 } from 'lucide-react'
 import { debounce } from 'lodash'
@@ -82,7 +83,7 @@ export const AutoComplete: React.FC<AutoCompleteProps> = ({
           setOptions(results)
           setFilteredOptions(results)
         } catch (error) {
-          console.error('Failed to fetch options:', error)
+          errorLog('Failed to fetch options:', error)
           setFilteredOptions([])
         } finally {
           setIsLoading(false)

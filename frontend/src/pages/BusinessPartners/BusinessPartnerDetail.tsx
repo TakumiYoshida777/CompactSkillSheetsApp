@@ -84,7 +84,6 @@ const BusinessPartnerDetail: React.FC = () => {
 
   const handleSendProposal = () => {
     form.validateFields().then(values => {
-      console.log('Proposal data:', values);
       message.success('エンジニアの提案を送信しました');
       setProposalModalVisible(false);
       form.resetFields();
@@ -93,7 +92,6 @@ const BusinessPartnerDetail: React.FC = () => {
 
   const handleAddNote = () => {
     noteForm.validateFields().then(values => {
-      console.log('Note data:', values);
       message.success('メモを追加しました');
       setNoteModalVisible(false);
       noteForm.resetFields();

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { useAuthStore } from '../stores/authStore';
 import { getLoginPath } from '../utils/navigation';
+import { errorLog } from '../utils/logger';
 
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
@@ -16,31 +17,23 @@ instance.interceptors.request.use(
     // Zustandストアから認証トークンとユーザー情報を取得
     const token = useAuthStore.getState().token;
     const user = useAuthStore.getState().user;
-    console.log('[Axios Request] URL:', config.url);
-    console.log('[Axios Request] Base URL:', config.baseURL);
-    console.log('[Axios Request] Full URL:', `${config.baseURL}${config.url}`);
-    console.log('[Axios Request] Method:', config.method);
-    console.log('[Axios Request] Params:', config.params);
-    console.log('[Axios Interceptor] Adding token to request:', token ? 'Token exists' : 'No token');
     
     config.headers = config.headers || {};
     
     // 認証トークンを設定
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('[Axios Interceptor] Authorization header set:', config.headers.Authorization);
     }
     
     // 企業IDヘッダーを設定
     if (user?.companyId) {
       config.headers['X-Company-ID'] = user.companyId;
-      console.log('[Axios Interceptor] X-Company-ID header set:', user.companyId);
     }
     
     return config;
   },
   (error) => {
-    console.error('[Axios Request Error]:', error);
+    errorLog('[Axios Request Error]:', error);
     return Promise.reject(error);
   }
 );
@@ -48,9 +41,6 @@ instance.interceptors.request.use(
 // レスポンスインターセプター
 instance.interceptors.response.use(
   (response) => {
-    console.log('[Axios Response] URL:', response.config.url);
-    console.log('[Axios Response] Status:', response.status);
-    console.log('[Axios Response] Data:', response.data);
     
     // APIレスポンスが標準的な形式の場合、dataを展開
     // ただし、特定のエンドポイント（business-partners）のみ展開する
@@ -70,9 +60,9 @@ instance.interceptors.response.use(
     return response;
   },
   async (error) => {
-    console.error('[Axios Response Error]:', error);
-    console.error('[Axios Response Error] Status:', error.response?.status);
-    console.error('[Axios Response Error] Data:', error.response?.data);
+    errorLog('[Axios Response Error]:', error);
+    errorLog('[Axios Response Error] Status:', error.response?.status);
+    errorLog('[Axios Response Error] Data:', error.response?.data);
     const originalRequest = error.config;
 
     // 401エラーでリフレッシュトークンを使用
@@ -106,7 +96,7 @@ instance.interceptors.response.use(
           return instance(originalRequest);
         }
       } catch (refreshError) {
-        console.error('[Axios Interceptor] Refresh token failed:', refreshError);
+        errorLog('[Axios Interceptor] Refresh token failed:', refreshError);
         // リフレッシュ失敗時はログアウト
         useAuthStore.getState().logout();
         

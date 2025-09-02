@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Form, Input, Button, Card, message, Checkbox, Typography, Space, Row, Col, Alert } from 'antd';
@@ -49,7 +50,7 @@ const EngineerLogin: React.FC = () => {
         navigate('/engineer/skill-sheet');
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      errorLog('Login error:', error);
       message.error(error.response?.data?.message || 'ログインに失敗しました');
     } finally {
       setLoading(false);

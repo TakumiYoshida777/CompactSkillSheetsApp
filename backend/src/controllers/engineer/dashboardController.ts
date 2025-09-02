@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import { Request, Response } from 'express';
 import { AuthRequest } from '../../types/auth';
 
@@ -54,7 +55,7 @@ export const engineerDashboardController = {
 
       res.json(dashboardData);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      errorLog('Error fetching dashboard data:', error);
       res.status(500).json({ message: 'ダッシュボードデータの取得に失敗しました' });
     }
   },

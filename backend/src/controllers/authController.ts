@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Request, Response } from 'express';
 import { AuthService } from '../services/authService';
 import { LoginRequest, RegisterRequest } from '../types/auth';
@@ -40,7 +41,7 @@ export class AuthController {
         message: 'ログインに成功しました'
       });
     } catch (error: any) {
-      console.error('ログインエラー:', error);
+      errorLog('ログインエラー:', error);
       
       // 認証エラーの場合
       if (error.statusCode === 401) {
@@ -97,7 +98,7 @@ export class AuthController {
         message: 'アカウント登録に成功しました'
       });
     } catch (error: any) {
-      console.error('登録エラー:', error);
+      errorLog('登録エラー:', error);
 
       // 既存ユーザーエラー
       if (error.message.includes('既に使用されています')) {
@@ -150,7 +151,7 @@ export class AuthController {
         message: 'トークンを更新しました'
       });
     } catch (error: any) {
-      console.error('トークンリフレッシュエラー:', error);
+      errorLog('トークンリフレッシュエラー:', error);
 
       if (error.statusCode === 401) {
         return res.status(401).json({
@@ -188,7 +189,7 @@ export class AuthController {
         message: 'ログアウトしました'
       });
     } catch (error) {
-      console.error('ログアウトエラー:', error);
+      errorLog('ログアウトエラー:', error);
 
       // ログアウトは失敗してもエラーにしない
       res.json({
@@ -230,7 +231,7 @@ export class AuthController {
         data: user
       });
     } catch (error) {
-      console.error('ユーザー情報取得エラー:', error);
+      errorLog('ユーザー情報取得エラー:', error);
 
       res.status(500).json({
         success: false,
@@ -287,7 +288,7 @@ export class AuthController {
         message: 'パスワードを変更しました'
       });
     } catch (error: any) {
-      console.error('パスワード変更エラー:', error);
+      errorLog('パスワード変更エラー:', error);
 
       if (error.statusCode === 401) {
         return res.status(401).json({
@@ -362,7 +363,7 @@ export class AuthController {
         }
       });
     } catch (error) {
-      console.error('権限確認エラー:', error);
+      errorLog('権限確認エラー:', error);
 
       res.status(500).json({
         success: false,

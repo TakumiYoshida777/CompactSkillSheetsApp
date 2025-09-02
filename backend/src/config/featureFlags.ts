@@ -4,6 +4,8 @@
  * 機能の段階的なロールアウトや切り替えを制御
  */
 
+import { infoLog } from '../utils/logger';
+
 export interface FeatureFlags {
   // 新しいBusinessPartner APIを使用するか
   useNewBusinessPartnerAPI: boolean;
@@ -43,9 +45,9 @@ export function isFeatureEnabled(feature: keyof FeatureFlags): boolean {
  */
 export function logFeatureFlags(): void {
   const flags = getFeatureFlags();
-  console.log('=== Feature Flags Status ===');
+  infoLog('=== Feature Flags Status ===');
   Object.entries(flags).forEach(([key, value]) => {
-    console.log(`${key}: ${value}`);
+    infoLog(`${key}: ${value}`);
   });
-  console.log('===========================');
+  infoLog('===========================');
 }

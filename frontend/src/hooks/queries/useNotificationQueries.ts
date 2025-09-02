@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationAPI } from '../../api/common/notificationApi';
 import { message } from 'antd';
@@ -54,7 +55,7 @@ export const useMarkAsRead = () => {
       message.success('通知を既読にしました');
     },
     onError: (error) => {
-      console.error('既読処理エラー:', error);
+      errorLog('既読処理エラー:', error);
       message.error('既読処理に失敗しました');
     },
   });
@@ -72,7 +73,7 @@ export const useMarkAllAsRead = () => {
       message.success('すべての通知を既読にしました');
     },
     onError: (error) => {
-      console.error('すべて既読処理エラー:', error);
+      errorLog('すべて既読処理エラー:', error);
       message.error('既読処理に失敗しました');
     },
   });
@@ -87,7 +88,6 @@ export const useNotificationWebSocket = () => {
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log('WebSocket接続が確立されました');
     };
 
     ws.onmessage = (event) => {
@@ -102,11 +102,10 @@ export const useNotificationWebSocket = () => {
     };
 
     ws.onerror = (error) => {
-      console.error('WebSocketエラー:', error);
+      errorLog('WebSocketエラー:', error);
     };
 
     ws.onclose = () => {
-      console.log('WebSocket接続が閉じられました');
       // 再接続ロジック
       setTimeout(() => connect(), 5000);
     };

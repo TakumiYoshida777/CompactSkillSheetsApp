@@ -5,6 +5,7 @@ import compression from 'compression';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import logger from './config/logger';
+import { errorLog } from './utils/logger';
 import { morganMiddleware, responseTimeMiddleware } from './middleware/httpLogger';
 import { generalRateLimiter, loginRateLimiter } from './middleware/rateLimiter';
 import authRoutes from './routes/authRoutes';
@@ -168,12 +169,12 @@ process.on('SIGTERM', async () => {
 // エラーハンドリング
 process.on('uncaughtException', (err) => {
   logger.error('Uncaught Exception:', err);
-  console.error('Uncaught Exception:', err);
+  errorLog('Uncaught Exception:', err);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  errorLog('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 export default app;

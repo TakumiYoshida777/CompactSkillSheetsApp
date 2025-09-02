@@ -379,7 +379,6 @@ ABC人材サービスの〇〇です。
                 <Input.Search
                   placeholder="エンジニア名で検索"
                   style={{ width: 300 }}
-                  onSearch={(value) => console.log('Search:', value)}
                 />
                 <Select placeholder="ステータス" style={{ width: 120 }}>
                   <Option value="all">すべて</Option>
@@ -425,7 +424,6 @@ ABC人材サービスの〇〇です。
                 <Input.Search
                   placeholder="企業名で検索"
                   style={{ width: 300 }}
-                  onSearch={(value) => console.log('Search:', value)}
                 />
                 <Select placeholder="ステータス" style={{ width: 120 }}>
                   <Option value="all">すべて</Option>
@@ -674,12 +672,7 @@ ABC人材サービスの〇〇です。
   const handleSend = async () => {
     try {
       const values = await form.validateFields();
-      console.log('Sending approach:', {
-        engineers: selectedEngineers,
-        companies: selectedCompanies,
-        message: values,
-        schedule: sendSchedule,
-      });
+      // TODO: 実際のアプローチ送信処理を実装
       
       message.success('アプローチを送信しました');
       
@@ -696,11 +689,7 @@ ABC人材サービスの〇〇です。
   // 下書き保存
   const handleSaveDraft = () => {
     const values = form.getFieldsValue();
-    console.log('Saving draft:', {
-      engineers: selectedEngineers,
-      companies: selectedCompanies,
-      message: values,
-    });
+    // TODO: 実際の下書き保存処理を実装
     message.success('下書きを保存しました');
   };
 

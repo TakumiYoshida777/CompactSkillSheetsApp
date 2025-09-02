@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React, { useState } from 'react';
 import {
   Card,
@@ -257,7 +258,7 @@ Email: sales@example.com
         }, 1000);
       }
     } catch (error: any) {
-      console.error('登録エラー:', error);
+      errorLog('登録エラー:', error);
       message.error(error.response?.data?.message || '登録に失敗しました');
     } finally {
       setLoading(false);

@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
   Row,
@@ -58,7 +59,7 @@ const EngineerDashboard: React.FC = () => {
       // 実際のAPIを呼び出す
       await fetchEngineerData();
     } catch (err) {
-      console.error('Failed to fetch dashboard data:', err);
+      errorLog('Failed to fetch dashboard data:', err);
       // エラーの場合はモックデータを使用
       message.info('デモモードで表示しています');
     } finally {
@@ -186,7 +187,6 @@ const EngineerDashboard: React.FC = () => {
           </Button>
           <Button
             icon={<ExportOutlined />}
-            onClick={() => console.log('Export PDF')}
           >
             PDF出力
           </Button>
@@ -398,7 +398,6 @@ const EngineerDashboard: React.FC = () => {
               block
               size="large"
               icon={<ExportOutlined />}
-              onClick={() => console.log('Export')}
             >
               データエクスポート
             </Button>

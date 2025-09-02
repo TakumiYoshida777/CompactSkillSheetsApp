@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { Result, Button } from 'antd';
@@ -22,7 +23,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
+    errorLog('Uncaught error:', error, errorInfo);
   }
 
   private handleReset = () => {

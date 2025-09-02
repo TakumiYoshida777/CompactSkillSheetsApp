@@ -16,6 +16,7 @@ import {
   Building2
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { errorLog } from '@/utils/logger'
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -47,7 +48,6 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, onMobileMenuClick }
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     // 検索処理の実装が必要
-    console.log('Search:', searchQuery)
   }
 
   const handleLogout = async () => {
@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, onMobileMenuClick }
       await logout()
       navigate('/login')
     } catch (error) {
-      console.error('Logout failed:', error)
+      errorLog('Logout failed:', error)
     }
   }
 
@@ -202,227 +202,6 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, onMobileMenuClick }
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      </div>
-    </header>
-  )
-} => setSearchQuery(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="検索..."
-                />
-              </div>
-            </form>
-          </div>
-
-          {/* 右側のボタン群 */}
-          <div className="flex items-center space-x-3">
-            {/* 通知 */}
-            <div className="relative">
-              <button
-                onClick={() => setNotificationOpen(!notificationOpen)}
-                className="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <Bell className="h-6 w-6" />
-                {/* 通知バッジ */}
-                <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white" />
-              </button>
-
-              {notificationOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                  <div className="py-1">
-                    <div className="px-4 py-3 border-b">
-                      <p className="text-sm font-medium text-gray-900">通知</p>
-                    </div>
-                    <div className="max-h-96 overflow-y-auto">
-                      <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                        <p className="text-sm text-gray-900">新しいオファーが届きました</p>
-                        <p className="text-xs text-gray-500 mt-1">5分前</p>
-                      </div>
-                      <div className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
-                        <p className="text-sm text-gray-900">スキルシートが更新されました</p>
-                        <p className="text-xs text-gray-500 mt-1">1時間前</p>
-                      </div>
-                    </div>
-                    <div className="px-4 py-3 border-t">
-                      <button className="text-sm text-indigo-600 hover:text-indigo-500">
-                        すべての通知を見る
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* ヘルプ */}
-            <button className="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              <HelpCircle className="h-6 w-6" />
-            </button>
-
-            {/* ユーザーメニュー */}
-            <div className="relative">
-              <button
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center">
-                    <User className="h-5 w-5 text-white" />
-                  </div>
-                </div>
-                <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-700">{currentUser.name}</p>
-                  <p className="text-xs text-gray-500">{currentUser.company}</p>
-                </div>
-                <ChevronDown className="h-4 w-4 text-gray-400" />
-              </button>
-
-              {userMenuOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                  <div className="py-1">
-                    <div className="px-4 py-3 border-b">
-                      <p className="text-sm font-medium text-gray-900">{currentUser.name}</p>
-                      <p className="text-xs text-gray-500">{currentUser.email}</p>
-                    </div>
-                    <button
-                      onClick={() => navigate('/profile')}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                    >
-                      <User className="h-4 w-4" />
-                      <span>プロフィール</span>
-                    </button>
-                    {currentUser.role === 'admin' && (
-                      <button
-                        onClick={() => navigate('/company-settings')}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                      >
-                        <Building2 className="h-4 w-4" />
-                        <span>企業設定</span>
-                      </button>
-                    )}
-                    <button
-                      onClick={() => navigate('/settings')}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>設定</span>
-                    </button>
-                    <div className="border-t">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        <span>ログアウト</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
-  )
-} => setSearchQuery(e.target.value)}
-              placeholder="検索..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </form>
-
-        {/* 右側：通知・ユーザーメニュー */}
-        <div className="flex items-center space-x-2">
-          {/* 通知アイコン */}
-          <div className="relative">
-            <button
-              onClick={() => setNotificationOpen(!notificationOpen)}
-              className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="通知"
-            >
-              <Bell className="w-5 h-5 text-gray-600" />
-              {/* 未読バッジ */}
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            {/* 通知ドロップダウン */}
-            {notificationOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200">
-                <div className="p-4 border-b border-gray-200">
-                  <h3 className="font-semibold text-gray-900">通知</h3>
-                </div>
-                <div className="max-h-96 overflow-y-auto">
-                  <div className="p-4 text-sm text-gray-500">
-                    新しい通知はありません
-                  </div>
-                </div>
-                <div className="p-2 border-t border-gray-200">
-                  <button className="w-full text-center text-sm text-blue-600 hover:text-blue-700 py-1">
-                    すべての通知を見る
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* ユーザーメニュー */}
-          <div className="relative">
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
-              </div>
-              <div className="hidden sm:block text-left">
-                <div className="text-sm font-medium text-gray-900">{currentUser.name}</div>
-                <div className="text-xs text-gray-500">{currentUser.company}</div>
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            </button>
-
-            {/* ユーザードロップダウン */}
-            {userMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200">
-                <div className="p-4 border-b border-gray-200">
-                  <div className="text-sm font-medium text-gray-900">{currentUser.name}</div>
-                  <div className="text-xs text-gray-500">{currentUser.email}</div>
-                </div>
-                <div className="py-2">
-                  <button
-                    onClick={() => navigate('profile')}
-                    className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>プロフィール</span>
-                  </button>
-                  <button
-                    onClick={() => navigate('settings')}
-                    className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>設定</span>
-                  </button>
-                  <button
-                    onClick={() => navigate('help')}
-                    className="w-full px-4 py-2 text-sm text-left text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
-                  >
-                    <HelpCircle className="w-4 h-4" />
-                    <span>ヘルプ</span>
-                  </button>
-                </div>
-                <div className="py-2 border-t border-gray-200">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-red-50 flex items-center space-x-2"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>ログアウト</span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React, { useState, useEffect } from 'react';
 import {
   Modal,
@@ -178,7 +179,7 @@ const ProjectCreateModal: React.FC<ProjectCreateModalProps> = ({
       form.resetFields();
       onSuccess(response.data);
     } catch (error: any) {
-      console.error('Project creation failed:', error);
+      errorLog('Project creation failed:', error);
       const errorMessage = error.response?.data?.message || 
                           'プロジェクトの作成に失敗しました';
       message.error(errorMessage);

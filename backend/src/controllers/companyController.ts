@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Request, Response } from 'express';
 import { companyService } from '../services/companyService';
 import { validationResult } from 'express-validator';
@@ -31,7 +32,7 @@ export class CompanyController {
         message: '企業とアカウントを作成しました'
       });
     } catch (error: any) {
-      console.error('企業作成エラー:', error);
+      errorLog('企業作成エラー:', error);
 
       if (error.message.includes('既に')) {
         return res.status(409).json({
@@ -76,7 +77,7 @@ export class CompanyController {
         data: company
       });
     } catch (error) {
-      console.error('企業取得エラー:', error);
+      errorLog('企業取得エラー:', error);
 
       res.status(500).json({
         success: false,
@@ -113,7 +114,7 @@ export class CompanyController {
         }
       });
     } catch (error) {
-      console.error('企業一覧取得エラー:', error);
+      errorLog('企業一覧取得エラー:', error);
 
       res.status(500).json({
         success: false,
@@ -152,7 +153,7 @@ export class CompanyController {
         message: '企業情報を更新しました'
       });
     } catch (error: any) {
-      console.error('企業更新エラー:', error);
+      errorLog('企業更新エラー:', error);
 
       if (error.message === '企業が見つかりません') {
         return res.status(404).json({
@@ -187,7 +188,7 @@ export class CompanyController {
         message: '企業を削除しました'
       });
     } catch (error: any) {
-      console.error('企業削除エラー:', error);
+      errorLog('企業削除エラー:', error);
 
       if (error.message === '企業が見つかりません') {
         return res.status(404).json({
@@ -225,7 +226,7 @@ export class CompanyController {
         }
       });
     } catch (error) {
-      console.error('ユーザー一覧取得エラー:', error);
+      errorLog('ユーザー一覧取得エラー:', error);
 
       res.status(500).json({
         success: false,
@@ -264,7 +265,7 @@ export class CompanyController {
         message: 'ユーザーを追加しました'
       });
     } catch (error: any) {
-      console.error('ユーザー追加エラー:', error);
+      errorLog('ユーザー追加エラー:', error);
 
       if (error.message === '企業が見つかりません') {
         return res.status(404).json({
@@ -309,7 +310,7 @@ export class CompanyController {
         data: statistics
       });
     } catch (error: any) {
-      console.error('統計情報取得エラー:', error);
+      errorLog('統計情報取得エラー:', error);
 
       if (error.message === '企業が見つかりません') {
         return res.status(404).json({
@@ -363,7 +364,7 @@ export class CompanyController {
         data: company
       });
     } catch (error) {
-      console.error('企業情報取得エラー:', error);
+      errorLog('企業情報取得エラー:', error);
 
       res.status(500).json({
         success: false,

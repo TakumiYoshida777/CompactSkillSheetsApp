@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import React from 'react';
 import {
   Modal,
@@ -60,7 +61,7 @@ const CreateUserModal: React.FC<CreateUserModalProps> = ({
       const values = await form.validateFields();
       onOk({ ...values, sendWelcomeEmail });
     } catch (error) {
-      console.error('Validation failed:', error);
+      errorLog('Validation failed:', error);
     }
   };
 

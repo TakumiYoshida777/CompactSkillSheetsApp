@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
@@ -27,7 +28,7 @@ authApiClient.interceptors.request.use(
           config.headers['X-Company-ID'] = companyId;
         }
       } catch (error) {
-        console.error('Failed to parse auth state:', error);
+        errorLog('Failed to parse auth state:', error);
       }
     }
     return config;

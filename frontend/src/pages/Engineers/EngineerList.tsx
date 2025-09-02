@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Space, message, Spin, Alert } from 'antd';
 import { UserAddOutlined, DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
 import { EngineerSearchTable } from '../../components/EngineerSearch/EngineerSearchTable';
+import { errorLog } from '../../utils/logger';
 import type { Engineer } from '../../components/EngineerSearch/EngineerSearchTable';
 import { useEngineers, useDeleteEngineer, useBulkExport } from '../../hooks/useEngineers';
 import { engineerApi } from '../../api/engineers/engineerApi';
@@ -33,13 +34,6 @@ const EngineerList: React.FC = () => {
 
   // デバッグ用ログ
   React.useEffect(() => {
-    console.log('=== EngineerList Debug ===');
-    console.log('Filters:', filters);
-    console.log('Loading:', isLoading);
-    console.log('Error:', error);
-    console.log('Response:', response);
-    console.log('Response Data:', response?.data);
-    console.log('Response Meta:', response?.meta);
   }, [filters, isLoading, error, response]);
 
   // 年齢計算ヘルパー
@@ -103,11 +97,9 @@ const EngineerList: React.FC = () => {
   // APIレスポンスをコンポーネントの形式に変換
   const engineers: Engineer[] = React.useMemo(() => {
     if (!response?.data) {
-      console.log('No response data, returning empty array');
       return [];
     }
     
-    console.log('Transforming engineers data:', response.data);
     return response.data.map((eng: any) => ({
       key: eng.id,
       engineerId: eng.id,
@@ -174,7 +166,7 @@ const EngineerList: React.FC = () => {
         message.success('すべてのエンジニアデータをエクスポートしました');
       }
     } catch (error: any) {
-      console.error('Export failed:', error);
+      errorLog('Export failed:', error);
       message.error('エクスポートに失敗しました');
     }
   };

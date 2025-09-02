@@ -59,7 +59,6 @@ const SkillSheetPreview: React.FC = () => {
 
   const handleDownload = () => {
     // PDF出力処理
-    console.log('Download PDF');
   };
 
   const handlePrint = () => {

@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -134,7 +135,7 @@ class EmailAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('メールテンプレート一覧の取得に失敗しました:', error);
+      errorLog('メールテンプレート一覧の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -148,7 +149,7 @@ class EmailAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('メールテンプレートの作成に失敗しました:', error);
+      errorLog('メールテンプレートの作成に失敗しました:', error);
       throw error;
     }
   }
@@ -162,7 +163,7 @@ class EmailAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('メールテンプレートの更新に失敗しました:', error);
+      errorLog('メールテンプレートの更新に失敗しました:', error);
       throw error;
     }
   }
@@ -173,7 +174,7 @@ class EmailAPI {
         headers: this.getHeaders(),
       });
     } catch (error) {
-      console.error('メールテンプレートの削除に失敗しました:', error);
+      errorLog('メールテンプレートの削除に失敗しました:', error);
       throw error;
     }
   }
@@ -192,7 +193,7 @@ class EmailAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('メールプレビューの生成に失敗しました:', error);
+      errorLog('メールプレビューの生成に失敗しました:', error);
       throw error;
     }
   }
@@ -210,7 +211,7 @@ class EmailAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('メール送信に失敗しました:', error);
+      errorLog('メール送信に失敗しました:', error);
       throw error;
     }
   }
@@ -225,7 +226,7 @@ class EmailAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('メール送信キューの取得に失敗しました:', error);
+      errorLog('メール送信キューの取得に失敗しました:', error);
       throw error;
     }
   }
@@ -250,7 +251,7 @@ class EmailAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('送信済みメール一覧の取得に失敗しました:', error);
+      errorLog('送信済みメール一覧の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -268,7 +269,7 @@ class EmailAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('メール再送信に失敗しました:', error);
+      errorLog('メール再送信に失敗しました:', error);
       throw error;
     }
   }
@@ -291,7 +292,7 @@ class EmailAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('バウンス一覧の取得に失敗しました:', error);
+      errorLog('バウンス一覧の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -305,7 +306,7 @@ class EmailAPI {
         { headers: this.getHeaders() }
       );
     } catch (error) {
-      console.error('メールアドレスのブロック解除に失敗しました:', error);
+      errorLog('メールアドレスのブロック解除に失敗しました:', error);
       throw error;
     }
   }
@@ -318,7 +319,7 @@ class EmailAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('配信停止リストの取得に失敗しました:', error);
+      errorLog('配信停止リストの取得に失敗しました:', error);
       throw error;
     }
   }
@@ -331,7 +332,7 @@ class EmailAPI {
         { headers: this.getHeaders() }
       );
     } catch (error) {
-      console.error('配信停止リストへの追加に失敗しました:', error);
+      errorLog('配信停止リストへの追加に失敗しました:', error);
       throw error;
     }
   }
@@ -344,7 +345,7 @@ class EmailAPI {
         { headers: this.getHeaders() }
       );
     } catch (error) {
-      console.error('配信停止リストからの削除に失敗しました:', error);
+      errorLog('配信停止リストからの削除に失敗しました:', error);
       throw error;
     }
   }
@@ -363,7 +364,7 @@ class EmailAPI {
       });
       return response.data.data;
     } catch (error) {
-      console.error('メール統計の取得に失敗しました:', error);
+      errorLog('メール統計の取得に失敗しました:', error);
       throw error;
     }
   }
@@ -385,7 +386,7 @@ class EmailAPI {
       );
       return response.data.data;
     } catch (error) {
-      console.error('テストメール送信に失敗しました:', error);
+      errorLog('テストメール送信に失敗しました:', error);
       throw error;
     }
   }

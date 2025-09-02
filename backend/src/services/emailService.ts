@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import nodemailer from 'nodemailer';
 import { emailTemplateRepository } from '../repositories/emailTemplateRepository';
 import { emailLogRepository } from '../repositories/emailLogRepository';
@@ -88,7 +89,7 @@ class EmailService {
 
         await emailLogRepository.updateStatus(emailLog.id, 'SENT');
       } catch (error) {
-        console.error(`Failed to send email to ${engineer.email}:`, error);
+        errorLog(`Failed to send email to ${engineer.email}:`, error);
         await emailLogRepository.updateStatus(
           emailLog.id,
           'FAILED',

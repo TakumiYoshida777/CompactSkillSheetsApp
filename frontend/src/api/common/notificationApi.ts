@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import axiosInstance from '../../lib/axios';
 import type { Notification, SystemAnnouncement } from '../../stores/notificationStore';
 
@@ -20,7 +21,7 @@ export const notificationAPI = {
       });
       return response.data.data;
     } catch (error) {
-      console.error('通知一覧取得エラー:', error);
+      errorLog('通知一覧取得エラー:', error);
       // モックデータを返す（開発中）
       return {
         notifications: [
@@ -60,7 +61,7 @@ export const notificationAPI = {
       const response = await apiClient.get('/notifications/unread-count');
       return response.data.data.count;
     } catch (error) {
-      console.error('未読数取得エラー:', error);
+      errorLog('未読数取得エラー:', error);
       return 5; // モックデータ
     }
   },
@@ -72,7 +73,7 @@ export const notificationAPI = {
         notificationIds
       });
     } catch (error) {
-      console.error('既読処理エラー:', error);
+      errorLog('既読処理エラー:', error);
       throw error;
     }
   },
@@ -82,7 +83,7 @@ export const notificationAPI = {
     try {
       await apiClient.post('/notifications/mark-all-read');
     } catch (error) {
-      console.error('すべて既読処理エラー:', error);
+      errorLog('すべて既読処理エラー:', error);
       throw error;
     }
   },
@@ -93,7 +94,7 @@ export const notificationAPI = {
       const response = await apiClient.get('/notifications/announcements');
       return response.data.data;
     } catch (error) {
-      console.error('アナウンス取得エラー:', error);
+      errorLog('アナウンス取得エラー:', error);
       // モックデータを返す（開発中）
       return [
         {

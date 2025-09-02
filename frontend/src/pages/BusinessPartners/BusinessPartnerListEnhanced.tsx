@@ -101,7 +101,6 @@ const BusinessPartnerListEnhanced: React.FC = () => {
           // 選択した取引先をアクティブ化
           for (const partner of selectedRows) {
             // API呼び出し（実装済みの場合）
-            console.log('Activating:', partner.id);
           }
           message.success(`${selectedRows.length}件をアクティブ化しました`);
           break;
@@ -109,7 +108,6 @@ const BusinessPartnerListEnhanced: React.FC = () => {
         case 'deactivate':
           // 選択した取引先を非アクティブ化
           for (const partner of selectedRows) {
-            console.log('Deactivating:', partner.id);
           }
           message.success(`${selectedRows.length}件を非アクティブ化しました`);
           break;
@@ -129,7 +127,6 @@ const BusinessPartnerListEnhanced: React.FC = () => {
           break;
           
         default:
-          console.log('Unknown action:', action);
       }
     } catch (error) {
       message.error('操作に失敗しました');
