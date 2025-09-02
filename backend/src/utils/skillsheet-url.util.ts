@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import crypto from 'crypto';
 import { config } from '../config/environment';
 
@@ -114,7 +115,7 @@ export class SkillSheetUrlUtil {
       
       return payload;
     } catch (error) {
-      console.error('トークン検証エラー:', error);
+      errorLog('トークン検証エラー:', error);
       return null;
     }
   }

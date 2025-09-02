@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
 import { UnauthorizedError, ForbiddenError } from '../types/auth';
 
@@ -42,7 +43,7 @@ export const requireRole = (...roles: string[]) => {
         });
       }
       
-      console.error('ロールチェックエラー:', error);
+      errorLog('ロールチェックエラー:', error);
       return res.status(500).json({
         success: false,
         error: {

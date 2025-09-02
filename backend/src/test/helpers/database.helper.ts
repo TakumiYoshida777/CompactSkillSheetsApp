@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { infoLog } from '../../utils/logger';
+import { infoLog, errorLog, warnLog } from '../../utils/logger';
 import { execSync } from 'child_process';
 import bcrypt from 'bcrypt';
 
@@ -58,7 +58,7 @@ export class TestDatabase {
       
       infoLog('Test database setup completed');
     } catch (error) {
-      console.error('Failed to setup test database:', error);
+      errorLog('Failed to setup test database:', error);
       throw error;
     }
   }
@@ -203,7 +203,7 @@ export class TestDatabase {
       try {
         await this.cleanupTable(table);
       } catch (error) {
-        console.warn(`Failed to cleanup ${table}:`, error);
+        warnLog(`Failed to cleanup ${table}:`, error);
       }
     }
   }

@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -104,7 +105,7 @@ export const deleteUploadedFile = async (filePath: string): Promise<void> => {
       await fs.promises.unlink(filePath);
     }
   } catch (error) {
-    console.error('ファイル削除エラー:', error);
+    errorLog('ファイル削除エラー:', error);
     throw error;
   }
 };

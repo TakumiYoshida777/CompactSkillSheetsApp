@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import { Request, Response } from 'express';
 import { offerService } from '../../../services/offerService';
 import { emailService } from '../../../services/emailService';
@@ -29,7 +30,7 @@ export class OfferCommunicationController {
         reminderCount: updatedOffer.reminderCount
       });
     } catch (error) {
-      console.error('Send reminder error:', error);
+      errorLog('Send reminder error:', error);
       res.status(500).json({ error: 'リマインドメールの送信に失敗しました' });
     }
   }
@@ -54,7 +55,7 @@ export class OfferCommunicationController {
         message: 'オファーメールを再送信しました'
       });
     } catch (error) {
-      console.error('Resend offer email error:', error);
+      errorLog('Resend offer email error:', error);
       res.status(500).json({ error: 'オファーメールの再送信に失敗しました' });
     }
   }
@@ -70,7 +71,7 @@ export class OfferCommunicationController {
       
       res.json(history);
     } catch (error) {
-      console.error('Get email history error:', error);
+      errorLog('Get email history error:', error);
       res.status(500).json({ error: 'メール送信履歴の取得に失敗しました' });
     }
   }

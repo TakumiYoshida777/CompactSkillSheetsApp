@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/authService';
 import { JWTPayload, UnauthorizedError, ForbiddenError } from '../types/auth';
@@ -52,7 +53,7 @@ export const authenticateToken = async (
     }
     
     // 予期しないエラー
-    console.error('認証エラー:', error);
+    errorLog('認証エラー:', error);
     return res.status(500).json({
       success: false,
       error: {
@@ -138,7 +139,7 @@ export const requirePermission = (resource: string, action: string) => {
         });
       }
       
-      console.error('権限チェックエラー:', error);
+      errorLog('権限チェックエラー:', error);
       return res.status(500).json({
         success: false,
         error: {
@@ -190,7 +191,7 @@ export const requireRole = (...roles: string[]) => {
         });
       }
       
-      console.error('ロールチェックエラー:', error);
+      errorLog('ロールチェックエラー:', error);
       return res.status(500).json({
         success: false,
         error: {
@@ -246,7 +247,7 @@ export const requireAdmin = async (
       });
     }
     
-    console.error('管理者権限チェックエラー:', error);
+    errorLog('管理者権限チェックエラー:', error);
     return res.status(500).json({
       success: false,
       error: {
@@ -300,7 +301,7 @@ export const requireCompany = (paramName: string = 'companyId') => {
         });
       }
       
-      console.error('企業IDチェックエラー:', error);
+      errorLog('企業IDチェックエラー:', error);
       return res.status(500).json({
         success: false,
         error: {

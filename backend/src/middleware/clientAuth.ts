@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
@@ -165,7 +166,7 @@ export const checkClientAccessPermission = async (
         return res.status(403).json({ error: 'アクセス権限が設定されていません' });
     }
   } catch (error) {
-    console.error('アクセス権限チェックエラー:', error);
+    errorLog('アクセス権限チェックエラー:', error);
     return res.status(500).json({ error: 'サーバーエラーが発生しました' });
   }
 };
@@ -199,7 +200,7 @@ export const logClientView = async (
 
     next();
   } catch (error) {
-    console.error('閲覧ログ記録エラー:', error);
+    errorLog('閲覧ログ記録エラー:', error);
     // ログ記録に失敗してもリクエストは続行
     next();
   }

@@ -1,3 +1,4 @@
+import { errorLog } from '../utils/logger';
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 
@@ -173,7 +174,7 @@ export class ClientEngineerController {
 
       res.json(responseData);
     } catch (error) {
-      console.error('Error fetching engineers:', error);
+      errorLog('Error fetching engineers:', error);
       res.status(500).json({ error: 'エンジニア情報の取得に失敗しました' });
     }
   }
@@ -274,7 +275,7 @@ export class ClientEngineerController {
 
       res.json(responseData);
     } catch (error) {
-      console.error('Error fetching engineer detail:', error);
+      errorLog('Error fetching engineer detail:', error);
       res.status(500).json({ error: 'エンジニア詳細の取得に失敗しました' });
     }
   }
@@ -386,7 +387,7 @@ export class ClientEngineerController {
 
       res.json(responseData);
     } catch (error) {
-      console.error('Error searching engineers:', error);
+      errorLog('Error searching engineers:', error);
       res.status(500).json({ error: 'エンジニア検索に失敗しました' });
     }
   }
@@ -561,7 +562,7 @@ export class ClientEngineerController {
         recentOffers: formattedRecentOffers
       });
     } catch (error) {
-      console.error('Error fetching offer board:', error);
+      errorLog('Error fetching offer board:', error);
       res.status(500).json({ error: 'オファーボードデータの取得に失敗しました' });
     }
   }

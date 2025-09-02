@@ -1,3 +1,4 @@
+import { errorLog } from '../../utils/logger';
 import { Request, Response } from 'express';
 import authService from '../../services/authService';
 import { engineerService } from '../../services/engineerService';
@@ -44,7 +45,7 @@ class EngineerAuthController {
         },
       });
     } catch (error: any) {
-      console.error('Login error:', error);
+      errorLog('Login error:', error);
       
       if (error.message === 'メールアドレスまたはパスワードが正しくありません') {
         return res.status(401).json({
@@ -113,7 +114,7 @@ class EngineerAuthController {
         },
       });
     } catch (error: any) {
-      console.error('Register error:', error);
+      errorLog('Register error:', error);
       
       if (error.message === 'このメールアドレスは既に登録されています') {
         return res.status(409).json({
@@ -151,7 +152,7 @@ class EngineerAuthController {
         data: { tokens },
       });
     } catch (error: any) {
-      console.error('Refresh token error:', error);
+      errorLog('Refresh token error:', error);
       
       if (error.message === '無効なリフレッシュトークンです' ||
           error.message === 'リフレッシュトークンの有効期限が切れています') {
@@ -184,7 +185,7 @@ class EngineerAuthController {
         message: 'ログアウトしました',
       });
     } catch (error) {
-      console.error('Logout error:', error);
+      errorLog('Logout error:', error);
       res.status(500).json({
         success: false,
         message: 'ログアウト処理中にエラーが発生しました',
@@ -222,7 +223,7 @@ class EngineerAuthController {
         },
       });
     } catch (error) {
-      console.error('Get profile error:', error);
+      errorLog('Get profile error:', error);
       res.status(500).json({
         success: false,
         message: 'プロフィール取得中にエラーが発生しました',
@@ -258,7 +259,7 @@ class EngineerAuthController {
         },
       });
     } catch (error) {
-      console.error('Update profile error:', error);
+      errorLog('Update profile error:', error);
       res.status(500).json({
         success: false,
         message: 'プロフィール更新中にエラーが発生しました',
@@ -288,7 +289,7 @@ class EngineerAuthController {
         message: 'パスワードを変更しました',
       });
     } catch (error: any) {
-      console.error('Change password error:', error);
+      errorLog('Change password error:', error);
       
       if (error.message === '現在のパスワードが正しくありません') {
         return res.status(401).json({
