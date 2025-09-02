@@ -34,26 +34,26 @@ export const authenticateClientUser = async (
 ) => {
   try {
     const authHeader = req.headers.authorization;
-    console.log('[authenticateClientUser] Authorization header:', authHeader ? 'Present' : 'Missing');
+    // 認証ヘッダーの確認
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log('[authenticateClientUser] Invalid or missing Bearer token');
+      // Bearerトークンが不正または存在しない
       return res.status(401).json({ error: '認証トークンが必要です' });
     }
 
     const token = authHeader.substring(7);
-    console.log('[authenticateClientUser] Token extracted:', token.substring(0, 20) + '...');
+    // トークン抽出完了
 
     // トークン検証
     const decoded = jwt.verify(
       token,
       securityConfig.getJwtSecret()
     ) as any;
-    console.log('[authenticateClientUser] Token decoded - UserType:', decoded.userType, 'Sub:', decoded.sub);
+    // トークンデコード完了
 
     // 取引先企業ユーザーかチェック
     if (decoded.userType !== 'client') {
-      console.log('[authenticateClientUser] Not a client user, denying access');
+      // 取引先企業ユーザーではないためアクセス拒否
       return res.status(403).json({ error: '権限が不足しています' });
     }
 
@@ -80,18 +80,18 @@ export const authenticateClientUser = async (
       return res.status(403).json({ error: 'アカウントが無効になっています' });
     }
 
-    console.log('[authenticateClientUser] Authentication successful for user:', decoded.email);
+    // 認証成功
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      console.log('[authenticateClientUser] Token expired');
+      // トークン期限切れ
       return res.status(401).json({ error: 'トークンの有効期限が切れています' });
     }
     if (error instanceof jwt.JsonWebTokenError) {
-      console.log('[authenticateClientUser] Invalid token:', error.message);
+      // 無効なトークン（セキュリティ上、詳細エラー情報はログ出力しない）
       return res.status(401).json({ error: '無効なトークンです' });
     }
-    console.error('[authenticateClientUser] Authentication error:', error);
+    // 認証エラー（セキュリティ上、詳細エラー情報はログ出力しない）
     return res.status(500).json({ error: 'サーバーエラーが発生しました' });
   }
 };
