@@ -1,4 +1,6 @@
 import dayjs from 'dayjs';
+import type { Rule } from 'antd/es/form';
+import type { FormInstance } from 'antd/lib/form';
 
 // メールアドレスのバリデーション
 export const validateEmail = (email: string): boolean => {
@@ -68,7 +70,7 @@ export const validateDate = (date: string | dayjs.Dayjs, options?: {
 };
 
 // 必須フィールドのバリデーション
-export const validateRequired = (value: any): boolean => {
+export const validateRequired = (value: unknown): boolean => {
   if (value === null || value === undefined) return false;
   if (typeof value === 'string' && value.trim() === '') return false;
   if (Array.isArray(value) && value.length === 0) return false;
@@ -104,7 +106,7 @@ export const createValidationRules = {
       message: '有効な電話番号を入力してください',
     },
     {
-      validator: (_: any, value: string) => {
+      validator: (_: Rule, value: string) => {
         if (!value) return Promise.resolve();
         const digitsOnly = value.replace(/[\-\(\)]/g, '');
         if (digitsOnly.length === 10 || digitsOnly.length === 11) {
@@ -117,7 +119,7 @@ export const createValidationRules = {
   
   url: [
     {
-      validator: (_: any, value: string) => {
+      validator: (_: Rule, value: string) => {
         if (!value) return Promise.resolve();
         if (validateUrl(value)) {
           return Promise.resolve();

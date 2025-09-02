@@ -122,7 +122,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
         filters: currentFilters,
         isLoading: false,
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.response?.data?.message || 'エンジニア一覧の取得に失敗しました',
@@ -138,7 +138,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
         selectedEngineer: engineer,
         isLoading: false,
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.response?.data?.message || 'エンジニア詳細の取得に失敗しました',
@@ -159,7 +159,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
         pagination: response.meta.pagination,
         isLoading: false,
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.response?.data?.message || '検索に失敗しました',
@@ -177,7 +177,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
         isUpdating: false,
       }));
       return engineer;
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || 'エンジニアの作成に失敗しました',
@@ -199,7 +199,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
           : state.selectedEngineer,
         isUpdating: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || '更新に失敗しました',
@@ -219,7 +219,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
           : state.selectedEngineer,
         isUpdating: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || '削除に失敗しました',
@@ -242,7 +242,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
           : state.selectedEngineer,
         isUpdating: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || 'ステータス更新に失敗しました',
@@ -264,7 +264,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
           : state.selectedEngineer,
         isUpdating: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || '稼働可能時期の更新に失敗しました',
@@ -289,7 +289,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
           : state.selectedEngineer,
         isUpdating: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || '公開設定の更新に失敗しました',
@@ -330,7 +330,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
       // 一覧を再取得
       await get().fetchEngineers();
       set({ selectedEngineerIds: [], isUpdating: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || '一括ステータス更新に失敗しました',
@@ -354,7 +354,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
         selectedEngineerIds: [],
         isUpdating: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || '一括削除に失敗しました',
@@ -380,7 +380,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
       window.URL.revokeObjectURL(url);
       
       set({ isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.response?.data?.message || 'エクスポートに失敗しました',
@@ -421,7 +421,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
         savedSearches: [...state.savedSearches, savedSearch],
         isUpdating: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || '検索条件の保存に失敗しました',
@@ -440,7 +440,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
         filters: result.filters,
         isLoading: false,
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.response?.data?.message || '保存済み検索の読み込みに失敗しました',
@@ -456,7 +456,7 @@ const useEngineerStore = create<EngineerState>((set, get) => ({
         savedSearches: state.savedSearches.filter(s => s.id !== searchId),
         isUpdating: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isUpdating: false,
         error: error.response?.data?.message || '保存済み検索の削除に失敗しました',

@@ -36,8 +36,8 @@ const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
-          const errorMessage = error.message || 'ログインに失敗しました';
+        } catch (error) {
+          const errorMessage = getErrorMessage(error);
           set({
             isLoading: false,
             error: errorMessage,
@@ -79,8 +79,8 @@ const useAuthStore = create<AuthState>()(
             error: null,
           });
           
-        } catch (error: any) {
-          const errorMessage = error.message || 'ログインに失敗しました';
+        } catch (error) {
+          const errorMessage = getErrorMessage(error);
           set({
             isLoading: false,
             error: errorMessage,
@@ -119,7 +119,7 @@ const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({
             isLoading: false,
             error: error.response?.data?.message || '登録に失敗しました',
@@ -147,7 +147,7 @@ const useAuthStore = create<AuthState>()(
             token: tokens.accessToken,
             refreshToken: tokens.refreshToken,
           });
-        } catch (error: any) {
+        } catch (error) {
           // リフレッシュトークンが無効な場合はログアウト
           get().logout();
           throw error;
@@ -164,7 +164,7 @@ const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({
             isLoading: false,
             error: error.response?.data?.message || 'プロフィール更新に失敗しました',

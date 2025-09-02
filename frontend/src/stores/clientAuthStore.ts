@@ -82,7 +82,7 @@ const useClientAuthStore = create<ClientAuthState>()(
             error: null,
           });
           
-        } catch (error: any) {
+        } catch (error) {
           set({
             isLoading: false,
             error: error.response?.data?.error || 'ログインに失敗しました',
@@ -124,7 +124,7 @@ const useClientAuthStore = create<ClientAuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error) {
           
           // 401エラーの場合、リフレッシュトークンで再試行
           if (error.response?.status === 401 && refreshToken) {
