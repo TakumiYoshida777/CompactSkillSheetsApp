@@ -2,6 +2,7 @@
 
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
+import { partnerApi } from '@/api/partnerApi'
 import type { BusinessPartner, PartnerPermissions, PartnerUser, AccessUrl, PartnerFilters, PartnerStatistics } from '@/types/partner'
 
 interface PartnerState {
@@ -37,7 +38,7 @@ interface PartnerState {
   createPartnerUser: (partnerId: string, user: Omit<PartnerUser, 'id' | 'createdAt' | 'updatedAt'>) => Promise<PartnerUser>
   updatePartnerUser: (userId: string, user: Partial<PartnerUser>) => Promise<void>
   deletePartnerUser: (userId: string) => Promise<void>
-  resetUserPassword: (userId: string) => Promise<void>
+  resetUserPassword: (userId: string, newPassword: string) => Promise<void>
 
   // Actions - アクセスURL管理
   fetchAccessUrls: (partnerId: string) => Promise<void>
@@ -74,24 +75,8 @@ export const usePartnerStore = create<PartnerState>()(
       fetchPartners: async (filters?: PartnerFilters) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装後に置き換え
-          const mockPartners: BusinessPartner[] = [
-            {
-              id: '1',
-              companyId: 'company1',
-              partnerCompanyName: '株式会社サンプル取引先',
-              partnerCompanyEmail: 'contact@sample-partner.co.jp',
-              partnerCompanyPhone: '03-1234-5678',
-              contractStatus: 'active',
-              contractStartDate: '2024-01-01',
-              contractEndDate: '2024-12-31',
-              maxViewableEngineers: 50,
-              currentViewableEngineers: 25,
-              createdAt: '2024-01-01T00:00:00Z',
-              updatedAt: '2024-01-15T00:00:00Z'
-            }
-          ]
-          set({ partners: mockPartners, isLoading: false })
+          const partners = await partnerApi.fetchPartners(filters)
+          set({ partners, isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : '取引先の取得に失敗しました', isLoading: false })
         }
@@ -100,13 +85,8 @@ export const usePartnerStore = create<PartnerState>()(
       fetchPartnerById: async (partnerId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          const partner = get().partners.find(p => p.id === partnerId)
-          if (partner) {
-            set({ selectedPartner: partner, isLoading: false })
-          } else {
-            throw new Error('取引先が見つかりません')
-          }
+          const partner = await partnerApi.fetchPartnerById(partnerId)
+          set({ selectedPartner: partner, isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : '取引先の取得に失敗しました', isLoading: false })
         }
@@ -115,13 +95,7 @@ export const usePartnerStore = create<PartnerState>()(
       createPartner: async (partner) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          const newPartner: BusinessPartner = {
-            ...partner,
-            id: Date.now().toString(),
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
+          const newPartner = await partnerApi.createPartner(partner)
           set(state => ({
             partners: [...state.partners, newPartner],
             isLoading: false
@@ -136,13 +110,13 @@ export const usePartnerStore = create<PartnerState>()(
       updatePartner: async (partnerId: string, partner) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
+          const updatedPartner = await partnerApi.updatePartner(partnerId, partner)
           set(state => ({
             partners: state.partners.map(p =>
-              p.id === partnerId ? { ...p, ...partner, updatedAt: new Date().toISOString() } : p
+              p.id === partnerId ? updatedPartner : p
             ),
             selectedPartner: state.selectedPartner?.id === partnerId
-              ? { ...state.selectedPartner, ...partner, updatedAt: new Date().toISOString() }
+              ? updatedPartner
               : state.selectedPartner,
             isLoading: false
           }))
@@ -154,7 +128,7 @@ export const usePartnerStore = create<PartnerState>()(
       deletePartner: async (partnerId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
+          await partnerApi.deletePartner(partnerId)
           set(state => ({
             partners: state.partners.filter(p => p.id !== partnerId),
             selectedPartner: state.selectedPartner?.id === partnerId ? null : state.selectedPartner,
@@ -173,19 +147,8 @@ export const usePartnerStore = create<PartnerState>()(
       fetchPartnerPermissions: async (partnerId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          const mockPermissions: PartnerPermissions = {
-            partnerId,
-            viewAllEngineers: false,
-            viewWaitingEngineers: true,
-            viewWorkingEngineers: false,
-            canSendOffers: true,
-            canViewDetailedSkillSheet: true,
-            allowedEngineers: [],
-            blockedEngineers: [],
-            currentMonthOfferCount: 0
-          }
-          set({ permissions: mockPermissions, isLoading: false })
+          const permissions = await partnerApi.fetchPartnerPermissions(partnerId)
+          set({ permissions, isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : '権限情報の取得に失敗しました', isLoading: false })
         }
@@ -194,11 +157,8 @@ export const usePartnerStore = create<PartnerState>()(
       updatePartnerPermissions: async (partnerId: string, permissions) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          set(state => ({
-            permissions: state.permissions ? { ...state.permissions, ...permissions } : null,
-            isLoading: false
-          }))
+          const updatedPermissions = await partnerApi.updatePartnerPermissions(partnerId, permissions)
+          set({ permissions: updatedPermissions, isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : '権限の更新に失敗しました', isLoading: false })
         }
@@ -207,12 +167,19 @@ export const usePartnerStore = create<PartnerState>()(
       addAllowedEngineer: async (partnerId: string, engineerId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
+          const currentPermissions = get().permissions
+          if (!currentPermissions) {
+            throw new Error('権限情報が読み込まれていません')
+          }
+          
+          const updatedAllowedEngineers = [...currentPermissions.allowedEngineers, engineerId]
+          await partnerApi.updateAllowedEngineers(partnerId, updatedAllowedEngineers)
+          
           set(state => ({
             permissions: state.permissions
               ? {
                   ...state.permissions,
-                  allowedEngineers: [...state.permissions.allowedEngineers, engineerId]
+                  allowedEngineers: updatedAllowedEngineers
                 }
               : null,
             isLoading: false
@@ -225,12 +192,19 @@ export const usePartnerStore = create<PartnerState>()(
       removeAllowedEngineer: async (partnerId: string, engineerId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
+          const currentPermissions = get().permissions
+          if (!currentPermissions) {
+            throw new Error('権限情報が読み込まれていません')
+          }
+          
+          const updatedAllowedEngineers = currentPermissions.allowedEngineers.filter(id => id !== engineerId)
+          await partnerApi.updateAllowedEngineers(partnerId, updatedAllowedEngineers)
+          
           set(state => ({
             permissions: state.permissions
               ? {
                   ...state.permissions,
-                  allowedEngineers: state.permissions.allowedEngineers.filter(id => id !== engineerId)
+                  allowedEngineers: updatedAllowedEngineers
                 }
               : null,
             isLoading: false
@@ -243,16 +217,17 @@ export const usePartnerStore = create<PartnerState>()(
       addBlockedEngineer: async (partnerId: string, engineerId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          set(state => ({
-            permissions: state.permissions
-              ? {
-                  ...state.permissions,
-                  blockedEngineers: [...state.permissions.blockedEngineers, engineerId]
-                }
-              : null,
-            isLoading: false
-          }))
+          const currentPermissions = get().permissions
+          if (!currentPermissions) {
+            throw new Error('権限情報が読み込まれていません')
+          }
+          
+          const updatedBlockedEngineers = [...currentPermissions.blockedEngineers, engineerId]
+          const updatedPermissions = await partnerApi.updatePartnerPermissions(partnerId, {
+            blockedEngineers: updatedBlockedEngineers
+          })
+          
+          set({ permissions: updatedPermissions, isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'NGエンジニアの追加に失敗しました', isLoading: false })
         }
@@ -261,16 +236,17 @@ export const usePartnerStore = create<PartnerState>()(
       removeBlockedEngineer: async (partnerId: string, engineerId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          set(state => ({
-            permissions: state.permissions
-              ? {
-                  ...state.permissions,
-                  blockedEngineers: state.permissions.blockedEngineers.filter(id => id !== engineerId)
-                }
-              : null,
-            isLoading: false
-          }))
+          const currentPermissions = get().permissions
+          if (!currentPermissions) {
+            throw new Error('権限情報が読み込まれていません')
+          }
+          
+          const updatedBlockedEngineers = currentPermissions.blockedEngineers.filter(id => id !== engineerId)
+          const updatedPermissions = await partnerApi.updatePartnerPermissions(partnerId, {
+            blockedEngineers: updatedBlockedEngineers
+          })
+          
+          set({ permissions: updatedPermissions, isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'NGエンジニアの削除に失敗しました', isLoading: false })
         }
@@ -280,9 +256,8 @@ export const usePartnerStore = create<PartnerState>()(
       fetchPartnerUsers: async (partnerId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          const mockUsers: PartnerUser[] = []
-          set({ partnerUsers: mockUsers, isLoading: false })
+          const users = await partnerApi.fetchPartnerUsers(partnerId)
+          set({ partnerUsers: users, isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'ユーザー一覧の取得に失敗しました', isLoading: false })
         }
@@ -291,14 +266,10 @@ export const usePartnerStore = create<PartnerState>()(
       createPartnerUser: async (partnerId: string, user) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          const newUser: PartnerUser = {
+          const newUser = await partnerApi.createPartnerUser(partnerId, {
             ...user,
-            id: Date.now().toString(),
-            partnerId,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
+            partnerId
+          })
           set(state => ({
             partnerUsers: [...state.partnerUsers, newUser],
             isLoading: false
@@ -313,10 +284,15 @@ export const usePartnerStore = create<PartnerState>()(
       updatePartnerUser: async (userId: string, user) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
+          const partnerId = get().selectedPartner?.id
+          if (!partnerId) {
+            throw new Error('取引先が選択されていません')
+          }
+          
+          const updatedUser = await partnerApi.updatePartnerUser(partnerId, userId, user)
           set(state => ({
             partnerUsers: state.partnerUsers.map(u =>
-              u.id === userId ? { ...u, ...user, updatedAt: new Date().toISOString() } : u
+              u.id === userId ? updatedUser : u
             ),
             isLoading: false
           }))
@@ -328,7 +304,12 @@ export const usePartnerStore = create<PartnerState>()(
       deletePartnerUser: async (userId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
+          const partnerId = get().selectedPartner?.id
+          if (!partnerId) {
+            throw new Error('取引先が選択されていません')
+          }
+          
+          await partnerApi.deletePartnerUser(partnerId, userId)
           set(state => ({
             partnerUsers: state.partnerUsers.filter(u => u.id !== userId),
             isLoading: false
@@ -338,10 +319,15 @@ export const usePartnerStore = create<PartnerState>()(
         }
       },
 
-      resetUserPassword: async (userId: string) => {
+      resetUserPassword: async (userId: string, newPassword: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
+          const partnerId = get().selectedPartner?.id
+          if (!partnerId) {
+            throw new Error('取引先が選択されていません')
+          }
+          
+          await partnerApi.resetUserPassword(partnerId, userId, newPassword)
           set({ isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'パスワードのリセットに失敗しました', isLoading: false })
@@ -352,9 +338,8 @@ export const usePartnerStore = create<PartnerState>()(
       fetchAccessUrls: async (partnerId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          const mockUrls: AccessUrl[] = []
-          set({ accessUrls: mockUrls, isLoading: false })
+          const urls = await partnerApi.fetchAccessUrls(partnerId)
+          set({ accessUrls: urls, isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'アクセスURLの取得に失敗しました', isLoading: false })
         }
@@ -363,18 +348,7 @@ export const usePartnerStore = create<PartnerState>()(
       generateAccessUrl: async (partnerId: string, expiresAt?: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          const newUrl: AccessUrl = {
-            id: Date.now().toString(),
-            partnerId,
-            url: `https://example.com/partner/access/${Date.now()}`,
-            token: Math.random().toString(36).substring(7),
-            expiresAt: expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            createdBy: 'current-user',
-            createdAt: new Date().toISOString(),
-            accessCount: 0,
-            isActive: true
-          }
+          const newUrl = await partnerApi.generateAccessUrl(partnerId, expiresAt)
           set(state => ({
             accessUrls: [...state.accessUrls, newUrl],
             isLoading: false
@@ -389,7 +363,12 @@ export const usePartnerStore = create<PartnerState>()(
       revokeAccessUrl: async (urlId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
+          const partnerId = get().selectedPartner?.id
+          if (!partnerId) {
+            throw new Error('取引先が選択されていません')
+          }
+          
+          await partnerApi.revokeAccessUrl(partnerId, urlId)
           set(state => ({
             accessUrls: state.accessUrls.map(url =>
               url.id === urlId ? { ...url, isActive: false } : url
@@ -404,23 +383,19 @@ export const usePartnerStore = create<PartnerState>()(
       refreshAccessUrl: async (urlId: string) => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          const newUrl: AccessUrl = {
-            id: Date.now().toString(),
-            partnerId: 'partner1',
-            url: `https://example.com/partner/access/${Date.now()}`,
-            token: Math.random().toString(36).substring(7),
-            expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            createdBy: 'current-user',
-            createdAt: new Date().toISOString(),
-            accessCount: 0,
-            isActive: true
+          const partnerId = get().selectedPartner?.id
+          if (!partnerId) {
+            throw new Error('取引先が選択されていません')
           }
+          
+          const refreshedUrl = await partnerApi.refreshAccessUrl(partnerId, urlId)
           set(state => ({
-            accessUrls: [...state.accessUrls, newUrl],
+            accessUrls: state.accessUrls.map(url =>
+              url.id === urlId ? refreshedUrl : url
+            ),
             isLoading: false
           }))
-          return newUrl
+          return refreshedUrl
         } catch (error) {
           set({ error: error instanceof Error ? error.message : 'アクセスURLの更新に失敗しました', isLoading: false })
           throw error
@@ -431,16 +406,8 @@ export const usePartnerStore = create<PartnerState>()(
       fetchStatistics: async () => {
         set({ isLoading: true, error: null })
         try {
-          // TODO: API実装
-          const mockStatistics: PartnerStatistics = {
-            totalPartners: 10,
-            activePartners: 8,
-            expiredContracts: 2,
-            totalOffersSent: 150,
-            averageConversionRate: 35.5,
-            monthlyTrend: []
-          }
-          set({ statistics: mockStatistics, isLoading: false })
+          const statistics = await partnerApi.fetchStatistics()
+          set({ statistics, isLoading: false })
         } catch (error) {
           set({ error: error instanceof Error ? error.message : '統計情報の取得に失敗しました', isLoading: false })
         }

@@ -55,6 +55,7 @@ const ClientUserManagement: React.FC = () => {
     createClientUser,
     updateClientUser,
     deleteClientUser,
+    resetClientUserPassword,
     clearError,
   } = useBusinessPartnerStore();
 
@@ -164,13 +165,17 @@ const ClientUserManagement: React.FC = () => {
   const handlePasswordReset = async () => {
     try {
       const values = await passwordForm.validateFields();
-      // TODO: パスワードリセットAPIを呼び出す
+      if (!selectedUserId) {
+        message.error('ユーザーが選択されていません');
+        return;
+      }
+      await resetClientUserPassword(partnerId!, selectedUserId, values.newPassword);
       message.success('パスワードをリセットしました');
       setPasswordModalVisible(false);
       passwordForm.resetFields();
       setSelectedUserId(null);
-    } catch (error) {
-      message.error('パスワードリセットに失敗しました');
+    } catch (error: any) {
+      message.error(error.response?.data?.message || 'パスワードリセットに失敗しました');
     }
   };
 

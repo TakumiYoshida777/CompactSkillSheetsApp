@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { businessPartnerApi } from '../../api/businessPartner';
-import type { BusinessPartner } from '../../api/businessPartner';
+import { 
+  useBusinessPartners,
+  useDeleteBusinessPartner 
+} from '../../hooks/useBusinessPartners';
+import type { BusinessPartner } from '../../types/businessPartner';
 import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import {
   Card,
@@ -76,24 +78,31 @@ const BusinessPartnerList: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [emailModalVisible, setEmailModalVisible] = useState(false);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'active' | 'inactive' | 'prospective'>('all');
 
-  // APIからデータ取得
-  const { data: partnersData, isLoading, refetch } = useQuery({
-    queryKey: ['businessPartners', searchText, selectedStatus, selectedIndustries, currentPage, pageSize],
-    queryFn: () => businessPartnerApi.getList({
-      search: searchText || undefined,
-      status: selectedStatus !== 'all' ? selectedStatus : undefined,
-      industry: selectedIndustries.length > 0 ? selectedIndustries[0] : undefined,
-      page: currentPage,
-      limit: pageSize,
-    }),
+  // TanStack Queryカスタムフックを使用してAPIからデータ取得
+  const { data: partnersData, isLoading, refetch } = useBusinessPartners({
+    search: searchText || undefined,
+    status: selectedStatus !== 'all' ? selectedStatus : undefined,
+    // industry: selectedIndustries.length > 0 ? selectedIndustries[0] : undefined,
+    page: currentPage,
+    limit: pageSize,
   });
 
-  const partners = partnersData?.data || [];
-  const total = partnersData?.total || 0;
+  // 削除用のmutationフック
+  const deletePartnerMutation = useDeleteBusinessPartner();
 
-  const filteredPartners = partners.filter(partner => {
+  // APIレスポンスの型を正しく処理
+  const partners = partnersData?.data || [];
+  const total = partnersData?.pagination?.total || 0;
+
+
+  const filteredPartners = partners.filter((partner: BusinessPartner) => {
+    // companyNameが存在しない場合はフィルタリング対象外
+    if (!partner || !partner.companyName) {
+      return false;
+    }
+    
     const matchesSearch = partner.companyName.toLowerCase().includes(searchText.toLowerCase()) ||
                          (partner.companyNameKana?.toLowerCase().includes(searchText.toLowerCase()) || false);
     const matchesStatus = selectedStatus === 'all' || partner.status === selectedStatus;
@@ -102,173 +111,6 @@ const BusinessPartnerList: React.FC = () => {
     return matchesSearch && matchesStatus && matchesIndustry;
   });
 
-  /* const generateMockData = () => {
-    const mockData: BusinessPartner[] = [
-      {
-        id: '1',
-        companyName: '株式会社ABC商事',
-        companyNameKana: 'カブシキガイシャエービーシーショウジ',
-        industry: 'IT・通信',
-        employeeSize: '501-1000名',
-        website: 'https://abc-shoji.co.jp',
-        phone: '03-1234-5678',
-        address: '東京都千代田区丸の内1-1-1',
-        businessDescription: 'システム開発、ITコンサルティング',
-        contacts: [
-          {
-            id: '1',
-            name: '山田太郎',
-            department: '人事部',
-            position: '部長',
-            email: 'yamada@abc-shoji.co.jp',
-            phone: '03-1234-5678',
-            isPrimary: true,
-          },
-          {
-            id: '2',
-            name: '佐藤花子',
-            department: '開発部',
-            position: '課長',
-            email: 'sato@abc-shoji.co.jp',
-            phone: '03-1234-5679',
-            isPrimary: false,
-          },
-        ],
-        contractTypes: ['準委任契約', '派遣契約'],
-        budgetMin: 500000,
-        budgetMax: 1000000,
-        preferredSkills: ['React', 'TypeScript', 'AWS'],
-        status: 'active',
-        registeredDate: '2024-01-15',
-        lastContactDate: '2024-11-28',
-        totalProposals: 15,
-        acceptedProposals: 8,
-        currentEngineers: 5,
-        monthlyRevenue: 3750000,
-        rating: 4.5,
-        tags: ['優良顧客', '長期取引'],
-        approaches: [
-          {
-            id: '1',
-            date: '2024-11-28',
-            type: 'email',
-            subject: 'Reactエンジニア3名のご提案',
-            engineerCount: 3,
-            status: 'sent',
-          },
-          {
-            id: '2',
-            date: '2024-11-20',
-            type: 'meeting',
-            subject: '定例ミーティング',
-            status: 'accepted',
-          },
-        ],
-      },
-      {
-        id: '2',
-        companyName: 'XYZ株式会社',
-        companyNameKana: 'エックスワイゼットカブシキガイシャ',
-        industry: '金融・保険',
-        employeeSize: '1001-5000名',
-        website: 'https://xyz.co.jp',
-        phone: '06-9876-5432',
-        address: '大阪府大阪市北区梅田2-2-2',
-        businessDescription: '金融システム開発、保険業務システム',
-        contacts: [
-          {
-            id: '3',
-            name: '鈴木一郎',
-            department: 'IT戦略部',
-            position: '部長',
-            email: 'suzuki@xyz.co.jp',
-            phone: '06-9876-5432',
-            isPrimary: true,
-          },
-        ],
-        contractTypes: ['準委任契約'],
-        budgetMin: 600000,
-        budgetMax: 1200000,
-        preferredSkills: ['Java', 'Spring Boot', 'Oracle'],
-        status: 'active',
-        registeredDate: '2023-06-10',
-        lastContactDate: '2024-11-25',
-        totalProposals: 25,
-        acceptedProposals: 12,
-        currentEngineers: 8,
-        monthlyRevenue: 7200000,
-        rating: 5,
-        tags: ['最重要顧客', '大型案件'],
-      },
-      {
-        id: '3',
-        companyName: 'テックコーポレーション',
-        companyNameKana: 'テックコーポレーション',
-        industry: '製造業',
-        employeeSize: '301-500名',
-        website: 'https://tech-corp.jp',
-        phone: '052-1111-2222',
-        address: '愛知県名古屋市中区栄3-3-3',
-        businessDescription: 'IoTシステム開発、製造業向けDX支援',
-        contacts: [
-          {
-            id: '4',
-            name: '田中次郎',
-            department: 'DX推進室',
-            position: '室長',
-            email: 'tanaka@tech-corp.jp',
-            phone: '052-1111-2222',
-            isPrimary: true,
-          },
-        ],
-        contractTypes: ['請負契約', '準委任契約'],
-        budgetMin: 450000,
-        budgetMax: 800000,
-        preferredSkills: ['Python', 'IoT', 'AI'],
-        status: 'prospective',
-        registeredDate: '2024-11-01',
-        lastContactDate: '2024-11-15',
-        totalProposals: 3,
-        acceptedProposals: 0,
-        currentEngineers: 0,
-        monthlyRevenue: 0,
-        rating: 3.5,
-        tags: ['新規開拓'],
-      },
-      {
-        id: '4',
-        companyName: 'グローバルシステムズ',
-        companyNameKana: 'グローバルシステムズ',
-        industry: 'コンサルティング',
-        employeeSize: '101-300名',
-        phone: '092-3333-4444',
-        address: '福岡県福岡市博多区博多駅前4-4-4',
-        contacts: [
-          {
-            id: '5',
-            name: '伊藤三郎',
-            department: '採用部',
-            position: 'マネージャー',
-            email: 'ito@global-sys.com',
-            phone: '092-3333-4444',
-            isPrimary: true,
-          },
-        ],
-        contractTypes: ['派遣契約'],
-        status: 'inactive',
-        registeredDate: '2023-03-20',
-        lastContactDate: '2024-08-10',
-        totalProposals: 10,
-        acceptedProposals: 3,
-        currentEngineers: 0,
-        monthlyRevenue: 0,
-        rating: 3,
-        tags: ['休止中'],
-      },
-    ];
-    // モックデータ生成は不要になりました
-    refetch();
-  }; */
 
   const handleBulkEmail = () => {
     if (selectedRowKeys.length === 0) {
@@ -285,13 +127,8 @@ const BusinessPartnerList: React.FC = () => {
       okText: '削除',
       okType: 'danger',
       cancelText: 'キャンセル',
-      onOk: async () => {
-        try {
-          await businessPartnerApi.delete(partner.id);
-          refetch();
-        } catch {
-          // エラーはAPIで処理済み
-        }
+      onOk: () => {
+        deletePartnerMutation.mutate(partner.id);
       },
     });
   };
@@ -364,7 +201,7 @@ const BusinessPartnerList: React.FC = () => {
       title: '企業名',
       dataIndex: 'companyName',
       key: 'companyName',
-      sorter: (a, b) => a.companyName.localeCompare(b.companyName),
+      sorter: (a, b) => (a.companyName || '').localeCompare(b.companyName || ''),
       render: (name: string, record: BusinessPartner) => (
         <Space direction="vertical" size={0}>
           <Button
@@ -423,7 +260,7 @@ const BusinessPartnerList: React.FC = () => {
       key: 'primaryContact',
       width: 200,
       render: (_, record) => {
-        const primary = record.contacts.find(c => c.isPrimary);
+        const primary = record.contacts?.find(c => c.isPrimary);
         return primary ? (
           <Space direction="vertical" size={0}>
             <Text>{primary.name}</Text>
@@ -579,7 +416,7 @@ const BusinessPartnerList: React.FC = () => {
             <Card size="small">
               <Statistic
                 title="取引先企業数"
-                value={partners.filter(p => p.status === 'active').length}
+                value={partners.filter(p => p && p.status === 'active').length}
                 suffix={`/ ${partners.length}`}
                 prefix={<BankOutlined />}
               />
@@ -589,7 +426,7 @@ const BusinessPartnerList: React.FC = () => {
             <Card size="small">
               <Statistic
                 title="稼働エンジニア"
-                value={partners.reduce((sum, p) => sum + p.currentEngineers, 0)}
+                value={partners.reduce((sum, p) => sum + (p?.currentEngineers || 0), 0)}
                 suffix="名"
                 prefix={<TeamOutlined />}
                 valueStyle={{ color: '#3f8600' }}
@@ -600,7 +437,7 @@ const BusinessPartnerList: React.FC = () => {
             <Card size="small">
               <Statistic
                 title="月間売上"
-                value={partners.reduce((sum, p) => sum + (p.monthlyRevenue || 0), 0) / 10000}
+                value={partners.reduce((sum, p) => sum + (p?.monthlyRevenue || 0), 0) / 10000}
                 suffix="万円"
                 prefix={<DollarOutlined />}
                 valueStyle={{ color: '#cf1322' }}
@@ -611,10 +448,14 @@ const BusinessPartnerList: React.FC = () => {
             <Card size="small">
               <Statistic
                 title="提案成功率"
-                value={Math.round(
-                  (partners.reduce((sum, p) => sum + p.acceptedProposals, 0) /
-                   partners.reduce((sum, p) => sum + p.totalProposals, 0)) * 100
-                )}
+                value={
+                  partners.length > 0 && partners.reduce((sum, p) => sum + (p?.totalProposals || 0), 0) > 0
+                    ? Math.round(
+                        (partners.reduce((sum, p) => sum + (p?.acceptedProposals || 0), 0) /
+                         partners.reduce((sum, p) => sum + (p?.totalProposals || 0), 0)) * 100
+                      )
+                    : 0
+                }
                 suffix="%"
                 prefix={<CheckCircleOutlined />}
               />
@@ -762,7 +603,7 @@ const BusinessPartnerList: React.FC = () => {
 
             <TabPane tab="担当者" key="contacts">
               <Space direction="vertical" style={{ width: '100%' }}>
-                {selectedPartner.contacts.map(contact => (
+                {(selectedPartner.contacts || []).map(contact => (
                   <Card key={contact.id} size="small">
                     <Row justify="space-between">
                       <Col>
@@ -872,8 +713,8 @@ const BusinessPartnerList: React.FC = () => {
         <Card size="small" title="送信先企業">
           <Space direction="vertical" style={{ width: '100%' }}>
             {partners
-              .filter(p => selectedRowKeys.includes(p.id))
-              .map(partner => (
+              .filter((p: BusinessPartner) => selectedRowKeys.includes(p.id))
+              .map((partner: BusinessPartner) => (
                 <div key={partner.id}>
                   <Text>{partner.companyName}</Text>
                   <Text type="secondary" style={{ marginLeft: 8 }}>

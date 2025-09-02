@@ -39,7 +39,7 @@ import dayjs from 'dayjs';
 import { engineerApi } from '../../api/engineers/engineerApi';
 import { useAuthStore } from '../../stores/authStore';
 import type { EngineerCreateRequest, EngineerStatus } from '../../types/engineer';
-import { canRegisterEngineer, ROLE_DISPLAY_NAMES } from '../../constants/roles';
+import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import debounce from 'lodash/debounce';
 import axios from '../../lib/axios';
 
@@ -57,6 +57,7 @@ const EngineerRegister: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { canCreateEngineer } = usePermissionCheck();
   const [currentStep, setCurrentStep] = useState(0);
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -68,13 +69,13 @@ const EngineerRegister: React.FC = () => {
   useEffect(() => {
     console.log('EngineerRegister - User:', user);
     console.log('EngineerRegister - User roles:', user?.roles);
-    console.log('EngineerRegister - Can register:', user ? canRegisterEngineer(user.roles) : false);
+    console.log('EngineerRegister - Can register:', user ? canCreateEngineer() : false);
     
-    if (user && !canRegisterEngineer(user.roles)) {
+    if (user && !canCreateEngineer()) {
       message.error('この機能にアクセスする権限がありません');
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [user, navigate, canCreateEngineer]);
 
   // スキルレベルの選択肢
   const skillLevels = [
@@ -1031,7 +1032,7 @@ const EngineerRegister: React.FC = () => {
 
 
   // 権限がない場合の表示
-  if (user && !canRegisterEngineer(user.roles)) {
+  if (user && !canCreateEngineer()) {
     return (
       <Card className="text-center" style={{ maxWidth: 600, margin: '100px auto' }}>
         <LockOutlined style={{ fontSize: 48, color: '#ff4d4f', marginBottom: 24 }} />

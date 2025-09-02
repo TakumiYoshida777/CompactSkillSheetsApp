@@ -14,7 +14,7 @@ export const NotificationContainer: React.FC = () => {
   const [visible, setVisible] = useState<boolean>(false)
 
   useEffect(() => {
-    // TODO: WebSocket接続やSSEの設定
+    // WebSocket接続やSSEの設定が必要
     // 現時点では空の配列
     setNotifications(mockNotifications)
   }, [])

@@ -51,7 +51,7 @@ export class ErrorHandler {
         });
         // ログイン画面へリダイレクト
         setTimeout(() => {
-          window.location.href = 'login';
+          window.location.href = '/login';
         }, 2000);
         break;
 
@@ -200,7 +200,14 @@ export class ErrorHandler {
       };
 
       console.log('エラーログ:', errorLog);
-      // TODO: エラーログAPIに送信
+      // Sentryにエラーログを送信
+      if (process.env.NODE_ENV === 'production') {
+        import('./sentry').then(({ logError }) => {
+          logError(new Error(errorLog.message), errorLog)
+        }).catch(err => {
+          console.error('Sentry import error:', err);
+        })
+      }
     } catch (logError) {
       console.error('エラーログ送信失敗:', logError);
     }

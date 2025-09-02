@@ -2,9 +2,12 @@ import { Router } from 'express';
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { ApiResponse } from '../../utils/response.util';
 import { paginationMiddleware } from '../../middleware/pagination.middleware';
+import { notificationsService } from '../../services/notifications.service';
+import { PrismaClient } from '@prisma/client';
 import type { Request, Response, NextFunction } from 'express';
 
 const router = Router();
+const prisma = new PrismaClient();
 
 // 認証必須
 router.use(authMiddleware);
@@ -12,45 +15,24 @@ router.use(authMiddleware);
 // 通知一覧取得
 router.get('/', paginationMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20, unreadOnly = false } = req.query;
+    const userId = req.user?.id;
     
-    // TODO: 実際のデータベースクエリを実装
-    const notifications = [
-      {
-        id: '1',
-        type: 'info',
-        title: '新規プロジェクト登録',
-        message: 'プロジェクト「ECサイトリニューアル」が登録されました',
-        isRead: false,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: '2',
-        type: 'success',
-        title: 'アプローチ成功',
-        message: '株式会社ABCからアプローチに返信がありました',
-        isRead: false,
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-      },
-      {
-        id: '3',
-        type: 'warning',
-        title: 'エンジニア稼働終了予定',
-        message: '田中太郎さんのプロジェクトが来月終了予定です',
-        isRead: true,
-        createdAt: new Date(Date.now() - 172800000).toISOString(),
-      },
-    ];
+    if (!userId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    const result = await notificationsService.getNotifications(
+      userId,
+      Number(page),
+      Number(limit),
+      Boolean(unreadOnly)
+    );
     
     res.json(ApiResponse.success({
-      data: notifications,
+      data: result.notifications,
       meta: {
-        pagination: {
-          page: Number(page),
-          limit: Number(limit),
-          total: 3,
-          totalPages: 1,
-        },
+        pagination: result.pagination,
       },
     }));
   } catch (error) {
@@ -61,8 +43,13 @@ router.get('/', paginationMiddleware, async (req: Request, res: Response, next: 
 // 未読件数取得
 router.get('/unread-count', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // TODO: 実際のデータベースクエリを実装
-    const unreadCount = 2;
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    const unreadCount = await notificationsService.getUnreadCount(userId);
     
     res.json(ApiResponse.success({ count: unreadCount }));
   } catch (error) {
@@ -74,23 +61,31 @@ router.get('/unread-count', async (req: Request, res: Response, next: NextFuncti
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.id;
     
-    // TODO: 実際のデータベースクエリを実装
-    const notification = {
-      id,
-      type: 'info',
-      title: '新規プロジェクト登録',
-      message: 'プロジェクト「ECサイトリニューアル」が登録されました',
-      details: {
-        projectId: 'PRJ001',
-        projectName: 'ECサイトリニューアル',
-        clientName: '株式会社XYZ',
+    if (!userId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    const notification = await prisma.notification.findFirst({
+      where: {
+        id: BigInt(id),
+        userId: BigInt(userId),
       },
-      isRead: false,
-      createdAt: new Date().toISOString(),
+    });
+    
+    if (!notification) {
+      return res.status(404).json(ApiResponse.error('NOT_FOUND', '通知が見つかりません'));
+    }
+    
+    // BigIntをstringに変換
+    const serializedNotification = {
+      ...notification,
+      id: notification.id.toString(),
+      userId: notification.userId.toString(),
     };
     
-    res.json(ApiResponse.success(notification));
+    res.json(ApiResponse.success(serializedNotification));
   } catch (error) {
     next(error);
   }
@@ -99,20 +94,38 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 // 通知作成
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { type, title, message, userId } = req.body;
+    const { type, title, message, targetUserId } = req.body;
+    const currentUserId = req.user?.id;
     
-    // TODO: 実際のデータベース保存を実装
-    const notification = {
-      id: Date.now().toString(),
+    if (!currentUserId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    // 管理者権限チェック（通知作成は管理者のみ可能）
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(currentUserId) },
+      select: { role: true },
+    });
+    
+    if (user?.role !== 'admin') {
+      return res.status(403).json(ApiResponse.error('FORBIDDEN', '権限がありません'));
+    }
+    
+    const notification = await notificationsService.createNotification({
+      userId: targetUserId || currentUserId,
       type,
       title,
-      message,
-      userId,
-      isRead: false,
-      createdAt: new Date().toISOString(),
+      content: message,
+    });
+    
+    // BigIntをstringに変換
+    const serializedNotification = {
+      ...notification,
+      id: notification.id.toString(),
+      userId: notification.userId.toString(),
     };
     
-    res.status(201).json(ApiResponse.success(notification, '通知を作成しました'));
+    res.status(201).json(ApiResponse.success(serializedNotification, '通知を作成しました'));
   } catch (error) {
     next(error);
   }
@@ -122,8 +135,14 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
 router.patch('/:id/read', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.id;
     
-    // TODO: 実際のデータベース更新を実装
+    if (!userId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    await notificationsService.markAsRead(userId, [id]);
+    
     res.json(ApiResponse.success(null, '通知を既読にしました'));
   } catch (error) {
     next(error);
@@ -134,8 +153,19 @@ router.patch('/:id/read', async (req: Request, res: Response, next: NextFunction
 router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+    const userId = req.user?.id;
     
-    // TODO: 実際のデータベース削除を実装
+    if (!userId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    await prisma.notification.deleteMany({
+      where: {
+        id: BigInt(id),
+        userId: BigInt(userId),
+      },
+    });
+    
     res.json(ApiResponse.success(null, '通知を削除しました'));
   } catch (error) {
     next(error);
@@ -145,7 +175,14 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
 // 全既読設定
 router.patch('/mark-all-read', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // TODO: 実際のデータベース更新を実装
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    await notificationsService.markAllAsRead(userId);
+    
     res.json(ApiResponse.success(null, 'すべての通知を既読にしました'));
   } catch (error) {
     next(error);
@@ -155,7 +192,19 @@ router.patch('/mark-all-read', async (req: Request, res: Response, next: NextFun
 // 既読通知削除
 router.delete('/clear-read', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // TODO: 実際のデータベース削除を実装
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    await prisma.notification.deleteMany({
+      where: {
+        userId: BigInt(userId),
+        isRead: true,
+      },
+    });
+    
     res.json(ApiResponse.success(null, '既読の通知を削除しました'));
   } catch (error) {
     next(error);
@@ -165,10 +214,24 @@ router.delete('/clear-read', async (req: Request, res: Response, next: NextFunct
 // 通知設定取得
 router.get('/settings', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // TODO: 実際のデータベースクエリを実装
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    // ユーザーのプリファレンスを取得（存在しない場合はデフォルト値を返す）
+    const user = await prisma.user.findUnique({
+      where: { id: BigInt(userId) },
+      select: { 
+        notificationPreferences: true,
+        emailNotifications: true,
+      },
+    });
+    
     const settings = {
       email: {
-        enabled: true,
+        enabled: user?.emailNotifications !== false,
         projectUpdates: true,
         approachResponses: true,
         engineerUpdates: true,
@@ -181,6 +244,7 @@ router.get('/settings', async (req: Request, res: Response, next: NextFunction) 
         engineerUpdates: false,
         systemNotifications: false,
       },
+      preferences: user?.notificationPreferences || {},
     };
     
     res.json(ApiResponse.success(settings));
@@ -192,10 +256,43 @@ router.get('/settings', async (req: Request, res: Response, next: NextFunction) 
 // 通知設定更新
 router.put('/settings', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const userId = req.user?.id;
     const settings = req.body;
     
-    // TODO: 実際のデータベース更新を実装
-    res.json(ApiResponse.success(settings, '通知設定を更新しました'));
+    if (!userId) {
+      return res.status(401).json(ApiResponse.error('UNAUTHORIZED', '認証が必要です'));
+    }
+    
+    // ユーザーの通知設定を更新
+    const updatedUser = await prisma.user.update({
+      where: { id: BigInt(userId) },
+      data: {
+        emailNotifications: settings.email?.enabled,
+        notificationPreferences: settings.preferences || {},
+        updatedAt: new Date(),
+      },
+      select: {
+        emailNotifications: true,
+        notificationPreferences: true,
+      },
+    });
+    
+    const updatedSettings = {
+      email: {
+        enabled: updatedUser.emailNotifications !== false,
+        ...settings.email,
+      },
+      push: settings.push || {
+        enabled: false,
+        projectUpdates: false,
+        approachResponses: false,
+        engineerUpdates: false,
+        systemNotifications: false,
+      },
+      preferences: updatedUser.notificationPreferences,
+    };
+    
+    res.json(ApiResponse.success(updatedSettings, '通知設定を更新しました'));
   } catch (error) {
     next(error);
   }

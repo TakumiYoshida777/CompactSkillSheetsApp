@@ -80,7 +80,19 @@ export class EngineerService {
         include: {
           skillSheet: true,
           engineerProjects: {
-            include: { project: true },
+            include: { 
+              project: {
+                select: {
+                  id: true,
+                  name: true,
+                  clientCompany: true,
+                  monthlyRate: true,
+                  startDate: true,
+                  endDate: true,
+                  status: true
+                }
+              }
+            },
             orderBy: { startDate: 'desc' },
             take: 5
           },
@@ -147,8 +159,21 @@ export class EngineerService {
         include: {
           skillSheet: true,
           engineerProjects: {
-            include: { project: true },
-            orderBy: { startDate: 'desc' }
+            include: { 
+              project: {
+                select: {
+                  id: true,
+                  name: true,
+                  clientCompany: true,
+                  monthlyRate: true,
+                  startDate: true,
+                  endDate: true,
+                  status: true
+                }
+              }
+            },
+            orderBy: { startDate: 'desc' },
+            take: 10
           },
           user: true
         }

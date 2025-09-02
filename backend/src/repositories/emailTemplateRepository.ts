@@ -22,7 +22,7 @@ class EmailTemplateRepository {
    * オファーメールのテンプレートを取得
    */
   async findOfferTemplate(clientCompanyId: string): Promise<EmailTemplate | null> {
-    // 実際のテーブルがまだない場合のモック実装
+    // TODO:モックの実装はせずテーブルがないならテーブルを作る
     // TODO: email_templatesテーブル作成後に実装を更新
     return null;
   }

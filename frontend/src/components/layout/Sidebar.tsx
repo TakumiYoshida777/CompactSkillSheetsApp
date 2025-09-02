@@ -2,8 +2,9 @@
  * サイドバーコンポーネント
  */
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { useAuthStore } from '@/stores/authStore'
 import {
   Home,
   Users,
@@ -38,9 +39,12 @@ interface MenuItem {
 
 export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
   const location = useLocation()
+  const user = useAuthStore((state) => state.user)
+  const userRole = user?.role || 'guest'
 
-  // TODO: ユーザーロールに応じてメニューを動的に生成
-  const menuItems: MenuItem[] = [
+  // ユーザーロールに応じてメニューを動的に生成
+  const menuItems: MenuItem[] = useMemo(() => {
+    const baseMenuItems: MenuItem[] = [
     {
       id: 'dashboard',
       label: 'ダッシュボード',
@@ -110,7 +114,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
     },
   ]
 
-  const systemMenuItems: MenuItem[] = [
+    // ロールに応じてメニューをフィルタリング
+    if (userRole === 'admin' || userRole === 'company_admin') {
+      // 管理者は全メニューにアクセス可能
+      return baseMenuItems
+    } else if (userRole === 'engineer') {
+      // エンジニアはダッシュボード、スキルシート、プロジェクト、カレンダーのみ
+      return baseMenuItems.filter(item => 
+        ['dashboard', 'skill-sheets', 'projects', 'calendar'].includes(item.id)
+      )
+    } else if (userRole === 'client') {
+      // 取引先はダッシュボード、エンジニア管理、オファー管理のみ
+      return baseMenuItems.filter(item => 
+        ['dashboard', 'engineers', 'offers'].includes(item.id)
+      )
+    } else {
+      // ゲストユーザーはダッシュボードのみ
+      return baseMenuItems.filter(item => item.id === 'dashboard')
+    }
+  }, [userRole])
+
+  const systemMenuItems: MenuItem[] = useMemo(() => {
+    const baseSystemMenuItems: MenuItem[] = [
     {
       id: 'admin',
       label: '管理者設定',
@@ -124,6 +149,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onClose }) => {
       path: 'settings',
     },
   ]
+
+    // ロールに応じてシステムメニューをフィルタリング
+    if (userRole === 'admin' || userRole === 'company_admin') {
+      return baseSystemMenuItems
+    } else {
+      // 管理者以外は設定メニューのみ
+      return baseSystemMenuItems.filter(item => item.id === 'settings')
+    }
+  }, [userRole])
 
   const isActive = (path: string) => {
     return location.pathname.startsWith(path)

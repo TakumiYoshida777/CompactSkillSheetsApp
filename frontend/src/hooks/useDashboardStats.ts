@@ -1,6 +1,25 @@
-import { useState, useEffect } from 'react';
-import { getDashboardStats, calculatePercentage } from '../mocks/dashboardData';
-import type { DashboardStats } from '../mocks/dashboardData';
+import { useQuery } from '@tanstack/react-query';
+import { dashboardAPI } from '../api/ses/dashboardApi';
+import type { DashboardData } from '../types/dashboard';
+
+interface DashboardStats {
+  engineers: {
+    total: number;
+    totalChange: number;
+    active: number;
+    waiting: number;
+    waitingScheduled: number;
+  };
+  approaches: {
+    monthlyCount: number;
+    monthlyChange: number;
+    successRate: number;
+  };
+  skillSheets: {
+    monthlyUpdated: number;
+    needsUpdate: number;
+  };
+}
 
 interface UseDashboardStatsReturn {
   stats: DashboardStats | null;
@@ -12,46 +31,70 @@ interface UseDashboardStatsReturn {
 }
 
 /**
+ * パーセンテージ計算
+ */
+const calculatePercentage = (value: number, total: number): number => {
+  if (total === 0) return 0;
+  return Math.round((value / total) * 100 * 10) / 10; // 小数点1桁まで
+};
+
+/**
+ * DashboardDataをDashboardStatsに変換
+ */
+const transformDashboardData = (data: DashboardData): DashboardStats => {
+  return {
+    engineers: {
+      total: data.kpi.totalEngineers,
+      totalChange: 0, // APIから取得できない場合は0
+      active: data.kpi.activeEngineers,
+      waiting: data.kpi.waitingEngineers,
+      waitingScheduled: 0, // APIから取得できない場合は0
+    },
+    approaches: {
+      monthlyCount: data.approaches.current,
+      monthlyChange: data.approaches.growth,
+      successRate: data.kpi.acceptanceRate,
+    },
+    skillSheets: {
+      monthlyUpdated: 0, // APIから別途取得が必要
+      needsUpdate: 0, // APIから別途取得が必要
+    },
+  };
+};
+
+/**
  * ダッシュボードの統計データを取得するカスタムフック
  */
 export const useDashboardStats = (): UseDashboardStatsReturn => {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const data = await getDashboardStats();
-        setStats(data);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, []);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: async () => {
+      const dashboardData = await dashboardAPI.getDashboardData();
+      return transformDashboardData(dashboardData);
+    },
+    staleTime: 1000 * 60 * 5, // 5分間はキャッシュを使用
+    gcTime: 1000 * 60 * 10, // 10分間キャッシュを保持
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
 
   // パーセンテージ計算
-  const engineerActivePercent = stats 
-    ? calculatePercentage(stats.engineers.active, stats.engineers.total)
+  const engineerActivePercent = data
+    ? calculatePercentage(data.engineers.active, data.engineers.total)
     : 0;
   
-  const engineerWaitingPercent = stats
-    ? calculatePercentage(stats.engineers.waiting, stats.engineers.total)
+  const engineerWaitingPercent = data
+    ? calculatePercentage(data.engineers.waiting, data.engineers.total)
     : 0;
   
-  const engineerWaitingScheduledPercent = stats
-    ? calculatePercentage(stats.engineers.waitingScheduled, stats.engineers.total)
+  const engineerWaitingScheduledPercent = data
+    ? calculatePercentage(data.engineers.waitingScheduled, data.engineers.total)
     : 0;
 
   return {
-    stats,
-    loading,
-    error,
+    stats: data || null,
+    loading: isLoading,
+    error: error as Error | null,
     engineerActivePercent,
     engineerWaitingPercent,
     engineerWaitingScheduledPercent,

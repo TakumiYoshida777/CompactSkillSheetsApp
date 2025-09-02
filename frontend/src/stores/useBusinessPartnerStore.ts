@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { 
-  businessPartnerService,
+import { businessPartnerService } from '../services/businessPartnerService';
+import type { 
   BusinessPartner,
   BusinessPartnerListResponse,
   BusinessPartnerDetailResponse,
@@ -15,7 +15,7 @@ import {
   UpdateAccessPermissionDto,
   NGListEngineer,
   AddNGListDto
-} from '../services/businessPartnerService';
+} from '../services/businessPartnerTypes';
 
 interface BusinessPartnerState {
   // 状態
@@ -45,6 +45,7 @@ interface BusinessPartnerState {
   createClientUser: (partnerId: string, data: Omit<CreateClientUserDto, 'businessPartnerId'>) => Promise<void>;
   updateClientUser: (partnerId: string, userId: string, data: UpdateClientUserDto) => Promise<void>;
   deleteClientUser: (partnerId: string, userId: string) => Promise<void>;
+  resetClientUserPassword: (partnerId: string, userId: string, newPassword: string) => Promise<void>;
   
   // アクション - アクセス権限
   fetchAccessPermissions: (partnerId: string) => Promise<void>;
@@ -269,6 +270,21 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
         } catch (error: any) {
           set({ 
             error: error.response?.data?.message || '取引先ユーザーの削除に失敗しました',
+            isLoading: false,
+          });
+          throw error;
+        }
+      },
+      
+      // 取引先ユーザーパスワードリセット
+      resetClientUserPassword: async (partnerId, userId, newPassword) => {
+        set({ isLoading: true, error: null });
+        try {
+          await businessPartnerService.resetClientUserPassword(partnerId, userId, newPassword);
+          set({ isLoading: false });
+        } catch (error: any) {
+          set({ 
+            error: error.response?.data?.message || 'パスワードのリセットに失敗しました',
             isLoading: false,
           });
           throw error;

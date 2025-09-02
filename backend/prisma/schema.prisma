@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
@@ -368,6 +369,7 @@ model BusinessPartner {
   engineerPermissions    EngineerPermission[]
   engineerNgLists        EngineerNgList[]
   setting                BusinessPartnerSetting?
+  detail                 BusinessPartnerDetail?
   deletedAt              DateTime?
 
   @@map("business_partners")
@@ -482,6 +484,62 @@ model BusinessPartnerSetting {
   businessPartner BusinessPartner @relation(fields: [businessPartnerId], references: [id])
 
   @@map("business_partner_settings")
+}
+
+// 取引先企業詳細情報（暫定実装との互換性維持用）
+model BusinessPartnerDetail {
+  id                BigInt   @id @default(autoincrement())
+  businessPartnerId BigInt   @unique
+  
+  // 基本情報（Companyテーブルと一部重複だが暫定実装との互換性のため）
+  companyNameKana   String?  @db.VarChar(255)
+  industry          String?  @db.VarChar(100)
+  employeeSize      String?  @db.VarChar(50)
+  businessDescription String? @db.Text
+  
+  // 契約・予算情報
+  contractTypes     Json?    // ['準委任契約', '派遣契約']
+  budgetMin         Int?
+  budgetMax         Int?
+  
+  // 求める条件
+  preferredSkills   Json?    // ['React', 'TypeScript', 'AWS']
+  preferredIndustries Json?  // ['金融', 'IT', '製造']
+  requirements      String?  @db.Text
+  
+  // 統計情報（定期的に更新）
+  currentEngineers  Int      @default(0)
+  monthlyRevenue    Int      @default(0)
+  totalRevenue      Int      @default(0)
+  totalProposals    Int      @default(0)
+  acceptedProposals Int      @default(0)
+  lastContactDate   DateTime?
+  
+  // 評価・タグ
+  rating            Float?   @db.Real
+  tags              Json?    // ['最重要顧客', '優良顧客']
+  
+  // 支払条件
+  paymentTerms      String?  @db.Text
+  
+  // 自動化設定
+  autoEmailEnabled  Boolean  @default(false)
+  followUpEnabled   Boolean  @default(false)
+  
+  // 備考
+  notes             String?  @db.Text
+  
+  // メタ情報
+  lastUpdatedAt     DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  businessPartner BusinessPartner @relation(fields: [businessPartnerId], references: [id])
+
+  @@index([businessPartnerId])
+  @@index([industry])
+  @@index([rating])
+  @@map("business_partner_details")
 }
 
 // 取引先企業閲覧ログ

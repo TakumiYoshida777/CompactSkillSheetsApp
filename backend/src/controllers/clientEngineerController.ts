@@ -105,6 +105,20 @@ export class ClientEngineerController {
             include: {
               project: true
             }
+          },
+          offerEngineers: {
+            where: {
+              offer: {
+                clientCompanyId: clientUserData.businessPartnerId
+              }
+            },
+            orderBy: {
+              createdAt: 'desc'
+            },
+            take: 5,
+            include: {
+              offer: true
+            }
           }
         }
       });
@@ -119,20 +133,40 @@ export class ClientEngineerController {
 
       // レスポンスデータの整形
       const responseData = {
-        engineers: engineers.map(eng => ({
-          id: eng.id.toString(),
-          name: eng.name,
-          skills: eng.skillSheet?.technicalSkills || [],
-          experience: 5, // TODO: 経験年数の計算ロジック追加
-          availability: eng.availableDate?.toISOString() || null,
-          availabilityStatus: eng.currentStatus === 'WAITING' ? 'available' : 'unavailable',
-          rate: {
-            min: 40,
-            max: 80
-          },
-          lastOfferStatus: null, // TODO: オファー機能実装後に連携
-          offerHistory: [], // TODO: オファー機能実装後に連携
-        })),
+        engineers: engineers.map(eng => {
+          // 経験年数の計算
+          const yearsOfExperience = eng.yearsOfExperience || 
+            (eng.skillSheet?.totalExperienceYears as number | null) || 
+            0;
+
+          // 最新のオファー状態を取得
+          const latestOffer = eng.offerEngineers[0];
+          const lastOfferStatus = latestOffer ? latestOffer.individualStatus : null;
+
+          // オファー履歴
+          const offerHistory = eng.offerEngineers.map(oe => ({
+            offerId: oe.offerId.toString(),
+            status: oe.individualStatus,
+            projectName: oe.offer.projectName,
+            sentAt: oe.offer.sentAt.toISOString(),
+            respondedAt: oe.respondedAt?.toISOString() || null
+          }));
+
+          return {
+            id: eng.id.toString(),
+            name: eng.name,
+            skills: eng.skillSheet?.technicalSkills || [],
+            experience: yearsOfExperience,
+            availability: eng.availableDate?.toISOString() || null,
+            availabilityStatus: eng.currentStatus === 'WAITING' ? 'available' : 'unavailable',
+            rate: {
+              min: eng.hourlyRate ? Math.floor(eng.hourlyRate * 0.9) : 40,
+              max: eng.hourlyRate ? Math.floor(eng.hourlyRate * 1.1) : 80
+            },
+            lastOfferStatus,
+            offerHistory
+          };
+        }),
         totalCount: engineers.length,
         permissionType
       };
@@ -417,23 +451,100 @@ export class ClientEngineerController {
       // エンジニア一覧を取得（権限に基づく）
       const engineersResponse = await this.getEngineersForOfferBoard(clientUserData);
       
-      // 統計情報を計算
+      // 現在時刻と時間範囲を定義
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekAgo = new Date(today);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const monthAgo = new Date(today);
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+
+      // オファー関連の統計を取得
+      const offers = await prisma.offer.findMany({
+        where: {
+          clientCompanyId: clientUserData.businessPartnerId
+        },
+        include: {
+          offerEngineers: true
+        }
+      });
+
+      // オファー統計の計算
+      const totalOffers = offers.length;
+      const monthlyOffers = offers.filter(o => o.sentAt >= monthAgo).length;
+      const weeklyOffers = offers.filter(o => o.sentAt >= weekAgo).length;
+      const todayOffers = offers.filter(o => o.sentAt >= today).length;
+
+      // オファーエンジニアの統計を計算
+      const allOfferEngineers = offers.flatMap(o => o.offerEngineers);
+      const offeredEngineers = new Set(allOfferEngineers.map(oe => oe.engineerId.toString())).size;
+      const acceptedOffers = allOfferEngineers.filter(oe => oe.individualStatus === 'ACCEPTED').length;
+      const pendingResponses = allOfferEngineers.filter(oe => 
+        oe.individualStatus === 'SENT' || oe.individualStatus === 'OPENED'
+      ).length;
+
+      // 承諾率の計算
+      const respondedOffers = allOfferEngineers.filter(oe => 
+        oe.individualStatus === 'ACCEPTED' || oe.individualStatus === 'DECLINED'
+      ).length;
+      const offerAcceptanceRate = respondedOffers > 0 
+        ? Math.round((acceptedOffers / respondedOffers) * 100) 
+        : 0;
+
+      // 統計情報
       const statistics = {
         totalEngineers: engineersResponse.engineers.length,
         availableEngineers: engineersResponse.engineers.filter(e => e.availabilityStatus === 'available').length,
-        offeredEngineers: 0, // TODO: オファー機能実装後
-        acceptedOffers: 0, // TODO: オファー機能実装後
-        offerAcceptanceRate: 0, // TODO: オファー機能実装後
+        offeredEngineers,
+        acceptedOffers,
+        offerAcceptanceRate
       };
 
       const summary = {
-        totalOffers: 0, // TODO: オファー機能実装後
-        monthlyOffers: 0, // TODO: オファー機能実装後
-        weeklyOffers: 0, // TODO: オファー機能実装後
-        todayOffers: 0, // TODO: オファー機能実装後
-        pendingResponses: 0, // TODO: オファー機能実装後
-        acceptanceRate: 0, // TODO: オファー機能実装後
+        totalOffers,
+        monthlyOffers,
+        weeklyOffers,
+        todayOffers,
+        pendingResponses,
+        acceptanceRate: offerAcceptanceRate
       };
+
+      // 最近のオファーを取得
+      const recentOffers = await prisma.offer.findMany({
+        where: {
+          clientCompanyId: clientUserData.businessPartnerId
+        },
+        orderBy: {
+          sentAt: 'desc'
+        },
+        take: 10,
+        include: {
+          offerEngineers: {
+            include: {
+              engineer: true
+            }
+          }
+        }
+      });
+
+      const formattedRecentOffers = recentOffers.map(offer => ({
+        id: offer.id.toString(),
+        offerNumber: offer.offerNumber,
+        projectName: offer.projectName,
+        status: offer.status,
+        sentAt: offer.sentAt.toISOString(),
+        engineerCount: offer.offerEngineers.length,
+        acceptedCount: offer.offerEngineers.filter(oe => oe.individualStatus === 'ACCEPTED').length,
+        pendingCount: offer.offerEngineers.filter(oe => 
+          oe.individualStatus === 'SENT' || oe.individualStatus === 'OPENED'
+        ).length,
+        engineers: offer.offerEngineers.map(oe => ({
+          id: oe.engineerId.toString(),
+          name: oe.engineer.name,
+          status: oe.individualStatus,
+          respondedAt: oe.respondedAt?.toISOString() || null
+        }))
+      }));
 
       // 閲覧ログを記録
       await prisma.clientViewLog.create({
@@ -447,7 +558,7 @@ export class ClientEngineerController {
         statistics,
         summary,
         engineers: engineersResponse.engineers,
-        recentOffers: [] // TODO: オファー機能実装後
+        recentOffers: formattedRecentOffers
       });
     } catch (error) {
       console.error('Error fetching offer board:', error);
@@ -477,7 +588,21 @@ export class ClientEngineerController {
     const engineers = await prisma.engineer.findMany({
       where: whereConditions,
       include: {
-        skillSheet: true
+        skillSheet: true,
+        offerEngineers: {
+          where: {
+            offer: {
+              clientCompanyId: clientUser.businessPartnerId
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+          take: 1,
+          include: {
+            offer: true
+          }
+        }
       }
     });
 
@@ -494,6 +619,16 @@ export class ClientEngineerController {
           ...frameworks.map((fw: any) => fw.name || fw),
           ...databases.map((db: any) => db.name || db)
         ].filter(Boolean);
+
+        // 最新のオファー情報を取得
+        const latestOffer = eng.offerEngineers[0];
+        const lastOfferStatus = latestOffer ? latestOffer.individualStatus : null;
+        const offerHistory = eng.offerEngineers.map(oe => ({
+          offerId: oe.offerId.toString(),
+          status: oe.individualStatus,
+          projectName: oe.offer.projectName,
+          sentAt: oe.offer.sentAt.toISOString()
+        }));
         
         return {
           id: eng.id.toString(),
@@ -503,11 +638,11 @@ export class ClientEngineerController {
           availability: eng.availableDate?.toISOString() || '即日',
           availabilityStatus: eng.currentStatus === 'WAITING' ? 'available' : 'unavailable',
           rate: {
-            min: 40,
-            max: 60
+            min: eng.hourlyRate ? Math.floor(eng.hourlyRate * 0.9) : 40,
+            max: eng.hourlyRate ? Math.floor(eng.hourlyRate * 1.1) : 60
           },
-          lastOfferStatus: null,
-          offerHistory: []
+          lastOfferStatus,
+          offerHistory
         };
       })
     };

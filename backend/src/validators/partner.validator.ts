@@ -77,5 +77,17 @@ export const partnerValidation = {
       password: yup.string().min(8, 'パスワードは8文字以上である必要があります'),
       role: yup.string().oneOf(['admin', 'viewer', 'editor'])
     })
+  }),
+  
+  resetPassword: yup.object({
+    body: yup.object({
+      newPassword: yup.string()
+        .required('新しいパスワードは必須です')
+        .min(8, 'パスワードは8文字以上である必要があります')
+        .matches(
+          /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+          'パスワードは大文字、小文字、数字を含む必要があります'
+        )
+    })
   })
 };
