@@ -6,6 +6,7 @@ import { AuthService } from '../services/authService';
 import { AuthCheckService } from '../services/authCheckService';
 import { getLoginPath } from '../utils/navigation';
 import type { AuthState, User } from './types/authTypes';
+import { getErrorMessage } from '../types/error.types';
 
 const useAuthStore = create<AuthState>()(
   persist(

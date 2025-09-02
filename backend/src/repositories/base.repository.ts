@@ -1,13 +1,14 @@
 import { PrismaClient } from '@prisma/client';
 import { PaginationOptions } from '../middleware/pagination.middleware';
 import { SortOptions, FilterOptions } from '../middleware/pagination.middleware';
+import { BaseFilterOptions, PaginatedResult } from '../types/repository.types';
 
 export interface RepositoryOptions {
   pagination?: PaginationOptions;
   sort?: SortOptions;
   filters?: FilterOptions;
-  include?: any;
-  select?: any;
+  include?: Record<string, boolean | object>;
+  select?: Record<string, boolean | object>;
 }
 
 export interface FindAllResult<T> {
@@ -35,10 +36,10 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
     companyId: number,
     options?: RepositoryOptions
   ): Promise<FindAllResult<T>> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     // WHERE条件の構築
-    const where: any = { companyId };
+    const where: Record<string, any> = { companyId };
     
     // フィルタ条件の追加
     if (options?.filters) {
@@ -85,7 +86,7 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
     companyId: number,
     options?: Pick<RepositoryOptions, 'include' | 'select'>
   ): Promise<T | null> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     return model.findFirst({
       where: { id, companyId },
@@ -98,10 +99,10 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
    * 条件指定で1件取得
    */
   async findOne(
-    where: any,
+    where: Record<string, any>,
     options?: Pick<RepositoryOptions, 'include' | 'select'>
   ): Promise<T | null> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     return model.findFirst({
       where,
@@ -118,7 +119,7 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
     companyId: number,
     options?: Pick<RepositoryOptions, 'include' | 'select'>
   ): Promise<T> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     return model.create({
       data: {
@@ -139,7 +140,7 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
     companyId: number,
     options?: Pick<RepositoryOptions, 'include' | 'select'>
   ): Promise<T> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     // 存在確認（企業IDも含めてチェック）
     const exists = await model.findFirst({
@@ -165,7 +166,7 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
    * 削除
    */
   async delete(id: number, companyId: number): Promise<boolean> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     // 存在確認（企業IDも含めてチェック）
     const exists = await model.findFirst({
@@ -187,7 +188,7 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
    * 複数削除
    */
   async deleteMany(ids: number[], companyId: number): Promise<number> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     const result = await model.deleteMany({
       where: {
@@ -203,7 +204,7 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
    * カウント
    */
   async count(companyId: number, filters?: FilterOptions): Promise<number> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     const where: any = { companyId };
     
@@ -240,7 +241,7 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
     data: CreateInput[],
     companyId: number
   ): Promise<number> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     const dataWithCompanyId = data.map(item => ({
       ...item,
@@ -262,7 +263,7 @@ export abstract class BaseRepository<T, CreateInput, UpdateInput> {
     data: UpdateInput,
     companyId: number
   ): Promise<number> {
-    const model = (this.prisma as any)[this.modelName];
+    const model = (this.prisma as Record<string, any>)[this.modelName];
     
     const result = await model.updateMany({
       where: {

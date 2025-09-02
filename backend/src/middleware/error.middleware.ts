@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ApiResponse } from '../utils/response.util';
 import { config } from '../config/environment';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { AppErrorDetails } from '../types/common.types';
 
 // カスタムエラークラス
 export class AppError extends Error {
@@ -10,7 +11,7 @@ export class AppError extends Error {
     public statusCode: number,
     public code: string,
     message: string,
-    public details?: any
+    public details?: AppErrorDetails | AppErrorDetails[]
   ) {
     super(message);
     this.name = 'AppError';
@@ -18,7 +19,7 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: AppErrorDetails | AppErrorDetails[]) {
     super(422, 'VALIDATION_ERROR', message, details);
     this.name = 'ValidationError';
   }
@@ -56,7 +57,7 @@ export class ConflictError extends AppError {
  * グローバルエラーハンドラー
  */
 export const errorHandler = (
-  err: any,
+  err: Error | AppError,
   req: Request,
   res: Response,
   next: NextFunction

@@ -12,6 +12,16 @@ export interface AccessUrl {
   createdAt: Date;
 }
 
+export interface CreateAccessUrlData {
+  partnerId: number;
+  token: string;
+  expiresAt: Date;
+  maxUses?: number;
+  usedCount?: number;
+  isActive?: boolean;
+  createdBy?: number;
+}
+
 export class AccessUrlRepository {
   private prisma: PrismaClient;
   
@@ -37,7 +47,7 @@ export class AccessUrlRepository {
     return (result as AccessUrl[])[0] || null;
   }
   
-  async create(data: any): Promise<AccessUrl> {
+  async create(data: CreateAccessUrlData): Promise<AccessUrl> {
     const keys = Object.keys(data);
     const values = Object.values(data);
     const placeholders = keys.map((_, index) => `$${index + 1}`);

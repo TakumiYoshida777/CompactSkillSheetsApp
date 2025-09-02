@@ -88,7 +88,7 @@ export const stream = {
 };
 
 // 環境に応じてconsole.logを制御するラッパー関数
-export const infoLog = (...args: any[]) => {
+export const infoLog = (...args: unknown[]) => {
   if (process.env.NODE_ENV === 'development') {
     logger.info(args.map(arg => 
       typeof arg === 'object' ? JSON.stringify(arg) : arg
@@ -96,14 +96,14 @@ export const infoLog = (...args: any[]) => {
   }
 };
 
-export const errorLog = (...args: any[]) => {
+export const errorLog = (...args: unknown[]) => {
   // エラーログは本番環境でも出力（ただしwinstonのログレベル設定に従う）
   logger.error(args.map(arg => 
     typeof arg === 'object' ? JSON.stringify(arg) : arg
   ).join(' '));
 };
 
-export const warnLog = (...args: any[]) => {
+export const warnLog = (...args: unknown[]) => {
   // 警告ログは本番環境でも出力（ただしwinstonのログレベル設定に従う）
   logger.warn(args.map(arg => 
     typeof arg === 'object' ? JSON.stringify(arg) : arg
