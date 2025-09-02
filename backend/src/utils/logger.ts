@@ -104,4 +104,18 @@ export const infoLog = (...args: any[]) => {
   }
 };
 
+export const errorLog = (...args: any[]) => {
+  // エラーログは本番環境でも出力（ただしwinstonのログレベル設定に従う）
+  logger.error(args.map(arg => 
+    typeof arg === 'object' ? JSON.stringify(arg) : arg
+  ).join(' '));
+};
+
+export const warnLog = (...args: any[]) => {
+  // 警告ログは本番環境でも出力（ただしwinstonのログレベル設定に従う）
+  logger.warn(args.map(arg => 
+    typeof arg === 'object' ? JSON.stringify(arg) : arg
+  ).join(' '));
+};
+
 export default logger;

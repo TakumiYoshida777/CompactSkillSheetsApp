@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { infoLog } from '../../utils/logger';
 import { execSync } from 'child_process';
 import bcrypt from 'bcrypt';
 
@@ -47,7 +48,7 @@ export class TestDatabase {
       await this.prisma.$connect();
       
       // マイグレーション実行
-      console.log('Running migrations for test database...');
+      infoLog('Running migrations for test database...');
       execSync('npx prisma migrate deploy', {
         env: {
           ...process.env,
@@ -55,7 +56,7 @@ export class TestDatabase {
         }
       });
       
-      console.log('Test database setup completed');
+      infoLog('Test database setup completed');
     } catch (error) {
       console.error('Failed to setup test database:', error);
       throw error;
