@@ -36,7 +36,7 @@ export const createAuthenticationActions: StateCreator<
         isLoading: false,
         error: null,
       });
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage = error.message || 'ログインに失敗しました';
       set({
         isLoading: false,
@@ -65,7 +65,7 @@ export const createAuthenticationActions: StateCreator<
         error: null,
       });
       
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage = error.message || 'ログインに失敗しました';
       set({
         isLoading: false,
@@ -112,7 +112,7 @@ export const createAuthenticationActions: StateCreator<
         isLoading: false,
         error: null,
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || '登録に失敗しました',

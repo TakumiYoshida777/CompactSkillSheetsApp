@@ -42,7 +42,7 @@ export const createTokenManagementActions: StateCreator<
         token: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       });
-    } catch (error: any) {
+    } catch (error) {
       get().logout();
       throw error;
     }

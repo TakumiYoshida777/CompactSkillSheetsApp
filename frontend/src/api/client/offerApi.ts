@@ -138,7 +138,7 @@ export const offerApi = {
   bulkAction: async (data: {
     action: string;
     offerIds: string[];
-  }): Promise<{ success: boolean; results: any[] }> => {
+  }): Promise<{ success: boolean; results: unknown[] }> => {
     const response = await axios.post(`${BASE_URL}/offers/bulk-action`, data);
     return response.data;
   },

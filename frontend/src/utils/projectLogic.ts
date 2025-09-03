@@ -86,7 +86,7 @@ export interface ResourceOptimization {
 }
 
 export const suggestResourceOptimization = (
-  engineers: any[],
+  engineers: unknown[],
   projects: Project[],
   assignments: Assignment[]
 ): ResourceOptimization[] => {

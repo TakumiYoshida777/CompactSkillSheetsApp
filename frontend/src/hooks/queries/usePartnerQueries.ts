@@ -9,6 +9,7 @@ import type {
   AccessUrl, 
   PartnerFilters 
 } from '@/types/partner'
+import { getErrorMessage } from '@/types/error.types'
 import { message } from 'antd'
 
 // Query Keys
@@ -106,8 +107,8 @@ export const useCreatePartner = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.partners })
       message.success('取引先を作成しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || '取引先の作成に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || '取引先の作成に失敗しました')
     },
   })
 }
@@ -124,8 +125,8 @@ export const useUpdatePartner = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.partner(partnerId) })
       message.success('取引先を更新しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || '取引先の更新に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || '取引先の更新に失敗しました')
     },
   })
 }
@@ -140,8 +141,8 @@ export const useDeletePartner = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.partners })
       message.success('取引先を削除しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || '取引先の削除に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || '取引先の削除に失敗しました')
     },
   })
 }
@@ -157,8 +158,8 @@ export const useUpdatePartnerPermissions = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.partnerPermissions(partnerId) })
       message.success('権限を更新しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || '権限の更新に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || '権限の更新に失敗しました')
     },
   })
 }
@@ -174,8 +175,8 @@ export const useGenerateAccessUrl = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.partnerAccessUrls(partnerId) })
       message.success('アクセスURLを生成しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'アクセスURLの生成に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || 'アクセスURLの生成に失敗しました')
     },
   })
 }
@@ -191,8 +192,8 @@ export const useRevokeAccessUrl = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.partnerAccessUrls(partnerId) })
       message.success('アクセスURLを無効化しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'アクセスURLの無効化に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || 'アクセスURLの無効化に失敗しました')
     },
   })
 }
@@ -208,8 +209,8 @@ export const useCreatePartnerUser = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.partnerUsers(partnerId) })
       message.success('ユーザーを作成しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'ユーザーの作成に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || 'ユーザーの作成に失敗しました')
     },
   })
 }
@@ -225,8 +226,8 @@ export const useUpdatePartnerUser = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.partnerUsers(partnerId) })
       message.success('ユーザーを更新しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'ユーザーの更新に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || 'ユーザーの更新に失敗しました')
     },
   })
 }
@@ -242,8 +243,8 @@ export const useDeletePartnerUser = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.partnerUsers(partnerId) })
       message.success('ユーザーを削除しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'ユーザーの削除に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || 'ユーザーの削除に失敗しました')
     },
   })
 }
@@ -256,8 +257,8 @@ export const useResetPartnerUserPassword = () => {
     onSuccess: (data) => {
       message.success(`仮パスワードを生成しました: ${data.temporaryPassword}`)
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'パスワードのリセットに失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error) || 'パスワードのリセットに失敗しました')
     },
   })
 }

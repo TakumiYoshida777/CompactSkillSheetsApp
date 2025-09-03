@@ -159,7 +159,7 @@ export const createValidationRules = {
   amount: (options?: { min?: number; max?: number }) => [
     { required: true, message: '金額を入力してください' },
     {
-      validator: (_: any, value: number) => {
+      validator: (_: Rule, value: number) => {
         if (!value && value !== 0) return Promise.resolve();
         if (value < 0) {
           return Promise.reject(new Error('金額は0以上で入力してください'));
@@ -178,7 +178,7 @@ export const createValidationRules = {
   dateRange: (options?: { allowFuture?: boolean; allowPast?: boolean }) => [
     { required: true, message: '日付を選択してください' },
     {
-      validator: (_: any, value: dayjs.Dayjs) => {
+      validator: (_: Rule, value: dayjs.Dayjs) => {
         if (!value) return Promise.resolve();
         if (options?.allowFuture === false && value.isAfter(dayjs())) {
           return Promise.reject(new Error('未来の日付は選択できません'));
@@ -196,8 +196,8 @@ export const createValidationRules = {
 export const createCrossFieldValidator = {
   // 開始日と終了日の整合性チェック
   dateRange: (startFieldName: string, endFieldName: string) => ({
-    validator: ({ getFieldValue }: any) => ({
-      validator(_: any, value: any) {
+    validator: ({ getFieldValue }: FormInstance) => ({
+      validator(_: Rule, value: dayjs.Dayjs) {
         const startDate = getFieldValue(startFieldName);
         const endDate = getFieldValue(endFieldName);
         
@@ -216,8 +216,8 @@ export const createCrossFieldValidator = {
   
   // 最小値と最大値の整合性チェック
   amountRange: (minFieldName: string, maxFieldName: string) => ({
-    validator: ({ getFieldValue }: any) => ({
-      validator(_: any, value: any) {
+    validator: ({ getFieldValue }: FormInstance) => ({
+      validator(_: Rule, value: number) {
         const minAmount = getFieldValue(minFieldName);
         const maxAmount = getFieldValue(maxFieldName);
         
@@ -236,8 +236,8 @@ export const createCrossFieldValidator = {
   
   // パスワード確認
   passwordConfirm: (passwordFieldName: string) => ({
-    validator: ({ getFieldValue }: any) => ({
-      validator(_: any, value: any) {
+    validator: ({ getFieldValue }: FormInstance) => ({
+      validator(_: Rule, value: string) {
         if (!value || getFieldValue(passwordFieldName) === value) {
           return Promise.resolve();
         }
@@ -248,7 +248,15 @@ export const createCrossFieldValidator = {
 };
 
 // エンジニア作成リクエストのバリデーション
-export const validateEngineerCreateRequest = (data: any): { isValid: boolean; errors: string[] } => {
+interface EngineerCreateData {
+  name?: string
+  email?: string
+  phone?: string
+  engineerType?: string
+  skills?: Array<{ name: string; level: number }>
+}
+
+export const validateEngineerCreateRequest = (data: EngineerCreateData): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
   // 必須フィールドのチェック

@@ -58,7 +58,7 @@ const ForgotPassword: React.FC = () => {
       setCurrentStep(1);
       message.success('認証コードをメールで送信しました');
       form.resetFields();
-    } catch (error: any) {
+    } catch (error) {
       message.error(
         error.response?.data?.message || 'メール送信に失敗しました'
       );
@@ -77,7 +77,7 @@ const ForgotPassword: React.FC = () => {
       setResetToken(response.data.token);
       setCurrentStep(2);
       form.resetFields();
-    } catch (error: any) {
+    } catch (error) {
       message.error(
         error.response?.data?.message || '認証コードが無効です'
       );
@@ -98,7 +98,7 @@ const ForgotPassword: React.FC = () => {
       });
       setCurrentStep(3);
       message.success('パスワードが正常にリセットされました');
-    } catch (error: any) {
+    } catch (error) {
       message.error(
         error.response?.data?.message ||
           'パスワードのリセットに失敗しました'

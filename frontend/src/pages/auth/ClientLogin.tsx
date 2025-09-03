@@ -55,7 +55,7 @@ const ClientLogin: React.FC = () => {
       navigate('/client/offer-board');
       
       message.success('ログインに成功しました');
-    } catch (error: any) {
+    } catch (error) {
       const errorMessage = error.response?.data?.error || 'ログインに失敗しました';
       message.error(errorMessage);
       

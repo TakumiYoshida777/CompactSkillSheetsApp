@@ -46,7 +46,7 @@ const Login: React.FC = () => {
       }
       
       message.success('ログインに成功しました');
-    } catch (error: any) {
+    } catch (error) {
       message.error(error.response?.data?.message || 'ログインに失敗しました');
     }
   };

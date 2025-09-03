@@ -51,7 +51,7 @@ export interface ListQueryParams {
   sort?: string
   order?: 'asc' | 'desc'
   search?: string
-  filters?: Record<string, any>
+  filters?: Record<string, string | number | boolean | string[] | number[] | undefined>
 }
 
 // バッチ操作結果
@@ -82,7 +82,7 @@ export interface Notification {
   message: string
   read: boolean
   createdAt: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 // エクスポートジョブ
@@ -98,7 +98,7 @@ export interface ExportJob {
 }
 
 // WebSocket イベント
-export interface WebSocketEvent<T = any> {
+export interface WebSocketEvent<T = unknown> {
   event: string
   data: T
   timestamp: string
@@ -119,8 +119,8 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 export interface RequestConfig {
   method: HttpMethod
   url: string
-  data?: any
-  params?: any
+  data?: unknown
+  params?: Record<string, string | number | boolean | string[] | number[] | undefined>
   headers?: Record<string, string>
   timeout?: number
   withCredentials?: boolean
@@ -140,5 +140,5 @@ export interface CacheConfig {
 export interface RetryConfig {
   retries: number
   retryDelay: number
-  retryCondition?: (error: any) => boolean
+  retryCondition?: (error: unknown) => boolean
 }

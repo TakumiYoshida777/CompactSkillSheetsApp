@@ -78,7 +78,7 @@ export class AuthService {
       this.setAuthorizationHeader(authResponse.accessToken);
       
       return authResponse;
-    } catch (error: any) {
+    } catch (error) {
       throw ErrorFactory.fromApiError(error);
     }
   }

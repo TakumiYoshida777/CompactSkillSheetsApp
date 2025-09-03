@@ -178,7 +178,7 @@ const ProjectCreateModal: React.FC<ProjectCreateModalProps> = ({
       message.success('プロジェクトを作成しました');
       form.resetFields();
       onSuccess(response.data);
-    } catch (error: any) {
+    } catch (error) {
       errorLog('Project creation failed:', error);
       const errorMessage = error.response?.data?.message || 
                           'プロジェクトの作成に失敗しました';

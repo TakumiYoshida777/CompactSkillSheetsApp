@@ -21,7 +21,7 @@ interface ProjectState {
   
   // Assignment management
   fetchAssignments: (projectId: string) => Promise<void>;
-  assignEngineer: (projectId: string, engineerId: string, data: any) => Promise<void>;
+  assignEngineer: (projectId: string, engineerId: string, data: { startDate: string; endDate?: string; role?: string }) => Promise<void>;
   updateAssignment: (projectId: string, assignmentId: string, data: Partial<Assignment>) => Promise<void>;
   removeAssignment: (projectId: string, assignmentId: string) => Promise<void>;
   
@@ -161,7 +161,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     }
   },
 
-  assignEngineer: async (projectId: string, engineerId: string, data: any) => {
+  assignEngineer: async (projectId: string, engineerId: string, data: { startDate: string; endDate?: string; role?: string }) => {
     set({ isLoading: true, error: null });
     try {
       const assignment = await projectAPI.createAssignment(projectId, {

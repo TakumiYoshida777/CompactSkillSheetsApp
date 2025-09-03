@@ -4,7 +4,7 @@ import { message } from 'antd';
 /**
  * グローバルエラーハンドラー
  */
-const onError = (error: any) => {
+const onError = (error: unknown) => {
   // 401エラー（認証エラー）の場合はログイン画面へ
   if (error.response?.status === 401) {
     message.error('セッションの有効期限が切れました。再度ログインしてください。');
@@ -124,8 +124,8 @@ export const suspenseOptions = {
  * Infinite Query用の設定
  */
 export const infiniteQueryOptions = {
-  getNextPageParam: (lastPage: any) => lastPage.nextCursor,
-  getPreviousPageParam: (firstPage: any) => firstPage.prevCursor,
+  getNextPageParam: (lastPage: { nextCursor?: unknown }) => lastPage.nextCursor,
+  getPreviousPageParam: (firstPage: { prevCursor?: unknown }) => firstPage.prevCursor,
   staleTime: 2 * 60 * 1000, // 2分
   gcTime: 5 * 60 * 1000, // 5分
 };

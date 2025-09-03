@@ -195,7 +195,7 @@ export const useErrorHandler = () => {
 /**
  * エラーハンドリング用の高階関数
  */
-export const withErrorHandler = <T extends (...args: any[]) => Promise<any>>(
+export const withErrorHandler = <T extends (...args: unknown[]) => Promise<any>>(
   fn: T,
   options?: ErrorHandlerOptions
 ) => {

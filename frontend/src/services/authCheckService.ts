@@ -51,7 +51,7 @@ export class AuthCheckService {
         success: true,
         user: userData,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         needsRefresh: true,

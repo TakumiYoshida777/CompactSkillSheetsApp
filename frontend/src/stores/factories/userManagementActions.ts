@@ -21,7 +21,7 @@ export const createUserManagementActions: StateCreator<
         isLoading: false,
         error: null,
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.response?.data?.message || 'プロフィール更新に失敗しました',

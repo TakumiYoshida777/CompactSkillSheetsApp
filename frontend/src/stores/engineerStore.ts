@@ -27,7 +27,7 @@ interface EngineerState {
   // フィルター・検索
   filters: EngineerFilterParams;
   searchQuery: string;
-  savedSearches: any[];
+  savedSearches: Array<{ id: string; name: string; params: Record<string, unknown> }>;
   
   // ページネーション
   pagination: PaginationState;
