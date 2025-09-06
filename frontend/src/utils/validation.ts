@@ -11,8 +11,8 @@ export const validateEmail = (email: string): boolean => {
 // 電話番号のバリデーション（日本の電話番号形式）
 export const validatePhoneNumber = (phone: string): boolean => {
   // 様々な形式に対応（ハイフン有無、市外局番の括弧など）
-  const phoneRegex = /^[\d\-\(\)]+$/;
-  const digitsOnly = phone.replace(/[\-\(\)]/g, '');
+  const phoneRegex = /^[\d\-()]+$/;
+  const digitsOnly = phone.replace(/[\-()]/g, '');
   
   // 数字のみで10桁または11桁であることを確認
   return phoneRegex.test(phone) && (digitsOnly.length === 10 || digitsOnly.length === 11);
@@ -102,13 +102,13 @@ export const createValidationRules = {
   phone: [
     { required: true, message: '電話番号を入力してください' },
     {
-      pattern: /^[\d\-\(\)]+$/,
+      pattern: /^[\d\-()]+$/,
       message: '有効な電話番号を入力してください',
     },
     {
       validator: (_: Rule, value: string) => {
         if (!value) return Promise.resolve();
-        const digitsOnly = value.replace(/[\-\(\)]/g, '');
+        const digitsOnly = value.replace(/[\-()]/g, '');
         if (digitsOnly.length === 10 || digitsOnly.length === 11) {
           return Promise.resolve();
         }
@@ -197,7 +197,7 @@ export const createCrossFieldValidator = {
   // 開始日と終了日の整合性チェック
   dateRange: (startFieldName: string, endFieldName: string) => ({
     validator: ({ getFieldValue }: FormInstance) => ({
-      validator(_: Rule, value: dayjs.Dayjs) {
+      validator(_: Rule) {
         const startDate = getFieldValue(startFieldName);
         const endDate = getFieldValue(endFieldName);
         
@@ -217,7 +217,7 @@ export const createCrossFieldValidator = {
   // 最小値と最大値の整合性チェック
   amountRange: (minFieldName: string, maxFieldName: string) => ({
     validator: ({ getFieldValue }: FormInstance) => ({
-      validator(_: Rule, value: number) {
+      validator(_: Rule) {
         const minAmount = getFieldValue(minFieldName);
         const maxAmount = getFieldValue(maxFieldName);
         

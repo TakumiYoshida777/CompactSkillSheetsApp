@@ -1,14 +1,15 @@
 import { errorLog } from '../../utils/logger';
 import axiosInstance from '../../lib/axios';
+import type { AxiosRequestConfig } from 'axios';
 import type { Notification, SystemAnnouncement } from '../../stores/notificationStore';
 
 const API_V1_PATH = '/v1';
 
 // 共通のAxiosインスタンスを使用
 const apiClient = {
-  get: (path: string, config?: any) => axiosInstance.get(`${API_V1_PATH}${path}`, config),
-  post: (path: string, data?: any) => axiosInstance.post(`${API_V1_PATH}${path}`, data),
-  put: (path: string, data?: any) => axiosInstance.put(`${API_V1_PATH}${path}`, data),
+  get: (path: string, config?: AxiosRequestConfig) => axiosInstance.get(`${API_V1_PATH}${path}`, config),
+  post: (path: string, data?: unknown) => axiosInstance.post(`${API_V1_PATH}${path}`, data),
+  put: (path: string, data?: unknown) => axiosInstance.put(`${API_V1_PATH}${path}`, data),
   delete: (path: string) => axiosInstance.delete(`${API_V1_PATH}${path}`),
 };
 
