@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { offerApi } from '@/api/client/offerApi';
 import type { CreateOfferDto, UpdateOfferStatusDto, Offer } from '@/types/offer';
+import { getErrorMessage } from '@/types/error.types';
 
 export const useCreateOffer = () => {
   const queryClient = useQueryClient();
@@ -14,9 +15,8 @@ export const useCreateOffer = () => {
       queryClient.invalidateQueries({ queryKey: ['offers'] });
       message.success('オファーを送信しました');
     },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'オファーの送信に失敗しました';
-      message.error(errorMessage);
+    onError: (error) => {
+      message.error(getErrorMessage(error));
       errorLog('Offer creation error:', error);
     },
   });
@@ -33,9 +33,8 @@ export const useUpdateOfferStatus = () => {
       queryClient.invalidateQueries({ queryKey: ['offer', variables.offerId] });
       message.success('ステータスを更新しました');
     },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'ステータスの更新に失敗しました';
-      message.error(errorMessage);
+    onError: (error) => {
+      message.error(getErrorMessage(error));
       errorLog('Status update error:', error);
     },
   });
@@ -50,9 +49,8 @@ export const useSendReminder = () => {
       queryClient.invalidateQueries({ queryKey: ['offer', offerId] });
       message.success('リマインドメールを送信しました');
     },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'リマインドメールの送信に失敗しました';
-      message.error(errorMessage);
+    onError: (error) => {
+      message.error(getErrorMessage(error));
       errorLog('Reminder send error:', error);
     },
   });
@@ -69,9 +67,8 @@ export const useWithdrawOffer = () => {
       queryClient.invalidateQueries({ queryKey: ['offer', offerId] });
       message.success('オファーを取り下げました');
     },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'オファーの取り下げに失敗しました';
-      message.error(errorMessage);
+    onError: (error) => {
+      message.error(getErrorMessage(error));
       errorLog('Offer withdrawal error:', error);
     },
   });
@@ -88,9 +85,8 @@ export const useBulkOfferAction = () => {
       queryClient.invalidateQueries({ queryKey: ['offerBoard'] });
       message.success('一括操作を実行しました');
     },
-    onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || '一括操作に失敗しました';
-      message.error(errorMessage);
+    onError: (error) => {
+      message.error(getErrorMessage(error));
       errorLog('Bulk action error:', error);
     },
   });

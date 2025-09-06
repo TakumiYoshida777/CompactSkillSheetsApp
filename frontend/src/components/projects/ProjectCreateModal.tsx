@@ -28,10 +28,31 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
+interface Project {
+  id: string;
+  name: string;
+  clientCompany: string;
+  projectScale: string;
+  businessType: string;
+  systemType: string;
+  startDate: string;
+  endDate?: string;
+  contractAmount?: number;
+  salesAmount?: number;
+  costAmount?: number;
+  profitAmount?: number;
+  profitRate?: number;
+  teamSize?: number;
+  description?: string;
+  developmentMethodology?: string;
+  requiredSkills?: string[];
+  isActive: boolean;
+}
+
 interface ProjectCreateModalProps {
   visible: boolean;
   onCancel: () => void;
-  onSuccess: (project: any) => void;
+  onSuccess: (project: Project) => void;
 }
 
 interface ProjectFormData {
@@ -148,7 +169,7 @@ const ProjectCreateModal: React.FC<ProjectCreateModalProps> = ({
   }, [form.getFieldValue('salesAmount'), form.getFieldValue('costAmount')]);
 
   // フォーム送信
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: ProjectFormData & { dateRange?: [Dayjs, Dayjs] }) => {
     setLoading(true);
     try {
       // データ整形
@@ -180,8 +201,9 @@ const ProjectCreateModal: React.FC<ProjectCreateModalProps> = ({
       onSuccess(response.data);
     } catch (error) {
       errorLog('Project creation failed:', error);
-      const errorMessage = error.response?.data?.message || 
-                          'プロジェクトの作成に失敗しました';
+      const errorMessage = error instanceof Error && 'response' in error 
+        ? (error as any).response?.data?.message || 'プロジェクトの作成に失敗しました'
+        : 'プロジェクトの作成に失敗しました';
       message.error(errorMessage);
     } finally {
       setLoading(false);

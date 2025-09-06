@@ -1,8 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { engineerApi } from '../api/engineers/engineerApi';
-import type { EngineerFilterParams } from '../types/engineer';
+import type { EngineerFilterParams, EngineerCreateRequest, EngineerUpdateRequest } from '../types/engineer';
 import { errorLog } from '../utils/logger';
+import { getErrorMessage } from '../types/error.types';
 
 /**
  * エンジニア一覧を取得するカスタムフック
@@ -44,13 +45,13 @@ export const useCreateEngineer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: any) => engineerApi.create(data),
+    mutationFn: (data: EngineerCreateRequest) => engineerApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['engineers'] });
       message.success('エンジニアを登録しました');
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'エンジニアの登録に失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };
@@ -62,15 +63,15 @@ export const useUpdateEngineer = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => 
+    mutationFn: ({ id, data }: { id: string; data: EngineerUpdateRequest }) => 
       engineerApi.update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['engineers'] });
       queryClient.invalidateQueries({ queryKey: ['engineer', variables.id] });
       message.success('エンジニア情報を更新しました');
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'エンジニア情報の更新に失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };
@@ -87,8 +88,8 @@ export const useDeleteEngineer = () => {
       queryClient.invalidateQueries({ queryKey: ['engineers'] });
       message.success('エンジニアを削除しました');
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'エンジニアの削除に失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };
@@ -107,8 +108,8 @@ export const useUpdateEngineerStatus = () => {
       queryClient.invalidateQueries({ queryKey: ['engineer', variables.id] });
       message.success('ステータスを更新しました');
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'ステータスの更新に失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };
@@ -123,8 +124,8 @@ export const useBulkExport = () => {
     onSuccess: () => {
       message.success('エクスポートを開始しました');
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'エクスポートに失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };
