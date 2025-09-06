@@ -219,3 +219,22 @@ export interface ReportData {
   createdAt: string;
   expiresAt?: string;
 }
+
+// ページネーション関連の型定義
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: Pagination;
+}
+
+// API用のフィルタ型（ページネーション含む）
+export interface OfferFilters extends OfferFilter {
+  page?: number;
+  limit?: number;
+}

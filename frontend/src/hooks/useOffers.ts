@@ -6,7 +6,8 @@ import {
   useQueryClient 
 } from '@tanstack/react-query';
 import { message } from 'antd';
-import * as offerApi from '../api/client/offerApi';
+import { offerApi } from '../api/client/offerApi';
+import type { OfferFilters } from '../api/client/offerApi';
 import type { OfferStatus } from '../stores/offerStore';
 import { queryOptions, infiniteQueryOptions } from '../config/queryClient';
 import { getErrorMessage } from '../types/error.types';
@@ -21,7 +22,7 @@ const QUERY_KEYS = {
   offerDetails: (id: string) => ['offer', id],
 };
 
-export const useOffers = (filters?: offerApi.OfferFilters) => {
+export const useOffers = (filters?: OfferFilters) => {
   return useQuery({
     queryKey: [QUERY_KEYS.offers, filters],
     queryFn: () => offerApi.getOffers(filters),
@@ -33,7 +34,7 @@ export const useOffers = (filters?: offerApi.OfferFilters) => {
  * オファー一覧を取得（Suspense版）
  * ローディング状態をSuspenseで管理
  */
-export const useOffersSuspense = (filters?: offerApi.OfferFilters) => {
+export const useOffersSuspense = (filters?: OfferFilters) => {
   return useSuspenseQuery({
     queryKey: [QUERY_KEYS.offers, filters],
     queryFn: () => offerApi.getOffers(filters),
@@ -44,15 +45,14 @@ export const useOffersSuspense = (filters?: offerApi.OfferFilters) => {
 /**
  * オファー一覧を無限スクロールで取得
  */
-export const useInfiniteOffers = (filters?: Omit<offerApi.OfferFilters, 'page'>) => {
+export const useInfiniteOffers = (filters?: Omit<OfferFilters, 'page'>) => {
   return useInfiniteQuery({
     queryKey: [QUERY_KEYS.offers, 'infinite', filters],
-    queryFn: ({ pageParam = 1 }) => 
-      offerApi.getOffers({ ...filters, page: pageParam }),
-    ...infiniteQueryOptions,
+    queryFn: ({ pageParam }) => 
+      offerApi.getOffers({ ...filters, page: pageParam as number }),
+    initialPageParam: 1,
     getNextPageParam: (lastPage) => {
-      const pagination = lastPage?.pagination as { page?: number; totalPages?: number } | undefined;
-      const { page, totalPages } = pagination || {};
+      const { page, totalPages } = lastPage?.pagination || {};
       return page && totalPages && page < totalPages ? page + 1 : undefined;
     },
   });
