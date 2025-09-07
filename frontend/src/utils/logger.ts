@@ -22,7 +22,7 @@ const currentLogLevel = isProduction ? LogLevel.ERROR : LogLevel.DEBUG;
 /**
  * 情報ログ（開発環境でのみ出力）
  */
-export const infoLog = (...args: any[]): void => {
+export const infoLog = (...args: unknown[]): void => {
   if (currentLogLevel <= LogLevel.INFO) {
     console.info(...args);
   }
@@ -31,7 +31,7 @@ export const infoLog = (...args: any[]): void => {
 /**
  * 警告ログ（本番環境でも出力）
  */
-export const warnLog = (...args: any[]): void => {
+export const warnLog = (...args: unknown[]): void => {
   if (currentLogLevel <= LogLevel.WARN) {
     console.warn(...args);
   }
@@ -40,7 +40,7 @@ export const warnLog = (...args: any[]): void => {
 /**
  * エラーログ（本番環境でも出力）
  */
-export const errorLog = (...args: any[]): void => {
+export const errorLog = (...args: unknown[]): void => {
   if (currentLogLevel <= LogLevel.ERROR) {
     console.error(...args);
   }
@@ -87,7 +87,7 @@ export const timeEndLog = (label: string): void => {
 /**
  * アサーションログ（開発環境でのみ出力）
  */
-export const assertLog = (condition: boolean, ...args: any[]): void => {
+export const assertLog = (condition: boolean, ...args: unknown[]): void => {
   if (currentLogLevel <= LogLevel.DEBUG) {
     console.assert(condition, ...args);
   }

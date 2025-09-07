@@ -6,6 +6,7 @@ import { AuthService } from '../services/authService';
 import { AuthCheckService } from '../services/authCheckService';
 import { getLoginPath } from '../utils/navigation';
 import type { AuthState, User } from './types/authTypes';
+import { getErrorMessage } from '../types/error.types';
 
 const useAuthStore = create<AuthState>()(
   persist(
@@ -35,8 +36,8 @@ const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
-          const errorMessage = error.message || 'ログインに失敗しました';
+        } catch (error) {
+          const errorMessage = getErrorMessage(error);
           set({
             isLoading: false,
             error: errorMessage,
@@ -78,8 +79,8 @@ const useAuthStore = create<AuthState>()(
             error: null,
           });
           
-        } catch (error: any) {
-          const errorMessage = error.message || 'ログインに失敗しました';
+        } catch (error) {
+          const errorMessage = getErrorMessage(error);
           set({
             isLoading: false,
             error: errorMessage,
@@ -101,7 +102,7 @@ const useAuthStore = create<AuthState>()(
         });
       },
 
-      register: async (data: any) => {
+      register: async (data: { email: string; password: string; name?: string; company?: string }) => {
         set({ isLoading: true, error: null });
         try {
           const response = await axios.post('auth/register', data);
@@ -118,7 +119,7 @@ const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({
             isLoading: false,
             error: error.response?.data?.message || '登録に失敗しました',
@@ -146,14 +147,14 @@ const useAuthStore = create<AuthState>()(
             token: tokens.accessToken,
             refreshToken: tokens.refreshToken,
           });
-        } catch (error: any) {
+        } catch (error) {
           // リフレッシュトークンが無効な場合はログアウト
           get().logout();
           throw error;
         }
       },
 
-      updateProfile: async (data: any) => {
+      updateProfile: async (data: { name?: string; email?: string; phone?: string; avatar?: string }) => {
         set({ isLoading: true, error: null });
         try {
           const response = await axios.put('users/profile', data);
@@ -163,7 +164,7 @@ const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({
             isLoading: false,
             error: error.response?.data?.message || 'プロフィール更新に失敗しました',
@@ -239,7 +240,7 @@ const useAuthStore = create<AuthState>()(
         if (Array.isArray(user.roles)) {
           // rolesがオブジェクトの配列の場合
           if (user.roles.length > 0 && typeof user.roles[0] === 'object' && 'name' in user.roles[0]) {
-            return user.roles.some((r: any) => r.name === role);
+            return user.roles.some((r) => typeof r === 'object' && 'name' in r && r.name === role);
           }
           // rolesが文字列の配列の場合
           return user.roles.includes(role);

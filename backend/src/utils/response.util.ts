@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
+import { AppErrorDetails } from '../types/common.types';
+import { ValidationErrorDetail } from '../types/common.types';
 
 export interface PaginationInfo {
   page: number;
@@ -17,10 +19,10 @@ export interface ApiResponseMeta {
     total: number;
     totalPages: number;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-export interface SuccessResponse<T = any> {
+export interface SuccessResponse<T = unknown> {
   success: true;
   data: T;
   meta: ApiResponseMeta;
@@ -31,12 +33,12 @@ export interface ErrorResponse {
   error: {
     code: string;
     message: string;
-    details?: any;
+    details?: AppErrorDetails | AppErrorDetails[];
     documentation?: string;
   };
 }
 
-export type ApiResponseType<T = any> = SuccessResponse<T> | ErrorResponse;
+export type ApiResponseType<T = unknown> = SuccessResponse<T> | ErrorResponse;
 
 function generateRequestId(): string {
   // UUIDの使用を避けるため、タイムスタンプベースのIDを生成
@@ -65,7 +67,7 @@ export class ApiResponse {
   /**
    * エラーレスポンスを生成
    */
-  static error(code: string, message: string, details?: any): ErrorResponse {
+  static error(code: string, message: string, details?: AppErrorDetails | AppErrorDetails[]): ErrorResponse {
     return {
       success: false,
       error: {
@@ -117,7 +119,7 @@ export class ApiResponse {
   /**
    * バリデーションエラーレスポンスを生成
    */
-  static validationError(errors: any): ErrorResponse {
+  static validationError(errors: ValidationErrorDetail | ValidationErrorDetail[]): ErrorResponse {
     return this.error('VALIDATION_ERROR', 'バリデーションエラーが発生しました', errors);
   }
   

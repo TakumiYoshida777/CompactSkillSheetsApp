@@ -84,7 +84,7 @@ export const sortMiddleware = (req: Request, res: Response, next: NextFunction):
  * フィルタリングミドルウェア
  */
 export interface FilterOptions {
-  [key: string]: any;
+  [key: string]: string | number | boolean | Date | undefined | null;
 }
 
 declare global {

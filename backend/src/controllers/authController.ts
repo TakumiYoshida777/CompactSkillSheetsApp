@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { AuthService } from '../services/authService';
 import { LoginRequest, RegisterRequest } from '../types/auth';
 import { validationResult } from 'express-validator';
+import { AppError } from '../errors/AppError';
 
 /**
  * 認証コントローラー
@@ -40,11 +41,11 @@ export class AuthController {
         },
         message: 'ログインに成功しました'
       });
-    } catch (error: any) {
+    } catch (error) {
       errorLog('ログインエラー:', error);
       
       // 認証エラーの場合
-      if (error.statusCode === 401) {
+      if (error instanceof AppError && error.statusCode === 401) {
         return res.status(401).json({
           success: false,
           error: {
@@ -97,16 +98,17 @@ export class AuthController {
         },
         message: 'アカウント登録に成功しました'
       });
-    } catch (error: any) {
+    } catch (error) {
       errorLog('登録エラー:', error);
 
       // 既存ユーザーエラー
-      if (error.message.includes('既に使用されています')) {
+      const errorMessage = error instanceof Error ? error.message : 'エラーが発生しました';
+      if (errorMessage.includes('既に使用されています')) {
         return res.status(409).json({
           success: false,
           error: {
             code: 'DUPLICATE_EMAIL',
-            message: error.message
+            message: errorMessage
           }
         });
       }
@@ -150,10 +152,10 @@ export class AuthController {
         },
         message: 'トークンを更新しました'
       });
-    } catch (error: any) {
+    } catch (error) {
       errorLog('トークンリフレッシュエラー:', error);
 
-      if (error.statusCode === 401) {
+      if (error instanceof AppError && error.statusCode === 401) {
         return res.status(401).json({
           success: false,
           error: {
@@ -287,10 +289,10 @@ export class AuthController {
         success: true,
         message: 'パスワードを変更しました'
       });
-    } catch (error: any) {
+    } catch (error) {
       errorLog('パスワード変更エラー:', error);
 
-      if (error.statusCode === 401) {
+      if (error instanceof AppError && error.statusCode === 401) {
         return res.status(401).json({
           success: false,
           error: {

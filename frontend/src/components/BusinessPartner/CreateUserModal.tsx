@@ -21,17 +21,33 @@ import {
   InfoCircleOutlined,
 } from '@ant-design/icons';
 import { createValidationRules } from '../../utils/validation';
+import type { FormSubmitHandler } from '../../types/event.types';
 
 const { Option } = Select;
 const { Text } = Typography;
 
+interface UserFormValues {
+  name: string;
+  nameKana?: string;
+  email: string;
+  phoneNumber?: string;
+  department?: string;
+  position?: string;
+  password?: string;
+  confirmPassword?: string;
+  role: 'admin' | 'user';
+  isActive: boolean;
+  notes?: string;
+  sendWelcomeEmail?: boolean;
+}
+
 interface CreateUserModalProps {
   visible: boolean;
-  onOk: (values: any) => void;
+  onOk: (values: UserFormValues) => void;
   onCancel: () => void;
   loading?: boolean;
   isEdit?: boolean;
-  initialValues?: any;
+  initialValues?: Partial<UserFormValues>;
 }
 
 const CreateUserModal: React.FC<CreateUserModalProps> = ({

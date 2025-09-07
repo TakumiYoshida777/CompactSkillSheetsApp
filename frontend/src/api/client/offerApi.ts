@@ -6,8 +6,10 @@ import type {
   CreateOfferDto,
   UpdateOfferStatusDto,
   OfferFilter,
+  OfferFilters,
   OfferStatistics,
   OfferStatus,
+  PaginatedResponse,
 } from '@/types/offer';
 
 const BASE_URL = 'client';
@@ -107,7 +109,7 @@ export const offerApi = {
   },
 
   // オファー管理
-  getOffers: async (filter?: OfferFilter): Promise<Offer[]> => {
+  getOffers: async (filter?: OfferFilters): Promise<PaginatedResponse<Offer>> => {
     const response = await axios.get(`${BASE_URL}/offers`, { params: filter });
     return response.data;
   },
@@ -138,7 +140,7 @@ export const offerApi = {
   bulkAction: async (data: {
     action: string;
     offerIds: string[];
-  }): Promise<{ success: boolean; results: any[] }> => {
+  }): Promise<{ success: boolean; results: unknown[] }> => {
     const response = await axios.post(`${BASE_URL}/offers/bulk-action`, data);
     return response.data;
   },
@@ -199,3 +201,6 @@ export const offerApi = {
     }
   },
 };
+
+// 型をエクスポート
+export type { OfferFilters } from '@/types/offer';

@@ -93,7 +93,7 @@ const Register: React.FC = () => {
       await register(finalData);
       message.success('登録に成功しました');
       navigate('login');
-    } catch (error: any) {
+    } catch (error) {
       message.error(error.response?.data?.message || '登録に失敗しました');
     } finally {
       setIsLoading(false);

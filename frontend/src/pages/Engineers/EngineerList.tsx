@@ -9,6 +9,7 @@ import { useEngineers, useDeleteEngineer, useBulkExport } from '../../hooks/useE
 import { engineerApi } from '../../api/engineers/engineerApi';
 import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import type { EngineerFilterParams } from '../../types/engineer';
+import { getErrorMessage } from '../../types/error.types';
 
 const EngineerList: React.FC = () => {
   const navigate = useNavigate();
@@ -50,23 +51,35 @@ const EngineerList: React.FC = () => {
   };
 
   // スキル抽出ヘルパー
-  const extractSkills = (skillSheet?: any): string[] => {
+  interface SkillItem {
+    name?: string;
+    level?: number;
+    experience?: number;
+  }
+  
+  interface SkillSheet {
+    programmingLanguages?: Array<SkillItem | string>;
+    frameworks?: Array<SkillItem | string>;
+    databases?: Array<SkillItem | string>;
+  }
+  
+  const extractSkills = (skillSheet?: SkillSheet): string[] => {
     if (!skillSheet) return [];
     const skills: string[] = [];
     
     if (skillSheet.programmingLanguages) {
       skills.push(...(Array.isArray(skillSheet.programmingLanguages) 
-        ? skillSheet.programmingLanguages.map((s: any) => s.name || s)
+        ? skillSheet.programmingLanguages.map((s) => typeof s === 'string' ? s : s.name || '')
         : []));
     }
     if (skillSheet.frameworks) {
       skills.push(...(Array.isArray(skillSheet.frameworks)
-        ? skillSheet.frameworks.map((s: any) => s.name || s)
+        ? skillSheet.frameworks.map((s) => typeof s === 'string' ? s : s.name || '')
         : []));
     }
     if (skillSheet.databases) {
       skills.push(...(Array.isArray(skillSheet.databases)
-        ? skillSheet.databases.map((s: any) => s.name || s)
+        ? skillSheet.databases.map((s) => typeof s === 'string' ? s : s.name || '')
         : []));
     }
     
@@ -100,7 +113,27 @@ const EngineerList: React.FC = () => {
       return [];
     }
     
-    return response.data.map((eng: any) => ({
+    interface EngineerApiResponse {
+      id: string;
+      name: string;
+      age?: number;
+      birthDate?: string;
+      skillSheet?: SkillSheet & {
+        totalExperienceYears?: number;
+      };
+      yearsOfExperience?: number;
+      currentStatus?: string;
+      availableDate?: string;
+      currentProject?: {
+        name: string;
+        endDate?: string;
+      };
+      updatedAt?: string;
+      email?: string;
+      phone?: string;
+    }
+    
+    return response.data.map((eng: EngineerApiResponse) => ({
       key: eng.id,
       engineerId: eng.id,
       name: eng.name,
@@ -165,9 +198,9 @@ const EngineerList: React.FC = () => {
       } else {
         message.success('すべてのエンジニアデータをエクスポートしました');
       }
-    } catch (error: any) {
+    } catch (error) {
       errorLog('Export failed:', error);
-      message.error('エクスポートに失敗しました');
+      message.error(getErrorMessage(error));
     }
   };
 

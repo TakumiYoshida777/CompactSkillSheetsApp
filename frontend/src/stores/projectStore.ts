@@ -21,7 +21,7 @@ interface ProjectState {
   
   // Assignment management
   fetchAssignments: (projectId: string) => Promise<void>;
-  assignEngineer: (projectId: string, engineerId: string, data: any) => Promise<void>;
+  assignEngineer: (projectId: string, engineerId: string, data: { startDate: string; endDate?: string; role?: string }) => Promise<void>;
   updateAssignment: (projectId: string, assignmentId: string, data: Partial<Assignment>) => Promise<void>;
   removeAssignment: (projectId: string, assignmentId: string) => Promise<void>;
   
@@ -52,7 +52,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     try {
       const projects = await projectAPI.fetchProjects(filters);
       set({ projects, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'プロジェクトの取得に失敗しました',
@@ -69,7 +69,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         selectedProject: project,
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'プロジェクトの取得に失敗しました',
@@ -85,7 +85,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         projects: [...state.projects, project],
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'プロジェクトの作成に失敗しました',
@@ -103,7 +103,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         selectedProject: state.selectedProject?.id === id ? project : state.selectedProject,
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'プロジェクトの更新に失敗しました',
@@ -121,7 +121,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         selectedProject: state.selectedProject?.id === id ? null : state.selectedProject,
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'プロジェクトの削除に失敗しました',
@@ -139,7 +139,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         selectedProject: state.selectedProject?.id === id ? project : state.selectedProject,
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'プロジェクトステータスの更新に失敗しました',
@@ -153,7 +153,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     try {
       const assignments = await projectAPI.fetchAssignments(projectId);
       set({ assignments, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'アサインメントの取得に失敗しました',
@@ -161,7 +161,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     }
   },
 
-  assignEngineer: async (projectId: string, engineerId: string, data: any) => {
+  assignEngineer: async (projectId: string, engineerId: string, data: { startDate: string; endDate?: string; role?: string }) => {
     set({ isLoading: true, error: null });
     try {
       const assignment = await projectAPI.createAssignment(projectId, {
@@ -173,7 +173,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         assignments: [...state.assignments, assignment],
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'エンジニアのアサインに失敗しました',
@@ -190,7 +190,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         assignments: state.assignments.map(a => a.id === assignmentId ? assignment : a),
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'アサインメントの更新に失敗しました',
@@ -207,7 +207,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         assignments: state.assignments.filter(a => a.id !== assignmentId),
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'アサインメントの削除に失敗しました',
@@ -221,7 +221,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     try {
       const timeline = await projectAPI.fetchTimeline();
       set({ timeline, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'タイムラインの取得に失敗しました',
@@ -234,7 +234,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
     try {
       const utilization = await projectAPI.fetchUtilization();
       set({ utilization, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || '稼働率の取得に失敗しました',
@@ -250,7 +250,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         timeline: [timeline],
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'プロジェクトタイムラインの取得に失敗しました',
@@ -267,7 +267,7 @@ const useProjectStore = create<ProjectState>((set, get) => ({
         selectedProject: state.selectedProject?.id === projectId ? project : state.selectedProject,
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'プロジェクトの延長に失敗しました',

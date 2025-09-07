@@ -5,8 +5,8 @@ import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const ApiTest = () => {
-  const [healthStatus, setHealthStatus] = useState<any>(null);
-  const [apiInfo, setApiInfo] = useState<any>(null);
+  const [healthStatus, setHealthStatus] = useState<{ status: string; timestamp?: string } | null>(null);
+  const [apiInfo, setApiInfo] = useState<{ name?: string; version?: string; description?: string } | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
@@ -16,8 +16,9 @@ export const ApiTest = () => {
     try {
       const response = await axios.get('http://localhost:8000/health');
       setHealthStatus(response.data);
-    } catch (err: any) {
-      setError(`Health check failed: ${err.message}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Health check failed: ${errorMessage}`);
       errorLog('Health check error:', err);
     } finally {
       setLoading(false);
@@ -30,8 +31,9 @@ export const ApiTest = () => {
     try {
       const response = await axios.get(API_URL);
       setApiInfo(response.data);
-    } catch (err: any) {
-      setError(`API info failed: ${err.message}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`API info failed: ${errorMessage}`);
       errorLog('API info error:', err);
     } finally {
       setLoading(false);
@@ -51,8 +53,9 @@ export const ApiTest = () => {
       });
       const data = await response.json();
       setHealthStatus(data);
-    } catch (err: any) {
-      setError(`CORS test failed: ${err.message}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`CORS test failed: ${errorMessage}`);
       errorLog('CORS test error:', err);
     } finally {
       setLoading(false);

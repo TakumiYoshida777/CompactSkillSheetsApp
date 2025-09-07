@@ -49,7 +49,7 @@ const EngineerLogin: React.FC = () => {
         message.success('ログインに成功しました');
         navigate('/engineer/skill-sheet');
       }
-    } catch (error: any) {
+    } catch (error) {
       errorLog('Login error:', error);
       message.error(error.response?.data?.message || 'ログインに失敗しました');
     } finally {

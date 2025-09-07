@@ -257,7 +257,7 @@ Email: sales@example.com
           navigate('business-partners/list');
         }, 1000);
       }
-    } catch (error: any) {
+    } catch (error) {
       errorLog('登録エラー:', error);
       message.error(error.response?.data?.message || '登録に失敗しました');
     } finally {

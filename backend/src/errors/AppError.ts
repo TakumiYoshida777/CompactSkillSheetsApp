@@ -2,6 +2,8 @@
  * アプリケーション共通エラークラス
  */
 
+import { AppErrorDetails } from '../types/common.types';
+
 export enum ErrorCode {
   // 認証・認可エラー (401, 403)
   UNAUTHORIZED = 'UNAUTHORIZED',
@@ -38,7 +40,7 @@ export class AppError extends Error {
   public readonly statusCode: number;
   public readonly code: ErrorCode;
   public readonly isOperational: boolean;
-  public readonly details?: any;
+  public readonly details?: AppErrorDetails | AppErrorDetails[];
   public readonly timestamp: Date;
 
   constructor(
@@ -46,7 +48,7 @@ export class AppError extends Error {
     statusCode: number,
     code: ErrorCode,
     isOperational = true,
-    details?: any
+    details?: AppErrorDetails | AppErrorDetails[]
   ) {
     super(message);
     
@@ -82,11 +84,11 @@ export class AppError extends Error {
 // 便利なファクトリメソッド
 export class ErrorFactory {
   // 400 Bad Request
-  static badRequest(message = '不正なリクエストです', details?: any): AppError {
+  static badRequest(message = '不正なリクエストです', details?: AppErrorDetails | AppErrorDetails[]): AppError {
     return new AppError(message, 400, ErrorCode.INVALID_INPUT, true, details);
   }
 
-  static validationError(message = '入力値が不正です', details?: any): AppError {
+  static validationError(message = '入力値が不正です', details?: AppErrorDetails | AppErrorDetails[]): AppError {
     return new AppError(message, 400, ErrorCode.VALIDATION_ERROR, true, details);
   }
 
@@ -117,11 +119,11 @@ export class ErrorFactory {
   }
 
   // 409 Conflict
-  static conflict(message = 'リソースが既に存在します', details?: any): AppError {
+  static conflict(message = 'リソースが既に存在します', details?: AppErrorDetails | AppErrorDetails[]): AppError {
     return new AppError(message, 409, ErrorCode.CONFLICT, true, details);
   }
 
-  static alreadyExists(resource = 'リソース', details?: any): AppError {
+  static alreadyExists(resource = 'リソース', details?: AppErrorDetails | AppErrorDetails[]): AppError {
     return new AppError(
       `${resource}は既に存在します`,
       409,
@@ -132,7 +134,7 @@ export class ErrorFactory {
   }
 
   // 422 Unprocessable Entity
-  static businessRuleViolation(message: string, details?: any): AppError {
+  static businessRuleViolation(message: string, details?: AppErrorDetails | AppErrorDetails[]): AppError {
     return new AppError(
       message,
       422,
@@ -171,7 +173,7 @@ export class ErrorFactory {
   // 500 Internal Server Error
   static internal(
     message = 'サーバーエラーが発生しました',
-    details?: any
+    details?: AppErrorDetails | AppErrorDetails[]
   ): AppError {
     return new AppError(
       message,
@@ -182,7 +184,7 @@ export class ErrorFactory {
     );
   }
 
-  static database(message = 'データベースエラーが発生しました', error?: any): AppError {
+  static database(message = 'データベースエラーが発生しました', error?: Error | unknown): AppError {
     return new AppError(
       message,
       500,
@@ -194,7 +196,7 @@ export class ErrorFactory {
 
   static externalService(
     service: string,
-    error?: any
+    error?: Error | unknown
   ): AppError {
     return new AppError(
       `外部サービス(${service})との通信に失敗しました`,

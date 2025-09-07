@@ -30,7 +30,7 @@ export interface EmailSendRequest {
   subject: string;
   body: string;
   templateId?: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, string | number | boolean>;
   attachments?: {
     filename: string;
     content: string;
@@ -84,7 +84,7 @@ export interface EmailPreviewRequest {
   templateId?: string;
   subject?: string;
   body?: string;
-  variables?: Record<string, any>;
+  variables?: Record<string, string | number | boolean>;
 }
 
 export interface EmailStatistics {
@@ -373,7 +373,7 @@ class EmailAPI {
   async sendTestEmail(testData: {
     templateId?: string;
     to: string;
-    variables?: Record<string, any>;
+    variables?: Record<string, string | number | boolean>;
   }): Promise<{
     messageId: string;
     status: string;

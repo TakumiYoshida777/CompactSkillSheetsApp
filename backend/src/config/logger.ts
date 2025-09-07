@@ -1,6 +1,7 @@
 import winston from 'winston';
 import path from 'path';
 import fs from 'fs';
+import { Request, Response } from 'express';
 
 // Logsディレクトリのパス
 const logDir = path.join(__dirname, '../../Logs');
@@ -24,7 +25,7 @@ const customFormat = winston.format.combine(
     
     // HTTPリクエスト情報がある場合は追加
     if (metadata.req && typeof metadata.req === 'object') {
-      const reqMeta = metadata.req as any;
+      const reqMeta = metadata.req as Record<string, unknown>;
       msg += ` | Method: ${reqMeta.method || 'N/A'}`;
       msg += ` | URL: ${reqMeta.url || 'N/A'}`;
       msg += ` | IP: ${reqMeta.ip || 'N/A'}`;
@@ -98,8 +99,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 // HTTPリクエストロギング用のヘルパー関数
 export const logHttpRequest = (
-  req: any,
-  res: any,
+  req: Request,
+  res: Response,
   responseTime: number
 ) => {
   const logData = {

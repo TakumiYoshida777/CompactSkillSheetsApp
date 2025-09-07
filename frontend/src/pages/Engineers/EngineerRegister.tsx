@@ -1,5 +1,5 @@
 import { errorLog } from '../../utils/logger';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import {
   Form,
   Input,
@@ -35,11 +35,13 @@ import {
   LockOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import type { UploadProps } from 'antd';
+import type { UploadProps, UploadFile } from 'antd';
 import dayjs from 'dayjs';
 import { engineerApi } from '../../api/engineers/engineerApi';
 import { useAuthStore } from '../../stores/authStore';
 import type { EngineerCreateRequest, EngineerStatus } from '../../types/engineer';
+import type { FormSubmitHandler } from '../../types/event.types';
+import { isAxiosError, getErrorMessage } from '../../types/error.types';
 import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import debounce from 'lodash/debounce';
 import axios from '../../lib/axios';
@@ -64,7 +66,7 @@ const EngineerRegister: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [emailChecking, setEmailChecking] = useState(false);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<{resume?: any, skillSheet?: any}>({});
+  const [uploadedFiles, setUploadedFiles] = useState<{resume?: UploadFile, skillSheet?: UploadFile}>({});
 
   // 権限チェック
   useEffect(() => {
@@ -138,7 +140,7 @@ const EngineerRegister: React.FC = () => {
   };
 
   // スキル更新
-  const handleSkillChange = (index: number, field: keyof SkillItem, value: any) => {
+  const handleSkillChange = (index: number, field: keyof SkillItem, value: string | number) => {
     const newSkills = [...skills];
     newSkills[index] = { ...newSkills[index], [field]: value };
     setSkills(newSkills);
@@ -190,7 +192,35 @@ const EngineerRegister: React.FC = () => {
   }, 500);
 
   // フォーム送信
-  const handleSubmit = async (values: any) => {
+  interface EngineerFormValues {
+    lastName: string;
+    firstName: string;
+    lastNameKana?: string;
+    firstNameKana?: string;
+    email: string;
+    phone?: string;
+    contractType?: string;
+    status?: string;
+    availableDate?: dayjs.Dayjs;
+    nearestStation?: string;
+    birthDate?: dayjs.Dayjs;
+    gender?: 'male' | 'female' | 'other';
+    githubUrl?: string;
+    portfolioUrl?: string;
+    joinDate?: dayjs.Dayjs;
+    contractPrice?: number;
+    contractPeriod?: number;
+    workLocation?: string;
+    japanese?: string;
+    english?: string;
+    chinese?: string;
+    qualifications?: string[];
+    introduction?: string;
+    prHistory?: string;
+    remarks?: string;
+  }
+
+  const handleSubmit: FormSubmitHandler<EngineerFormValues> = async (values) => {
     // メールアドレスが利用不可の場合は送信しない
     if (emailAvailable === false) {
       message.error('メールアドレスが既に使用されています');
@@ -276,11 +306,9 @@ const EngineerRegister: React.FC = () => {
       
       // 詳細画面へ遷移
       navigate(`/engineers/${engineer.id}`);
-    } catch (error: any) {
+    } catch (error) {
       errorLog('Registration failed:', error);
-      const errorMessage = error.response?.data?.message || 
-                          error.message || 
-                          '登録に失敗しました。もう一度お試しください。';
+      const errorMessage = getErrorMessage(error);
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -325,7 +353,17 @@ const EngineerRegister: React.FC = () => {
   };
 
   // 追加情報の更新
-  const updateAdditionalInfo = async (engineerId: string, info: any) => {
+  interface AdditionalInfo {
+    japanese?: string;
+    english?: string;
+    chinese?: string;
+    qualifications?: string[];
+    introduction?: string;
+    prHistory?: string;
+    remarks?: string;
+  }
+
+  const updateAdditionalInfo = async (engineerId: string, info: AdditionalInfo) => {
     try {
       await axios.patch(`/api/v1/engineers/${engineerId}`, info);
     } catch (error) {
@@ -335,7 +373,12 @@ const EngineerRegister: React.FC = () => {
   };
 
   // ドキュメントアップロード
-  const uploadDocuments = async (engineerId: string, files: any) => {
+  interface DocumentFiles {
+    resume?: UploadFile;
+    skillSheet?: UploadFile;
+  }
+
+  const uploadDocuments = async (engineerId: string, files: DocumentFiles) => {
     const promises = [];
     if (files.resume) {
       promises.push(

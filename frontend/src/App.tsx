@@ -12,8 +12,6 @@ import ClientLayout from './layouts/ClientLayout';
 
 // ガードコンポーネント
 import AuthGuard from './components/guards/AuthGuard';
-import AdminGuard from './components/guards/AdminGuard';
-import CompanyGuard from './components/guards/CompanyGuard';
 import ClientPrivateRoute from './components/auth/ClientPrivateRoute';
 
 // 認証ストア
@@ -28,8 +26,6 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL?.replace(/\/api\/v1$/, '')
 // 認証ページ
 const Login = lazy(() => import('./pages/auth/Login'));
 const ClientLogin = lazy(() => import('./pages/auth/ClientLogin'));
-// テスト用シンプル版
-const ClientLoginSimple = lazy(() => import('./pages/auth/ClientLoginSimple'));
 const Unauthorized = lazy(() => import('./pages/Unauthorized'));
 const Test = lazy(() => import('./pages/Test'));
 
@@ -76,7 +72,6 @@ const PageLoader = () => (
 function App() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const token = useAuthStore((state) => state.token);
-  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     // アプリケーション起動時に認証状態をチェック

@@ -9,6 +9,9 @@ import type {
   OfferFilter,
   Engineer
 } from '@/types/offer'
+import type { OfferTemplate, CreateOfferTemplateDto, UpdateOfferTemplateDto } from '@/types/template.types'
+import type { EngineerFilter } from '@/types/filter.types'
+import { getErrorMessage } from '@/types/error.types'
 import { message } from 'antd'
 
 // Query Keys
@@ -129,8 +132,8 @@ export const useCreateOffer = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerBoard() })
       message.success('オファーを送信しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'オファーの送信に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -147,8 +150,8 @@ export const useBulkCreateOffers = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerBoard() })
       message.success(`${data.length}件のオファーを送信しました`)
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || '一括オファーの送信に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -166,8 +169,8 @@ export const useUpdateOfferStatus = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerBoard() })
       message.success('ステータスを更新しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'ステータスの更新に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -183,8 +186,8 @@ export const useDeleteOffer = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerBoard() })
       message.success('オファーを削除しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'オファーの削除に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -199,8 +202,8 @@ export const useSendReminder = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offer(offerId) })
       message.success('リマインダーを送信しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'リマインダーの送信に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -218,8 +221,8 @@ export const useWithdrawOffer = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerBoard() })
       message.success('オファーを撤回しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'オファーの撤回に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -227,9 +230,9 @@ export const useWithdrawOffer = () => {
 // エンジニアフィルタリング
 export const useFilterEngineers = () => {
   return useMutation({
-    mutationFn: (filters: any) => offerApi.filterEngineers(filters),
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'エンジニアの検索に失敗しました')
+    mutationFn: (filters: EngineerFilter) => offerApi.filterEngineers(filters),
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -239,13 +242,13 @@ export const useCreateTemplate = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: (template: any) => offerApi.createTemplate(template),
+    mutationFn: (template: CreateOfferTemplateDto) => offerApi.createTemplate(template),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerTemplates })
       message.success('テンプレートを作成しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'テンプレートの作成に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -255,14 +258,14 @@ export const useUpdateTemplate = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: ({ templateId, template }: { templateId: string; template: any }) => 
+    mutationFn: ({ templateId, template }: { templateId: string; template: UpdateOfferTemplateDto }) => 
       offerApi.updateTemplate(templateId, template),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerTemplates })
       message.success('テンプレートを更新しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'テンプレートの更新に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -277,8 +280,8 @@ export const useDeleteTemplate = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerTemplates })
       message.success('テンプレートを削除しました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'テンプレートの削除に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -286,13 +289,13 @@ export const useDeleteTemplate = () => {
 // レポート生成
 export const useGenerateReport = () => {
   return useMutation({
-    mutationFn: (params: { type: string; format: 'pdf' | 'excel'; dateRange?: any }) => 
+    mutationFn: (params: { type: string; format: 'pdf' | 'excel'; dateRange?: { start: string; end: string } }) => 
       offerApi.generateReport(params),
     onSuccess: () => {
       message.success('レポートを生成しています')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'レポートの生成に失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -312,8 +315,8 @@ export const useExportReport = () => {
       window.URL.revokeObjectURL(url)
       message.success('レポートをダウンロードしました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'レポートのエクスポートに失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -332,8 +335,8 @@ export const useExportOfferHistory = () => {
       window.URL.revokeObjectURL(url)
       message.success('オファー履歴をダウンロードしました')
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'オファー履歴のエクスポートに失敗しました')
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }
@@ -341,9 +344,9 @@ export const useExportOfferHistory = () => {
 // オファー履歴検索
 export const useSearchOfferHistory = () => {
   return useMutation({
-    mutationFn: (searchParams: any) => offerApi.searchOfferHistory(searchParams),
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'オファー履歴の検索に失敗しました')
+    mutationFn: (searchParams: OfferFilter) => offerApi.searchOfferHistory(searchParams),
+    onError: (error) => {
+      message.error(getErrorMessage(error))
     },
   })
 }

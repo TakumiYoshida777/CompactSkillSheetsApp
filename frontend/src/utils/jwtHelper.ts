@@ -3,7 +3,7 @@ import { errorLog } from '../utils/logger';
 /**
  * JWTトークンをデコードしてペイロードを取得
  */
-export function decodeJWT(token: string): any {
+export function decodeJWT(token: string): unknown {
   try {
     // JWTは3つの部分（header.payload.signature）で構成される
     const parts = token.split('.');

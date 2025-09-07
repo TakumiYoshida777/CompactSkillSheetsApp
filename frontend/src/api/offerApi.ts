@@ -3,14 +3,21 @@
 import axios from 'axios'
 import type { 
   Offer,
-  OfferSummary,
   OfferStatistics,
   CreateOfferDto,
   UpdateOfferStatusDto,
   OfferFilter,
   OfferBoardData,
-  Engineer
+  Engineer,
+  EngineerOfferStatus,
+  EngineerFilter,
+  MonthlyStatistics,
+  CompanyStatistics,
+  ConversionRateData,
+  ReportParams,
+  ReportData
 } from '@/types/offer'
+import type { OfferTemplate, CreateOfferTemplateDto, UpdateOfferTemplateDto } from '@/types/template.types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
 
@@ -108,12 +115,12 @@ export const offerApi = {
     return response.data.data
   },
 
-  fetchEngineerOfferStatus: async (engineerId: string): Promise<any> => {
+  fetchEngineerOfferStatus: async (engineerId: string): Promise<EngineerOfferStatus> => {
     const response = await apiClient.get(`/offers/engineers/${engineerId}/status`)
     return response.data.data
   },
 
-  filterEngineers: async (filters: any): Promise<Engineer[]> => {
+  filterEngineers: async (filters: EngineerFilter): Promise<Engineer[]> => {
     const response = await apiClient.post('offers/engineers/filter', filters)
     return response.data.data
   },
@@ -126,17 +133,17 @@ export const offerApi = {
   },
 
   // テンプレート管理
-  fetchOfferTemplates: async (): Promise<any[]> => {
+  fetchOfferTemplates: async (): Promise<OfferTemplate[]> => {
     const response = await apiClient.get('offers/templates')
     return response.data.data
   },
 
-  createTemplate: async (template: any): Promise<any> => {
+  createTemplate: async (template: CreateOfferTemplateDto): Promise<OfferTemplate> => {
     const response = await apiClient.post('offers/templates', template)
     return response.data.data
   },
 
-  updateTemplate: async (templateId: string, template: any): Promise<any> => {
+  updateTemplate: async (templateId: string, template: UpdateOfferTemplateDto): Promise<OfferTemplate> => {
     const response = await apiClient.put(`/offers/templates/${templateId}`, template)
     return response.data.data
   },
@@ -159,28 +166,28 @@ export const offerApi = {
     return response.data.data
   },
 
-  fetchMonthlyStatistics: async (): Promise<any> => {
+  fetchMonthlyStatistics: async (): Promise<MonthlyStatistics[]> => {
     const response = await apiClient.get('offers/statistics/monthly')
     return response.data.data
   },
 
-  fetchStatisticsByCompany: async (): Promise<any> => {
+  fetchStatisticsByCompany: async (): Promise<CompanyStatistics[]> => {
     const response = await apiClient.get('offers/statistics/by-company')
     return response.data.data
   },
 
-  fetchConversionRate: async (): Promise<any> => {
+  fetchConversionRate: async (): Promise<ConversionRateData> => {
     const response = await apiClient.get('offers/conversion-rate')
     return response.data.data
   },
 
   // レポート生成
-  generateReport: async (params: { type: string; format: 'pdf' | 'excel'; dateRange?: any }): Promise<any> => {
+  generateReport: async (params: ReportParams): Promise<ReportData> => {
     const response = await apiClient.post('offers/reports/generate', params)
     return response.data.data
   },
 
-  fetchReport: async (reportId: string): Promise<any> => {
+  fetchReport: async (reportId: string): Promise<ReportData> => {
     const response = await apiClient.get(`/offers/reports/${reportId}`)
     return response.data.data
   },
@@ -208,7 +215,7 @@ export const offerApi = {
     return response.data
   },
 
-  searchOfferHistory: async (searchParams: any): Promise<Offer[]> => {
+  searchOfferHistory: async (searchParams: OfferFilter): Promise<Offer[]> => {
     const response = await apiClient.post('client/offer-history/search', searchParams)
     return response.data.data
   }

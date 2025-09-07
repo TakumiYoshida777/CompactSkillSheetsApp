@@ -140,7 +140,7 @@ const BusinessPartnerEdit: React.FC = () => {
       await updateBusinessPartner(id!, updateData);
       message.success('取引先情報を更新しました');
       navigate('/business-partners/list');
-    } catch (error: any) {
+    } catch (error) {
       errorLog('更新エラー:', error);
       message.error(error.response?.data?.message || '更新に失敗しました');
     } finally {

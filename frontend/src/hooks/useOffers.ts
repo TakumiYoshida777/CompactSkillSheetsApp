@@ -6,9 +6,11 @@ import {
   useQueryClient 
 } from '@tanstack/react-query';
 import { message } from 'antd';
-import * as offerApi from '../api/client/offerApi';
+import { offerApi } from '../api/client/offerApi';
+import type { OfferFilters } from '../api/client/offerApi';
 import type { OfferStatus } from '../stores/offerStore';
 import { queryOptions, infiniteQueryOptions } from '../config/queryClient';
+import { getErrorMessage } from '../types/error.types';
 
 const QUERY_KEYS = {
   offers: 'offers',
@@ -20,7 +22,7 @@ const QUERY_KEYS = {
   offerDetails: (id: string) => ['offer', id],
 };
 
-export const useOffers = (filters?: offerApi.OfferFilters) => {
+export const useOffers = (filters?: OfferFilters) => {
   return useQuery({
     queryKey: [QUERY_KEYS.offers, filters],
     queryFn: () => offerApi.getOffers(filters),
@@ -32,7 +34,7 @@ export const useOffers = (filters?: offerApi.OfferFilters) => {
  * オファー一覧を取得（Suspense版）
  * ローディング状態をSuspenseで管理
  */
-export const useOffersSuspense = (filters?: offerApi.OfferFilters) => {
+export const useOffersSuspense = (filters?: OfferFilters) => {
   return useSuspenseQuery({
     queryKey: [QUERY_KEYS.offers, filters],
     queryFn: () => offerApi.getOffers(filters),
@@ -43,15 +45,15 @@ export const useOffersSuspense = (filters?: offerApi.OfferFilters) => {
 /**
  * オファー一覧を無限スクロールで取得
  */
-export const useInfiniteOffers = (filters?: Omit<offerApi.OfferFilters, 'page'>) => {
+export const useInfiniteOffers = (filters?: Omit<OfferFilters, 'page'>) => {
   return useInfiniteQuery({
     queryKey: [QUERY_KEYS.offers, 'infinite', filters],
-    queryFn: ({ pageParam = 1 }) => 
-      offerApi.getOffers({ ...filters, page: pageParam }),
-    ...infiniteQueryOptions,
-    getNextPageParam: (lastPage: any) => {
-      const { page, totalPages } = lastPage.pagination || {};
-      return page < totalPages ? page + 1 : undefined;
+    queryFn: ({ pageParam }) => 
+      offerApi.getOffers({ ...filters, page: pageParam as number }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage?.pagination || {};
+      return page && totalPages && page < totalPages ? page + 1 : undefined;
     },
   });
 };
@@ -162,10 +164,9 @@ export const useCreateOffer = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.offerBoard] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.offerStatistics] });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       // エラーハンドリングはグローバル設定でも行われる
-      const errorMessage = error.response?.data?.message || 'オファー送信に失敗しました';
-      message.error(errorMessage);
+      message.error(getErrorMessage(error));
     },
     // 楽観的更新
     onMutate: async (newOffer) => {
@@ -176,11 +177,12 @@ export const useCreateOffer = () => {
       const previousOffers = queryClient.getQueryData([QUERY_KEYS.offers]);
       
       // 楽観的に更新
-      queryClient.setQueryData([QUERY_KEYS.offers], (old: any) => {
-        if (!old) return old;
+      queryClient.setQueryData([QUERY_KEYS.offers], (old) => {
+        const oldData = old as { data?: unknown[] } | undefined;
+        if (!oldData) return oldData;
         return {
-          ...old,
-          data: [newOffer, ...old.data],
+          ...oldData,
+          data: [newOffer, ...(oldData.data || [])],
         };
       });
       
@@ -210,8 +212,8 @@ export const useUpdateOfferStatus = () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.offers] });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerDetails(variables.offerId) });
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'ステータス更新に失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };
@@ -225,8 +227,8 @@ export const useSendReminder = () => {
       message.success('リマインドメールを送信しました');
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.offerDetails(offerId) });
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'リマインド送信に失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };
@@ -245,8 +247,8 @@ export const useBulkAction = () => {
       }
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.offers] });
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || '一括操作に失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };
@@ -254,8 +256,8 @@ export const useBulkAction = () => {
 export const useSearchEngineers = () => {
   return useMutation({
     mutationFn: offerApi.searchEngineers,
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || '検索に失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };
@@ -274,8 +276,8 @@ export const useExportOfferHistory = () => {
       window.URL.revokeObjectURL(url);
       message.success('エクスポートが完了しました');
     },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'エクスポートに失敗しました');
+    onError: (error) => {
+      message.error(getErrorMessage(error));
     },
   });
 };

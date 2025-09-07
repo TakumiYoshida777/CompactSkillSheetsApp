@@ -49,12 +49,24 @@ export interface Engineer {
   // リレーション
   skillSheet?: SkillSheetSummary;
   currentProject?: ProjectSummary;
+  engineerProjects?: EngineerProject[];
+  company?: { id: string; name: string };
   tags?: string[];
   
   // メタ情報
   createdAt: string;
   updatedAt: string;
   lastActiveAt?: string;
+}
+
+/**
+ * スキルアイテム
+ */
+export interface SkillItem {
+  id?: string;
+  name: string;
+  level?: number;
+  years?: number;
 }
 
 /**
@@ -66,6 +78,11 @@ export interface SkillSheetSummary {
   completionRate: number;
   lastUpdatedAt: string;
   mainSkills: string[];
+  totalExperienceYears?: number;
+  possibleRoles?: string[];
+  programmingLanguages?: SkillItem[];
+  frameworks?: SkillItem[];
+  databases?: SkillItem[];
 }
 
 /**
@@ -78,6 +95,19 @@ export interface ProjectSummary {
   startDate: string;
   endDate?: string;
   role: string;
+  monthlyRate?: number;
+}
+
+/**
+ * エンジニアプロジェクト
+ */
+export interface EngineerProject {
+  id: string;
+  role: string;
+  startDate: string;
+  endDate?: string;
+  technologies?: string[];
+  project?: ProjectSummary;
 }
 
 /**

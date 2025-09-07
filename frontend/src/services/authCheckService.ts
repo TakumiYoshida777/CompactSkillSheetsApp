@@ -29,7 +29,7 @@ export class AuthCheckService {
   /**
    * ユーザータイプに基づいてAPIエンドポイントを決定
    */
-  static determineEndpoint(token: string, user?: any): string {
+  static determineEndpoint(token: string, user?: unknown): string {
     const userTypeFromToken = getUserTypeFromToken(token);
     
     const userType = userTypeFromToken || user?.userType;
@@ -41,7 +41,7 @@ export class AuthCheckService {
   /**
    * ユーザー情報を取得
    */
-  static async fetchUserData(token: string, user?: any): Promise<AuthCheckResult> {
+  static async fetchUserData(token: string, user?: unknown): Promise<AuthCheckResult> {
     try {
       AuthService.setAuthorizationHeader(token);
       const endpoint = this.determineEndpoint(token, user);
@@ -51,7 +51,7 @@ export class AuthCheckService {
         success: true,
         user: userData,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         needsRefresh: true,

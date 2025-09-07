@@ -1,6 +1,6 @@
 import morgan from 'morgan';
 import logger, { logHttpRequest } from '../config/logger';
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 // Morganのトークンをカスタマイズ
 morgan.token('body', (req: Request) => {
@@ -12,7 +12,7 @@ morgan.token('query', (req: Request) => {
 });
 
 // レスポンスタイムを記録するミドルウェア
-export const responseTimeMiddleware = (req: any, res: any, next: any) => {
+export const responseTimeMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const startTime = Date.now();
   
   // レスポンスが終了したときの処理

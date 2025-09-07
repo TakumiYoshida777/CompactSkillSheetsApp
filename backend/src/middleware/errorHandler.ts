@@ -6,6 +6,8 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError, ErrorCode } from '../errors/AppError';
 import { logger } from '../utils/logger';
 import { Prisma } from '@prisma/client';
+import { AppErrorDetails } from '../types/common.types';
+import { YupValidationError, ErrorResponse } from '../types/error.types';
 
 /**
  * エラーログの記録
@@ -95,11 +97,12 @@ const handlePrismaError = (error: Prisma.PrismaClientKnownRequestError): AppErro
 /**
  * バリデーションエラーの変換
  */
-const handleValidationError = (error: any): AppError => {
-  if (error.name === 'ValidationError') {
-    const details = error.inner?.map((err: any) => ({
+const handleValidationError = (error: Error | YupValidationError): AppError => {
+  if (error.name === 'ValidationError' && 'inner' in error) {
+    const details: AppErrorDetails[] = error.inner?.map((err) => ({
       field: err.path,
-      message: err.message
+      message: err.message,
+      value: err.value
     })) || [];
 
     return new AppError(
@@ -129,12 +132,12 @@ const sendErrorResponse = (
 ) => {
   const { statusCode, code, message, timestamp, details } = error;
 
-  const response: any = {
+  const response: ErrorResponse = {
     success: false,
     error: {
       code,
       message,
-      timestamp,
+      timestamp: timestamp.toISOString(),
       path: req.path,
       method: req.method
     }
@@ -152,8 +155,8 @@ const sendErrorResponse = (
 /**
  * 非同期エラーハンドラーラッパー
  */
-export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+export const asyncHandler = <T = void>(
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<T>
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);

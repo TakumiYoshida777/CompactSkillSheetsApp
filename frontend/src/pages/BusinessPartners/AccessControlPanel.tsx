@@ -142,7 +142,7 @@ const AccessControlPanel: React.FC = () => {
       }
       
       message.success('アクセス権限を更新しました');
-    } catch (error: any) {
+    } catch (error) {
       errorLog('保存エラー:', error);
       message.error(error.response?.data?.message || '保存に失敗しました');
     } finally {

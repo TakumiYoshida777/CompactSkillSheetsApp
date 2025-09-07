@@ -44,7 +44,7 @@ export class AuthService {
    * @param response APIレスポンス
    * @returns 正規化されたレスポンス
    */
-  static normalizeLoginResponse(response: any): any {
+  static normalizeLoginResponse(response: unknown): unknown {
     if (response.access_token) {
       return {
         token: response.access_token,
@@ -78,7 +78,7 @@ export class AuthService {
       this.setAuthorizationHeader(authResponse.accessToken);
       
       return authResponse;
-    } catch (error: any) {
+    } catch (error) {
       throw ErrorFactory.fromApiError(error);
     }
   }
@@ -114,7 +114,7 @@ export class AuthService {
     // /api/client/auth/login のレスポンス形式（フラット）
     return {
       user: data.user!,
-      accessToken: data.accessToken || (data as any).token!,
+      accessToken: data.accessToken || (data as unknown as { token: string }).token,
       refreshToken: data.refreshToken!,
       message: data.message,
     };
@@ -174,7 +174,7 @@ export class AuthService {
    * @param endpoint APIエンドポイント
    * @returns ユーザー情報
    */
-  static async fetchUserInfo(endpoint: string): Promise<any> {
+  static async fetchUserInfo(endpoint: string): Promise<unknown> {
     try {
       const response = await axiosInstance.get(endpoint);
       

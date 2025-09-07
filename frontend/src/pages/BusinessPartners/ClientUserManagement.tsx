@@ -146,7 +146,7 @@ const ClientUserManagement: React.FC = () => {
       setModalVisible(false);
       form.resetFields();
       setEditingUser(null);
-    } catch (error: any) {
+    } catch (error) {
       errorLog('保存エラー:', error);
       message.error(error.response?.data?.message || '保存に失敗しました');
     }
@@ -157,7 +157,7 @@ const ClientUserManagement: React.FC = () => {
     try {
       await deleteClientUser(partnerId!, userId);
       message.success('ユーザーを削除しました');
-    } catch (error: any) {
+    } catch (error) {
       message.error(error.response?.data?.message || '削除に失敗しました');
     }
   };
@@ -175,7 +175,7 @@ const ClientUserManagement: React.FC = () => {
       setPasswordModalVisible(false);
       passwordForm.resetFields();
       setSelectedUserId(null);
-    } catch (error: any) {
+    } catch (error) {
       message.error(error.response?.data?.message || 'パスワードリセットに失敗しました');
     }
   };
@@ -185,7 +185,7 @@ const ClientUserManagement: React.FC = () => {
     try {
       await updateClientUser(partnerId!, userId, { isActive });
       message.success(`ユーザーを${isActive ? 'アクティブ' : '非アクティブ'}にしました`);
-    } catch (error: any) {
+    } catch (error) {
       message.error(error.response?.data?.message || '更新に失敗しました');
     }
   };

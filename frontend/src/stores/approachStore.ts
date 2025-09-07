@@ -72,7 +72,7 @@ const useApproachStore = create<ApproachState>((set) => ({
     try {
       const approaches = await approachAPI.fetchApproaches(filters);
       set({ approaches, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'アプローチ履歴の取得に失敗しました',
@@ -89,7 +89,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         selectedApproach: approach,
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'アプローチの取得に失敗しました',
@@ -105,7 +105,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         approaches: [approach, ...state.approaches],
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'アプローチの作成に失敗しました',
@@ -122,7 +122,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         approaches: [...approaches, ...state.approaches],
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || '一括アプローチの送信に失敗しました',
@@ -140,7 +140,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         selectedApproach: state.selectedApproach?.id === id ? null : state.selectedApproach,
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'アプローチの削除に失敗しました',
@@ -154,7 +154,7 @@ const useApproachStore = create<ApproachState>((set) => ({
     try {
       const templates = await approachAPI.fetchTemplates();
       set({ templates, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'テンプレート一覧の取得に失敗しました',
@@ -170,7 +170,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         templates: [...state.templates, template],
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'テンプレートの作成に失敗しました',
@@ -188,7 +188,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         selectedTemplate: state.selectedTemplate?.id === id ? template : state.selectedTemplate,
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'テンプレートの更新に失敗しました',
@@ -206,7 +206,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         selectedTemplate: state.selectedTemplate?.id === id ? null : state.selectedTemplate,
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'テンプレートの削除に失敗しました',
@@ -220,7 +220,7 @@ const useApproachStore = create<ApproachState>((set) => ({
     try {
       const periodicSettings = await approachAPI.fetchPeriodicApproaches();
       set({ periodicSettings, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || '定期アプローチ設定の取得に失敗しました',
@@ -236,7 +236,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         periodicSettings: [...state.periodicSettings, periodicApproach],
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || '定期アプローチの作成に失敗しました',
@@ -253,7 +253,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         periodicSettings: state.periodicSettings.map(p => p.id === id ? periodicApproach : p),
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || '定期アプローチの更新に失敗しました',
@@ -270,7 +270,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         periodicSettings: state.periodicSettings.filter(p => p.id !== id),
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || '定期アプローチの削除に失敗しました',
@@ -287,7 +287,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         periodicSettings: state.periodicSettings.map(p => p.id === id ? periodicApproach : p),
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || '定期アプローチの一時停止/再開に失敗しました',
@@ -301,7 +301,7 @@ const useApproachStore = create<ApproachState>((set) => ({
     try {
       const freelancers = await approachAPI.fetchFreelancers(filters);
       set({ freelancers, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'フリーランス一覧の取得に失敗しました',
@@ -317,7 +317,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         approaches: [approach, ...state.approaches],
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'フリーランスアプローチの送信に失敗しました',
@@ -334,7 +334,7 @@ const useApproachStore = create<ApproachState>((set) => ({
         approaches: [...approaches, ...state.approaches],
         isLoading: false,
       }));
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'フリーランス一括アプローチの送信に失敗しました',
@@ -348,7 +348,7 @@ const useApproachStore = create<ApproachState>((set) => ({
     try {
       const approaches = await approachAPI.fetchFreelanceApproachHistory(freelancerId);
       set({ approaches, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'フリーランスアプローチ履歴の取得に失敗しました',
@@ -361,7 +361,7 @@ const useApproachStore = create<ApproachState>((set) => ({
     try {
       const statistics = await approachAPI.fetchStatistics(period);
       set({ statistics, isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.message || 'アプローチ統計の取得に失敗しました',

@@ -149,7 +149,7 @@ const NGListManagement: React.FC = () => {
       setAddModalVisible(false);
       form.resetFields();
       setSelectedEngineer(null);
-    } catch (error: any) {
+    } catch (error) {
       if (error.errorFields) {
         errorLog('Validation failed:', error);
       } else {
@@ -163,7 +163,7 @@ const NGListManagement: React.FC = () => {
     try {
       await removeFromNGList(partnerId!, entryId);
       message.success('NGリストから削除しました');
-    } catch (error: any) {
+    } catch (error) {
       message.error(error.response?.data?.message || '削除に失敗しました');
     }
   };

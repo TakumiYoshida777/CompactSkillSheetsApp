@@ -110,7 +110,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             searchParams,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '取引先企業一覧の取得に失敗しました',
             isLoading: false,
@@ -130,7 +130,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             accessPermission: response.permissions,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '取引先企業詳細の取得に失敗しました',
             isLoading: false,
@@ -149,7 +149,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             isLoading: false,
           }));
           return partner;
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '取引先企業の作成に失敗しました',
             isLoading: false,
@@ -172,7 +172,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
               : state.currentPartner,
             isLoading: false,
           }));
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '取引先企業の更新に失敗しました',
             isLoading: false,
@@ -193,7 +193,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
               : state.currentPartner,
             isLoading: false,
           }));
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '取引先企業の削除に失敗しました',
             isLoading: false,
@@ -211,7 +211,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             clientUsers: users,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '取引先ユーザー一覧の取得に失敗しました',
             isLoading: false,
@@ -229,7 +229,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             clientUsers: [...state.clientUsers, user],
             isLoading: false,
           }));
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '取引先ユーザーの作成に失敗しました',
             isLoading: false,
@@ -249,7 +249,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             ),
             isLoading: false,
           }));
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '取引先ユーザーの更新に失敗しました',
             isLoading: false,
@@ -267,7 +267,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             clientUsers: state.clientUsers.filter(u => u.id !== userId),
             isLoading: false,
           }));
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '取引先ユーザーの削除に失敗しました',
             isLoading: false,
@@ -282,7 +282,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
         try {
           await businessPartnerService.resetClientUserPassword(partnerId, userId, newPassword);
           set({ isLoading: false });
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'パスワードのリセットに失敗しました',
             isLoading: false,
@@ -300,7 +300,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             accessPermission: permissions,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'アクセス権限の取得に失敗しました',
             isLoading: false,
@@ -318,7 +318,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             accessPermission: updatedPermissions,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'アクセス権限の更新に失敗しました',
             isLoading: false,
@@ -340,7 +340,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
               isLoading: false,
             }));
           }
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '公開エンジニアの設定に失敗しました',
             isLoading: false,
@@ -358,7 +358,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             ngList,
             isLoading: false,
           });
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'NGリストの取得に失敗しました',
             isLoading: false,
@@ -373,7 +373,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
         try {
           await businessPartnerService.addToNGList(partnerId, data);
           await get().fetchNGList(partnerId);
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'NGリストへの追加に失敗しました',
             isLoading: false,
@@ -391,7 +391,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
             ngList: state.ngList.filter(item => item.engineerId !== engineerId),
             isLoading: false,
           }));
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'NGリストからの削除に失敗しました',
             isLoading: false,
@@ -407,7 +407,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
           const result = await businessPartnerService.generateAccessUrl(partnerId);
           set({ isLoading: false });
           return result;
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'アクセスURLの生成に失敗しました',
             isLoading: false,
@@ -423,7 +423,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
           const result = await businessPartnerService.updateAccessUrl(partnerId);
           set({ isLoading: false });
           return result;
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'アクセスURLの更新に失敗しました',
             isLoading: false,
@@ -439,7 +439,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
           const log = await businessPartnerService.getActivityLog(partnerId);
           set({ isLoading: false });
           return log;
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'アクティビティログの取得に失敗しました',
             isLoading: false,
@@ -455,7 +455,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
           const analytics = await businessPartnerService.getAnalytics(partnerId);
           set({ isLoading: false });
           return analytics;
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || '分析データの取得に失敗しました',
             isLoading: false,
@@ -471,7 +471,7 @@ export const useBusinessPartnerStore = create<BusinessPartnerState>()(
           const engagement = await businessPartnerService.getEngagement(partnerId);
           set({ isLoading: false });
           return engagement;
-        } catch (error: any) {
+        } catch (error) {
           set({ 
             error: error.response?.data?.message || 'エンゲージメントデータの取得に失敗しました',
             isLoading: false,

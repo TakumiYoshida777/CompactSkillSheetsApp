@@ -44,7 +44,7 @@ const EngineerRegister: React.FC = () => {
         message.success('登録に成功しました');
         navigate('engineer/skill-sheet');
       }
-    } catch (error: any) {
+    } catch (error) {
       errorLog('Register error:', error);
       message.error(error.response?.data?.message || '登録に失敗しました');
     } finally {

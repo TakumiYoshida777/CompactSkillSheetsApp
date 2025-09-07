@@ -4,7 +4,7 @@ import { message } from 'antd';
 import EngineerSearchTable from '@/components/EngineerSearch/EngineerSearchTable';
 import type { Engineer } from '@/components/EngineerSearch/EngineerSearchTable';
 import { useEngineers } from '@/hooks/useEngineers';
-import type { EngineerFilterParams } from '@/types/engineer';
+import type { EngineerFilterParams, Engineer as EngineerType, SkillItem, SkillSheetSummary, EngineerProject } from '@/types/engineer';
 
 const ClientEngineerSearch: React.FC = () => {
   const navigate = useNavigate();
@@ -32,23 +32,23 @@ const ClientEngineerSearch: React.FC = () => {
   };
 
   // スキル抽出ヘルパー
-  const extractSkills = (skillSheet?: any): string[] => {
+  const extractSkills = (skillSheet?: SkillSheetSummary): string[] => {
     if (!skillSheet) return [];
     const skills: string[] = [];
     
     if (skillSheet.programmingLanguages) {
       skills.push(...(Array.isArray(skillSheet.programmingLanguages) 
-        ? skillSheet.programmingLanguages.map((s: any) => s.name || s)
+        ? skillSheet.programmingLanguages.map((s: SkillItem) => s.name)
         : []));
     }
     if (skillSheet.frameworks) {
       skills.push(...(Array.isArray(skillSheet.frameworks)
-        ? skillSheet.frameworks.map((s: any) => s.name || s)
+        ? skillSheet.frameworks.map((s: SkillItem) => s.name)
         : []));
     }
     if (skillSheet.databases) {
       skills.push(...(Array.isArray(skillSheet.databases)
-        ? skillSheet.databases.map((s: any) => s.name || s)
+        ? skillSheet.databases.map((s: SkillItem) => s.name)
         : []));
     }
     
@@ -82,7 +82,7 @@ const ClientEngineerSearch: React.FC = () => {
       return [];
     }
     
-    return response.data.map((eng: any) => ({
+    return response.data.map((eng: EngineerType) => ({
       key: eng.id,
       engineerId: eng.id,
       name: eng.name,
@@ -102,8 +102,8 @@ const ClientEngineerSearch: React.FC = () => {
       rate: eng.engineerProjects?.[0]?.project?.monthlyRate || 
             eng.currentProject?.monthlyRate,
       roleExperiences: eng.skillSheet?.possibleRoles || 
-                      eng.engineerProjects?.map((ep: any) => ep.role).filter(Boolean),
-      workExperiences: eng.engineerProjects?.map((ep: any) => ({
+                      eng.engineerProjects?.map((ep: EngineerProject) => ep.role).filter(Boolean),
+      workExperiences: eng.engineerProjects?.map((ep: EngineerProject) => ({
         projectName: ep.project?.name,
         role: ep.role,
         period: `${ep.startDate} ~ ${ep.endDate || '現在'}`,

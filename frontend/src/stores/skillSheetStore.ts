@@ -1,6 +1,7 @@
 import { errorLog } from '../utils/logger';
 import { create } from 'zustand';
 import { skillSheetApi, skillMasterApi } from '../api/engineers/skillSheetApi';
+import { getErrorMessage } from '../types/error.types';
 import type { 
   SkillSheet,
   SkillSheetUpdateRequest,
@@ -107,10 +108,10 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
         isDirty: false,
       });
       get().calculateProgress();
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
-        error: error.response?.data?.message || 'スキルシートの取得に失敗しました',
+        error: getErrorMessage(error),
       });
     }
   },
@@ -119,7 +120,7 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
     try {
       const skillMasters = await skillMasterApi.fetchAll();
       set({ skillMasters });
-    } catch (error: any) {
+    } catch (error) {
       errorLog('スキルマスタの取得に失敗しました:', error);
     }
   },
@@ -153,7 +154,7 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
         lastSaved: new Date().toISOString(),
       });
       get().calculateProgress();
-    } catch (error: any) {
+    } catch (error) {
       set({
         isSaving: false,
         error: error.response?.data?.message || '保存に失敗しました',
@@ -179,7 +180,7 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
         isDirty: false,
         lastSaved: new Date().toISOString(),
       });
-    } catch (error: any) {
+    } catch (error) {
       set({ isAutoSaving: false });
       errorLog('自動保存に失敗しました:', error);
     }
@@ -196,7 +197,7 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
         skillSheet: publishedSkillSheet,
         isSaving: false,
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isSaving: false,
         error: error.response?.data?.message || '公開に失敗しました',
@@ -213,7 +214,7 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
         skillSheet: completedSkillSheet,
         isSaving: false,
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isSaving: false,
         error: error.response?.data?.message || '完了設定に失敗しました',
@@ -461,7 +462,7 @@ const useSkillSheetStore = create<SkillSheetState>((set, get) => ({
       window.URL.revokeObjectURL(url);
       
       set({ isLoading: false });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isLoading: false,
         error: error.response?.data?.message || 'エクスポートに失敗しました',

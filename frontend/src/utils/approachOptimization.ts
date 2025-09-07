@@ -86,7 +86,7 @@ export interface EngineerSelection {
 }
 
 export const selectTargetEngineers = (
-  engineers: any[],
+  engineers: unknown[],
   criteria: {
     skills?: string[];
     experience?: number;
@@ -236,7 +236,7 @@ export interface ConversionAnalysis {
 
 export const analyzeConversionRate = (
   approaches: Approach[],
-  templates: any[]
+  templates: unknown[]
 ): ConversionAnalysis => {
   const totalApproaches = approaches.length;
   const acceptedApproaches = approaches.filter(a => a.status === 'accepted').length;
