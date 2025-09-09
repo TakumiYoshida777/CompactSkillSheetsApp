@@ -26,11 +26,19 @@ export const useEngineerDetail = (engineerId: string | undefined) => {
 export const useEngineerProjects = (engineerId: string | undefined) => {
   return useQuery({
     queryKey: ['engineer', engineerId, 'projects'],
-    queryFn: () => {
+    queryFn: async () => {
       if (!engineerId) {
         throw new Error('Engineer ID is required');
       }
-      return engineerApi.fetchProjectHistory(engineerId);
+      try {
+        return await engineerApi.fetchProjectHistory(engineerId);
+      } catch (error: any) {
+        // 404エラーの場合は空配列を返す
+        if (error?.response?.status === 404) {
+          return [];
+        }
+        throw error;
+      }
     },
     enabled: !!engineerId,
     staleTime: 5 * 60 * 1000,
