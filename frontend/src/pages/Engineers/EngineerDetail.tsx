@@ -39,10 +39,37 @@ import {
 } from '@ant-design/icons';
 import type { TabsProps } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { useEngineerDetail, useEngineerProjects } from '../../hooks/useEngineerDetail';
-import type { Engineer } from '../../types/engineer';
+import { useEngineerDetail } from '../../hooks/useEngineerDetail';
 
 const { Title, Text, Paragraph } = Typography;
+
+// Engineerデータ型を拡張（バックエンドとの整合性のため）
+interface ExtendedEngineer {
+  id: string;
+  name: string;
+  nameKana?: string;
+  age?: number;
+  gender?: string;
+  email?: string;
+  phone?: string;
+  nearestStation?: string;
+  joinDate?: string;
+  experience?: number;
+  education?: string;
+  contractType?: string;
+  unitPrice?: number;
+  availability?: string;
+  workTime?: string;
+  workLocation?: string;
+  selfPR?: string;
+  profileImageUrl?: string;
+  status?: string;
+  rating?: number;
+  skills?: any[];
+  certifications?: any[];
+  engineerProjects?: any[];
+  [key: string]: any;
+}
 
 interface ProjectHistory {
   key: string;
@@ -81,8 +108,9 @@ const EngineerDetail: React.FC = () => {
   const [certifications, setCertifications] = useState<Certification[]>([]);
 
   // TanStack Queryを使用してデータを取得
-  const { data: engineerData, isLoading, error } = useEngineerDetail(id);
-  const { data: projectData } = useEngineerProjects(id);
+  const { data, isLoading, error } = useEngineerDetail(id);
+  const engineerData = data as ExtendedEngineer | undefined;
+  // プロジェクト履歴APIは未実装のため、engineerDataから直接取得
 
   useEffect(() => {
     if (engineerData) {
@@ -110,24 +138,24 @@ const EngineerDetail: React.FC = () => {
         }));
         setCertifications(formattedCerts);
       }
+      
+      // プロジェクト履歴を整形（engineerDataから取得）
+      if (engineerData.engineerProjects && Array.isArray(engineerData.engineerProjects)) {
+        const formattedProjects = engineerData.engineerProjects.map((ep: any, index: number) => ({
+          key: String(index + 1),
+          projectName: ep.project?.name || '不明',
+          client: ep.project?.clientCompany || '不明',
+          period: `${ep.startDate || ''} - ${ep.endDate || '現在'}`,
+          role: ep.role || '不明',
+          technologies: ep.technologies || [],
+          teamSize: ep.teamSize || 0,
+          description: ep.description || '',
+        }));
+        setProjectHistory(formattedProjects);
+      }
     }
   }, [engineerData]);
 
-  useEffect(() => {
-    if (projectData && Array.isArray(projectData)) {
-      const formattedProjects = projectData.map((project: any, index: number) => ({
-        key: String(index + 1),
-        projectName: project.projectName || project.name || '不明',
-        client: project.client || project.clientName || '不明',
-        period: project.period || `${project.startDate || ''} - ${project.endDate || ''}`,
-        role: project.role || '不明',
-        technologies: project.technologies || project.skills || [],
-        teamSize: project.teamSize || 0,
-        description: project.description || '',
-      }));
-      setProjectHistory(formattedProjects);
-    }
-  }, [projectData]);
 
   useEffect(() => {
     if (error) {
@@ -500,7 +528,7 @@ const EngineerDetail: React.FC = () => {
             <Avatar 
               size={120} 
               icon={<UserOutlined />} 
-              src={engineerData.profileImage}
+              src={engineerData.profileImageUrl}
               className="mb-4" 
             />
             <Title level={3}>{engineerData.name || '-'}</Title>

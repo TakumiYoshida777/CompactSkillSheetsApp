@@ -60,9 +60,16 @@ instance.interceptors.response.use(
     return response;
   },
   async (error) => {
-    errorLog('[Axios Response Error]:', error);
-    errorLog('[Axios Response Error] Status:', error.response?.status);
-    errorLog('[Axios Response Error] Data:', error.response?.data);
+    // 404エラーで特定のパスの場合はログを抑制
+    const is404ProjectHistory = error.response?.status === 404 && 
+                                error.config?.url?.includes('/projects/history');
+    
+    if (!is404ProjectHistory) {
+      errorLog('[Axios Response Error]:', error);
+      errorLog('[Axios Response Error] Status:', error.response?.status);
+      errorLog('[Axios Response Error] Data:', error.response?.data);
+    }
+    
     const originalRequest = error.config;
 
     // 401エラーでリフレッシュトークンを使用
