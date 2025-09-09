@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { engineerApi } from '../api/engineers/engineerApi';
-import type { Engineer } from '../types/engineer';
+import type { Engineer, ApiResponse } from '../types/engineer';
 
 /**
  * エンジニア詳細情報を取得するカスタムフック
  */
 export const useEngineerDetail = (engineerId: string | undefined) => {
-  return useQuery<Engineer, Error>({
+  return useQuery<ApiResponse<Engineer>, Error>({
     queryKey: ['engineer', engineerId],
     queryFn: () => {
       if (!engineerId) {

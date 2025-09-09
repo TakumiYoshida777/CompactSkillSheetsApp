@@ -13,7 +13,8 @@ import type {
   EngineerCreateRequest,
   EngineerUpdateRequest,
   BulkStatusUpdateRequest,
-  ExportFormat
+  ExportFormat,
+  ApiResponse
 } from '../../types/engineer';
 
 const API_BASE = '/v1/engineers';
@@ -33,15 +34,15 @@ export const engineerApi = {
   /**
    * エンジニア詳細取得
    */
-  async fetchDetail(engineerId: string): Promise<Engineer> {
-    const response = await axios.get<Engineer>(`${API_BASE}/${engineerId}`);
+  async fetchDetail(engineerId: string): Promise<ApiResponse<Engineer>> {
+    const response = await axios.get<ApiResponse<Engineer>>(`${API_BASE}/${engineerId}`);
     return response.data;
   },
 
   /**
    * エンジニア作成
    */
-  async create(data: EngineerCreateRequest): Promise<Engineer> {
+  async create(data: EngineerCreateRequest): Promise<ApiResponse<Engineer>> {
     // クライアントサイドバリデーション
     const validation = validateEngineerCreateRequest(data);
     if (!validation.isValid) {
@@ -58,7 +59,7 @@ export const engineerApi = {
     }
 
     try {
-      const response = await axios.post<Engineer>(API_BASE, data);
+      const response = await axios.post<ApiResponse<Engineer>>(API_BASE, data);
       return response.data;
     } catch (error) {
       throw parseApiError(error);
@@ -68,16 +69,16 @@ export const engineerApi = {
   /**
    * エンジニア更新
    */
-  async update(engineerId: string, data: EngineerUpdateRequest): Promise<Engineer> {
-    const response = await axios.put<Engineer>(`${API_BASE}/${engineerId}`, data);
+  async update(engineerId: string, data: EngineerUpdateRequest): Promise<ApiResponse<Engineer>> {
+    const response = await axios.put<ApiResponse<Engineer>>(`${API_BASE}/${engineerId}`, data);
     return response.data;
   },
 
   /**
    * エンジニア部分更新
    */
-  async patch(engineerId: string, data: Partial<EngineerUpdateRequest>): Promise<Engineer> {
-    const response = await axios.patch<Engineer>(`${API_BASE}/${engineerId}`, data);
+  async patch(engineerId: string, data: Partial<EngineerUpdateRequest>): Promise<ApiResponse<Engineer>> {
+    const response = await axios.patch<ApiResponse<Engineer>>(`${API_BASE}/${engineerId}`, data);
     return response.data;
   },
 
@@ -91,24 +92,24 @@ export const engineerApi = {
   /**
    * ステータス更新
    */
-  async updateStatus(engineerId: string, status: string): Promise<Engineer> {
-    const response = await axios.patch<Engineer>(`${API_BASE}/${engineerId}/status`, { status });
+  async updateStatus(engineerId: string, status: string): Promise<ApiResponse<Engineer>> {
+    const response = await axios.patch<ApiResponse<Engineer>>(`${API_BASE}/${engineerId}/status`, { status });
     return response.data;
   },
 
   /**
    * 稼働可能時期更新
    */
-  async updateAvailability(engineerId: string, availableDate: string): Promise<Engineer> {
-    const response = await axios.put<Engineer>(`${API_BASE}/${engineerId}/availability`, { availableDate });
+  async updateAvailability(engineerId: string, availableDate: string): Promise<ApiResponse<Engineer>> {
+    const response = await axios.put<ApiResponse<Engineer>>(`${API_BASE}/${engineerId}/availability`, { availableDate });
     return response.data;
   },
 
   /**
    * 公開設定変更
    */
-  async updatePublicStatus(engineerId: string, isPublic: boolean): Promise<Engineer> {
-    const response = await axios.patch<Engineer>(`${API_BASE}/${engineerId}/public`, { isPublic });
+  async updatePublicStatus(engineerId: string, isPublic: boolean): Promise<ApiResponse<Engineer>> {
+    const response = await axios.patch<ApiResponse<Engineer>>(`${API_BASE}/${engineerId}/public`, { isPublic });
     return response.data;
   },
 

@@ -65,10 +65,10 @@ interface ExtendedEngineer {
   profileImageUrl?: string;
   status?: string;
   rating?: number;
-  skills?: any[];
-  certifications?: any[];
-  engineerProjects?: any[];
-  [key: string]: any;
+  skills?: Skill[];
+  certifications?: Certification[];
+  engineerProjects?: ProjectHistory[];
+  [key: string]: unknown;
 }
 
 interface ProjectHistory {
@@ -109,7 +109,11 @@ const EngineerDetail: React.FC = () => {
 
   // TanStack Queryを使用してデータを取得
   const { data, isLoading, error } = useEngineerDetail(id);
-  const engineerData = data as ExtendedEngineer | undefined;
+  const engineerData = data?.data as ExtendedEngineer | undefined;
+
+  console.log("Fetch  Engineer Data", data);
+  console.log("Engineer Detail", engineerData);
+  
   // プロジェクト履歴APIは未実装のため、engineerDataから直接取得
 
   useEffect(() => {

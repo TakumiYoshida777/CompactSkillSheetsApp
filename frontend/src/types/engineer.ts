@@ -3,6 +3,22 @@
  */
 
 /**
+ * APIレスポンスの基本構造
+ */
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  meta?: {
+    pagination?: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
+}
+
+/**
  * エンジニア種別
  */
 export type EngineerType = 'employee' | 'partner' | 'freelance';
