@@ -17,7 +17,7 @@ import type {
   ApiResponse
 } from '../../types/engineer';
 
-const API_BASE = '/v1/engineers';
+const API_BASE = '/api/v1/engineers';
 
 /**
  * エンジニアAPI
