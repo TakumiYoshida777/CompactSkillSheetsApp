@@ -65,9 +65,24 @@ interface ExtendedEngineer {
   profileImageUrl?: string;
   status?: string;
   rating?: number;
-  skills?: Skill[];
-  certifications?: Certification[];
-  engineerProjects?: ProjectHistory[];
+  skillSheet?: {
+    programmingLanguages?: any;
+    frameworks?: any;
+    databases?: any;
+    cloudServices?: any;
+    tools?: any;
+    certifications?: any;
+    summary?: string;
+    totalExperienceYears?: number;
+    possibleRoles?: any;
+    possiblePhases?: any;
+    educationBackground?: any;
+    careerSummary?: string;
+    specialSkills?: string;
+    isCompleted?: boolean;
+    [key: string]: unknown;
+  };
+  engineerProjects?: any[];
   [key: string]: unknown;
 }
 
@@ -118,29 +133,140 @@ const EngineerDetail: React.FC = () => {
 
   useEffect(() => {
     if (engineerData) {
-      // スキル情報を整形
-      if (engineerData.skills && Array.isArray(engineerData.skills)) {
-        const formattedSkills = engineerData.skills.map((skill: any, index: number) => ({
-          key: String(index + 1),
-          category: skill.category || 'その他',
-          name: skill.name || skill.skillName || '不明',
-          level: skill.level || 3,
-          experience: skill.experience || skill.years || '-',
-          lastUsed: skill.lastUsed || '-',
-        }));
-        setSkills(formattedSkills);
+      console.log("Processing engineer data:", engineerData);
+      console.log("SkillSheet data:", engineerData.skillSheet);
+      
+      // スキルシートからプログラミング言語、フレームワーク、データベース等を整形してスキルとして表示
+      const allSkills: Skill[] = [];
+      let skillIndex = 1;
+      
+      // プログラミング言語
+      if (engineerData.skillSheet?.programmingLanguages) {
+        try {
+          const languages = engineerData.skillSheet.programmingLanguages;
+          if (Array.isArray(languages)) {
+            languages.forEach((lang: any) => {
+              allSkills.push({
+                key: String(skillIndex++),
+                category: 'プログラミング言語',
+                name: typeof lang === 'string' ? lang : (lang.name || lang),
+                level: lang.level || 3,
+                experience: lang.experience || lang.years || '-',
+                lastUsed: lang.lastUsed || '-',
+              });
+            });
+          }
+        } catch (error) {
+          console.error('プログラミング言語のパースエラー:', error);
+        }
       }
       
+      // フレームワーク
+      if (engineerData.skillSheet?.frameworks) {
+        try {
+          const frameworks = engineerData.skillSheet.frameworks;
+          if (Array.isArray(frameworks)) {
+            frameworks.forEach((fw: any) => {
+              allSkills.push({
+                key: String(skillIndex++),
+                category: 'フレームワーク',
+                name: typeof fw === 'string' ? fw : (fw.name || fw),
+                level: fw.level || 3,
+                experience: fw.experience || fw.years || '-',
+                lastUsed: fw.lastUsed || '-',
+              });
+            });
+          }
+        } catch (error) {
+          console.error('フレームワークのパースエラー:', error);
+        }
+      }
+      
+      // データベース
+      if (engineerData.skillSheet?.databases) {
+        try {
+          const databases = engineerData.skillSheet.databases;
+          if (Array.isArray(databases)) {
+            databases.forEach((db: any) => {
+              allSkills.push({
+                key: String(skillIndex++),
+                category: 'データベース',
+                name: typeof db === 'string' ? db : (db.name || db),
+                level: db.level || 3,
+                experience: db.experience || db.years || '-',
+                lastUsed: db.lastUsed || '-',
+              });
+            });
+          }
+        } catch (error) {
+          console.error('データベースのパースエラー:', error);
+        }
+      }
+      
+      // クラウドサービス
+      if (engineerData.skillSheet?.cloudServices) {
+        try {
+          const cloudServices = engineerData.skillSheet.cloudServices;
+          if (Array.isArray(cloudServices)) {
+            cloudServices.forEach((cloud: any) => {
+              allSkills.push({
+                key: String(skillIndex++),
+                category: 'クラウド',
+                name: typeof cloud === 'string' ? cloud : (cloud.name || cloud),
+                level: cloud.level || 3,
+                experience: cloud.experience || cloud.years || '-',
+                lastUsed: cloud.lastUsed || '-',
+              });
+            });
+          }
+        } catch (error) {
+          console.error('クラウドサービスのパースエラー:', error);
+        }
+      }
+      
+      // ツール
+      if (engineerData.skillSheet?.tools) {
+        try {
+          const tools = engineerData.skillSheet.tools;
+          if (Array.isArray(tools)) {
+            tools.forEach((tool: any) => {
+              allSkills.push({
+                key: String(skillIndex++),
+                category: 'ツール',
+                name: typeof tool === 'string' ? tool : (tool.name || tool),
+                level: tool.level || 3,
+                experience: tool.experience || tool.years || '-',
+                lastUsed: tool.lastUsed || '-',
+              });
+            });
+          }
+        } catch (error) {
+          console.error('ツールのパースエラー:', error);
+        }
+      }
+      
+      setSkills(allSkills);
+      console.log("Formatted skills:", allSkills);
+      
       // 資格情報を整形
-      if (engineerData.certifications && Array.isArray(engineerData.certifications)) {
-        const formattedCerts = engineerData.certifications.map((cert: any, index: number) => ({
-          key: String(index + 1),
-          name: cert.name || cert.certificationName || '不明',
-          issuer: cert.issuer || '-',
-          date: cert.date || cert.acquisitionDate || '-',
-          expiryDate: cert.expiryDate,
-        }));
-        setCertifications(formattedCerts);
+      if (engineerData.skillSheet?.certifications) {
+        try {
+          const certsData = engineerData.skillSheet.certifications;
+          
+          if (Array.isArray(certsData)) {
+            const formattedCerts = certsData.map((cert: any, index: number) => ({
+              key: String(index + 1),
+              name: typeof cert === 'string' ? cert : (cert.name || cert.certificationName || cert || '不明'),
+              issuer: cert.issuer || '-',
+              date: cert.date || cert.acquisitionDate || '-',
+              expiryDate: cert.expiryDate,
+            }));
+            setCertifications(formattedCerts);
+            console.log("Formatted certifications:", formattedCerts);
+          }
+        } catch (error) {
+          console.error('資格情報のパースエラー:', error);
+        }
       }
       
       // プロジェクト履歴を整形（engineerDataから取得）
@@ -149,13 +275,14 @@ const EngineerDetail: React.FC = () => {
           key: String(index + 1),
           projectName: ep.project?.name || '不明',
           client: ep.project?.clientCompany || '不明',
-          period: `${ep.startDate || ''} - ${ep.endDate || '現在'}`,
+          period: `${ep.startDate || ep.project?.startDate || ''} - ${ep.endDate || ep.project?.endDate || '現在'}`,
           role: ep.role || '不明',
-          technologies: ep.technologies || [],
-          teamSize: ep.teamSize || 0,
-          description: ep.description || '',
+          technologies: ep.technologies || ep.skills || [],
+          teamSize: ep.teamSize || ep.project?.teamSize || 0,
+          description: ep.description || ep.project?.description || '',
         }));
         setProjectHistory(formattedProjects);
+        console.log("Formatted projects:", formattedProjects);
       }
     }
   }, [engineerData]);
@@ -167,19 +294,6 @@ const EngineerDetail: React.FC = () => {
       message.error('データの取得に失敗しました');
     }
   }, [error]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'available':
-        return 'green';
-      case 'working':
-        return 'blue';
-      case 'pending':
-        return 'orange';
-      default:
-        return 'default';
-    }
-  };
 
   const getStatusText = (status: string) => {
     switch (status) {
