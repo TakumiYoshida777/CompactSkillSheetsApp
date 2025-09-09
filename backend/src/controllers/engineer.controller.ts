@@ -71,7 +71,9 @@ export class EngineerController {
         throw new AppError('エンジニアが見つかりません', 404);
       }
       
-      res.json(ApiResponse.success(engineer));
+      // BigIntをシリアライズ
+      const serializedEngineer = serializeBigInt(engineer);
+      res.json(ApiResponse.success(serializedEngineer));
     } catch (error) {
       next(error);
     }
