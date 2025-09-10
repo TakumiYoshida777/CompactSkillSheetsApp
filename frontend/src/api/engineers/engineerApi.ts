@@ -204,6 +204,16 @@ export const engineerApi = {
       data: { engineerIds },
     });
   },
+
+  /**
+   * メールアドレスの重複チェック
+   */
+  async checkEmail(email: string): Promise<{ available: boolean }> {
+    const response = await axios.get(`${API_BASE}/check-email`, {
+      params: { email }
+    });
+    return response.data;
+  },
 };
 
 /**
@@ -214,7 +224,7 @@ export const engineerSearchApi = {
    * 高度な検索
    */
   async search(params: any) {
-    const response = await axios.post('v1/search/engineers', params);
+    const response = await axios.post('/v1/search/engineers', params);
     return response.data;
   },
 

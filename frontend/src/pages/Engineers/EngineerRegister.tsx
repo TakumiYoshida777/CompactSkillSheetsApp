@@ -44,7 +44,6 @@ import type { FormSubmitHandler } from '../../types/event.types';
 import { isAxiosError, getErrorMessage } from '../../types/error.types';
 import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import debounce from 'lodash/debounce';
-import axios from '../../lib/axios';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -171,11 +170,9 @@ const EngineerRegister: React.FC = () => {
 
     setEmailChecking(true);
     try {
-      const response = await axios.get(`/api/v1/engineers/check-email`, {
-        params: { email }
-      });
-      setEmailAvailable(response.data.available);
-      if (!response.data.available) {
+      const response = await engineerApi.checkEmail(email);
+      setEmailAvailable(response.available);
+      if (!response.available) {
         form.setFields([
           {
             name: 'email',
