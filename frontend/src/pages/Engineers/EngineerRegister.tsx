@@ -342,7 +342,7 @@ const EngineerRegister: React.FC = () => {
           .map(s => ({ name: s.name, level: s.level, experience: s.experience })),
       };
       
-      await axios.put(`/api/v1/engineers/${engineerId}/skill-sheet`, skillData);
+      await engineerApi.updateSkillSheet(engineerId, skillData);
     } catch (error) {
       errorLog('Failed to update skills:', error);
       throw error;
@@ -362,7 +362,7 @@ const EngineerRegister: React.FC = () => {
 
   const updateAdditionalInfo = async (engineerId: string, info: AdditionalInfo) => {
     try {
-      await axios.patch(`/api/v1/engineers/${engineerId}`, info);
+      await engineerApi.updatePartial(engineerId, info);
     } catch (error) {
       errorLog('Failed to update additional info:', error);
       // エラーは握りつぶす（メインの登録は成功しているため）

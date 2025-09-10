@@ -146,6 +146,13 @@ export const engineerApi = {
   },
 
   /**
+   * スキルシート更新
+   */
+  async updateSkillSheet(engineerId: string, skillData: any): Promise<void> {
+    await axios.put(`${API_BASE}/${engineerId}/skill-sheet`, skillData);
+  },
+
+  /**
    * プロフィール画像アップロード
    */
   async uploadProfileImage(engineerId: string, file: File): Promise<{ url: string }> {
