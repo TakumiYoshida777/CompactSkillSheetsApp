@@ -190,7 +190,7 @@ const MainLayout: React.FC = () => {
         placement="left"
         onClose={() => setMobileMenuOpen(false)}
         open={mobileMenuOpen}
-        bodyStyle={{ padding: 0 }}
+        styles={{ body: { padding: 0 } }}
         width={280}
         className="md:hidden"
       >

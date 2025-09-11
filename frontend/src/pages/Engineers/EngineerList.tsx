@@ -305,7 +305,8 @@ const EngineerList: React.FC = () => {
       
       {isLoading ? (
         <div style={{ textAlign: 'center', padding: '100px 0' }}>
-          <Spin size="large" tip="データを読み込み中..." />
+          <Spin size="large" />
+          <div style={{ marginTop: 8 }}>データを読み込み中...</div>
         </div>
       ) : (
         <EngineerSearchTable

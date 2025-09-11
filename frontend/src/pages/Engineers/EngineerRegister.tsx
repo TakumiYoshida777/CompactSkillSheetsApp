@@ -922,20 +922,32 @@ const EngineerRegister: React.FC = () => {
             <Row gutter={[16, 16]}>
               <Col xs={24}>
                 <Form.Item
-                  name="resume"
                   label="履歴書"
+                  valuePropName="fileList"
+                  getValueFromEvent={(e) => {
+                    if (Array.isArray(e)) {
+                      return e;
+                    }
+                    return e?.fileList;
+                  }}
                 >
-                  <Upload {...uploadProps}>
+                  <Upload {...uploadProps} fileList={[]}>
                     <Button icon={<UploadOutlined />}>履歴書をアップロード</Button>
                   </Upload>
                 </Form.Item>
               </Col>
               <Col xs={24}>
                 <Form.Item
-                  name="skillSheet"
                   label="スキルシート"
+                  valuePropName="fileList"
+                  getValueFromEvent={(e) => {
+                    if (Array.isArray(e)) {
+                      return e;
+                    }
+                    return e?.fileList;
+                  }}
                 >
-                  <Upload {...uploadProps}>
+                  <Upload {...uploadProps} fileList={[]}>
                     <Button icon={<UploadOutlined />}>スキルシートをアップロード</Button>
                   </Upload>
                 </Form.Item>
