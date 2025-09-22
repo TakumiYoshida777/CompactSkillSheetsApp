@@ -8,6 +8,7 @@ import logger from './config/logger';
 import { errorLog } from './utils/logger';
 import { morganMiddleware, responseTimeMiddleware } from './middleware/httpLogger';
 import { generalRateLimiter, loginRateLimiter } from './middleware/rateLimiter';
+import { debugRequestLogger, errorTracker } from './middleware/debug.middleware';
 import authRoutes from './routes/authRoutes';
 import companyRoutes from './routes/companyRoutes';
 import engineerAuthRoutes from './routes/engineer/authRoutes';
@@ -63,8 +64,18 @@ app.use(compression());
 app.use(responseTimeMiddleware);
 app.use(morganMiddleware);
 
+// デバッグログミドルウェア（開発環境のみ）
+if (process.env.NODE_ENV === 'development') {
+  app.use(debugRequestLogger);
+}
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// BigIntを文字列としてシリアライズする設定（JSONでBigIntを安全に扱う）
+app.set('json replacer', (_key: string, value: any) => 
+  typeof value === 'bigint' ? value.toString() : value
+);
 
 // ヘルスチェックエンドポイント（レート制限なし）
 app.get('/health', (_req, res) => {
@@ -130,22 +141,46 @@ app.use('/api/v1/notifications', notificationsRoutes);
 // v1 API統合ルート
 app.use('/api/v1', v1Routes);
 
-// エラーハンドリングミドルウェア
+// エラートラッキングミドルウェア
+app.use(errorTracker);
+
+// 統一エラーハンドリングミドルウェア（最後に配置）
 app.use((err: any, req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  logger.error('エラーが発生しました', {
-    error: err.stack || err.message,
+  const status = err?.status || err?.statusCode || 500;
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  // 構造化ログ出力
+  logger.error('[ERROR]', {
+    status,
+    message: err.message,
+    code: err.code,
+    stack: err.stack,
     method: req.method,
     url: req.url,
     body: req.body,
-    query: req.query
+    query: req.query,
+    meta: err.meta
   });
-  
-  res.status(err.status || 500).json({
+
+  // レスポンス構築
+  const payload: any = {
     error: {
-      message: err.message || 'Internal Server Error',
-      status: err.status || 500
+      message: status >= 500 && !isDevelopment 
+        ? '予期しないエラーが発生しました' 
+        : err.message || 'エラーが発生しました',
+      code: err?.code || 'INTERNAL_ERROR',
+      status
     }
-  });
+  };
+
+  // 開発環境では詳細情報を含める
+  if (isDevelopment) {
+    payload.error.stack = err.stack;
+    payload.error.meta = err.meta || undefined;
+    payload.error.details = err.details || undefined;
+  }
+
+  res.status(status).json(payload);
 });
 
 // サーバー起動

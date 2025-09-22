@@ -62,12 +62,34 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  // ログ出力（開発環境のみ詳細表示）
-  if (config.env === 'development') {
-    errorLog('Error:', err);
-  } else {
-    errorLog('Error:', err.message);
-  }
+  // ログ出力（エラー詳細とスタックトレースを含む）
+  errorLog('リクエストエラー発生:', {
+    method: req.method,
+    url: req.url,
+    params: req.params,
+    query: req.query,
+    body: req.body,
+    headers: {
+      contentType: req.headers['content-type'],
+      userAgent: req.headers['user-agent']
+    },
+    error: {
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+      code: err instanceof PrismaClientKnownRequestError ? err.code : 
+            err instanceof AppError ? err.code : undefined,
+      statusCode: err instanceof AppError ? err.statusCode : undefined,
+      details: err instanceof AppError ? err.details : undefined,
+      // Prismaエラーの詳細
+      prismaCode: err instanceof PrismaClientKnownRequestError ? err.code : undefined,
+      prismaMeta: err instanceof PrismaClientKnownRequestError ? err.meta : undefined,
+      // その他のエラー情報
+      fullError: JSON.stringify(err, Object.getOwnPropertyNames(err))
+    },
+    timestamp: new Date().toISOString(),
+    companyId: req.companyId
+  });
   
   // AppErrorの場合
   if (err instanceof AppError) {

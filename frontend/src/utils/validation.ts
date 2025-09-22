@@ -253,53 +253,101 @@ interface EngineerCreateData {
   email?: string
   phone?: string
   engineerType?: string
+  status?: string
+  currentStatus?: string
+  githubUrl?: string
+  portfolioUrl?: string
+  gender?: string
+  yearsOfExperience?: number
   skills?: Array<{ name: string; level: number }>
+  [key: string]: any
 }
 
 export const validateEngineerCreateRequest = (data: EngineerCreateData): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
+  console.log("=== Starting validation ===");
+  console.log("Input data:", data);
+
   // 必須フィールドのチェック
-  if (!data.name || data.name.trim() === '') {
+  console.log("Checking name:", data.name);
+  if (!data.name || data.name.trim() === '' || data.name === 'undefined undefined') {
     errors.push('名前は必須です');
+    console.log("Name validation failed");
   }
 
+  console.log("Checking email:", data.email);
   if (!data.email || data.email.trim() === '') {
     errors.push('メールアドレスは必須です');
+    console.log("Email is required - failed");
   } else if (!validateEmail(data.email)) {
     errors.push('有効なメールアドレスを入力してください');
+    console.log("Email format validation failed");
   }
 
+  console.log("Checking engineerType:", data.engineerType);
   if (!data.engineerType) {
     errors.push('エンジニアタイプは必須です');
-  } else if (!['employee', 'partner', 'freelance'].includes(data.engineerType)) {
+    console.log("EngineerType is required - failed");
+  } else if (!['EMPLOYEE', 'FREELANCE'].includes(data.engineerType)) {
     errors.push('有効なエンジニアタイプを選択してください');
+    console.log("EngineerType validation failed - got:", data.engineerType);
   }
 
   // オプションフィールドのチェック
-  if (data.phone && !validatePhoneNumber(data.phone)) {
-    errors.push('有効な電話番号を入力してください');
+  if (data.phone) {
+    console.log("Checking phone:", data.phone);
+    if (!validatePhoneNumber(data.phone)) {
+      errors.push('有効な電話番号を入力してください');
+      console.log("Phone validation failed");
+    }
   }
 
-  if (data.githubUrl && !validateUrl(data.githubUrl)) {
-    errors.push('有効なGitHub URLを入力してください');
+  if (data.githubUrl) {
+    console.log("Checking githubUrl:", data.githubUrl);
+    if (!validateUrl(data.githubUrl)) {
+      errors.push('有効なGitHub URLを入力してください');
+      console.log("GitHub URL validation failed");
+    }
   }
 
-  if (data.portfolioUrl && !validateUrl(data.portfolioUrl)) {
-    errors.push('有効なポートフォリオURLを入力してください');
+  if (data.portfolioUrl) {
+    console.log("Checking portfolioUrl:", data.portfolioUrl);
+    if (!validateUrl(data.portfolioUrl)) {
+      errors.push('有効なポートフォリオURLを入力してください');
+      console.log("Portfolio URL validation failed");
+    }
   }
 
-  if (data.currentStatus && !['working', 'waiting', 'waiting_soon', 'leaving'].includes(data.currentStatus)) {
-    errors.push('有効なステータスを選択してください');
+  // statusフィールドはオプションなので、存在する場合のみチェック
+  const statusValue = data.status || data.currentStatus;
+  if (statusValue) {
+    console.log("Checking status:", statusValue);
+    if (!['WORKING', 'WAITING', 'WAITING_SOON'].includes(statusValue)) {
+      errors.push('有効なステータスを選択してください');
+      console.log("Status validation failed - got:", statusValue);
+    }
   }
 
-  if (data.gender && !['male', 'female', 'other'].includes(data.gender)) {
-    errors.push('有効な性別を選択してください');
+  if (data.gender) {
+    console.log("Checking gender:", data.gender);
+    if (!['male', 'female', 'other'].includes(data.gender)) {
+      errors.push('有効な性別を選択してください');
+      console.log("Gender validation failed - got:", data.gender);
+    }
   }
 
-  if (data.yearsOfExperience !== undefined && data.yearsOfExperience < 0) {
-    errors.push('経験年数は0以上で入力してください');
+  if (data.yearsOfExperience !== undefined) {
+    console.log("Checking yearsOfExperience:", data.yearsOfExperience);
+    if (data.yearsOfExperience < 0) {
+      errors.push('経験年数は0以上で入力してください');
+      console.log("Years of experience validation failed");
+    }
   }
+
+  console.log("=== Validation complete ===");
+  console.log("data",data)
+  console.log("errors",errors)
 
   return {
     isValid: errors.length === 0,

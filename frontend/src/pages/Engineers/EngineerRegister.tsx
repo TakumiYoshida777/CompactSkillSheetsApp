@@ -16,7 +16,6 @@ import {
   Typography,
   Divider,
   Alert,
-  Tag,
   Steps,
   message,
   Descriptions,
@@ -27,8 +26,6 @@ import {
   MailOutlined,
   PhoneOutlined,
   HomeOutlined,
-  PlusOutlined,
-  DeleteOutlined,
   SaveOutlined,
   ArrowLeftOutlined,
   UploadOutlined,
@@ -37,11 +34,10 @@ import {
 import { useNavigate } from 'react-router-dom';
 import type { UploadProps, UploadFile } from 'antd';
 import dayjs from 'dayjs';
+import { useCreateEngineer } from '../../hooks/useEngineers';
 import { engineerApi } from '../../api/engineers/engineerApi';
 import { useAuthStore } from '../../stores/authStore';
 import type { EngineerCreateRequest, EngineerStatus } from '../../types/engineer';
-import type { FormSubmitHandler } from '../../types/event.types';
-import { isAxiosError, getErrorMessage } from '../../types/error.types';
 import { usePermissionCheck } from '../../hooks/usePermissionCheck';
 import debounce from 'lodash/debounce';
 
@@ -49,23 +45,16 @@ const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
-interface SkillItem {
-  name: string;
-  level: number;
-  experience: number;
-}
-
 const EngineerRegister: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { canCreateEngineer } = usePermissionCheck();
+  const createEngineerMutation = useCreateEngineer();
   const [currentStep, setCurrentStep] = useState(0);
-  const [skills, setSkills] = useState<SkillItem[]>([]);
-  const [loading, setLoading] = useState(false);
   const [emailChecking, setEmailChecking] = useState(false);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
-  const [uploadedFiles, setUploadedFiles] = useState<{resume?: UploadFile, skillSheet?: UploadFile}>({});
+  const [uploadedFiles] = useState<{resume?: UploadFile, skillSheet?: UploadFile}>({});
 
   // 権限チェック
   useEffect(() => {
@@ -75,15 +64,6 @@ const EngineerRegister: React.FC = () => {
       navigate('/dashboard');
     }
   }, [user, navigate, canCreateEngineer]);
-
-  // スキルレベルの選択肢
-  const skillLevels = [
-    { value: 1, label: '初級' },
-    { value: 2, label: '中級' },
-    { value: 3, label: '上級' },
-    { value: 4, label: 'エキスパート' },
-    { value: 5, label: 'マスター' },
-  ];
 
   // 契約形態の選択肢
   const contractTypes = [
@@ -121,29 +101,6 @@ const EngineerRegister: React.FC = () => {
       description: '登録内容確認',
     },
   ];
-
-  // スキル追加
-  const handleAddSkill = () => {
-    const newSkill: SkillItem = {
-      name: '',
-      level: 3,
-      experience: 1,
-    };
-    setSkills([...skills, newSkill]);
-  };
-
-  // スキル削除
-  const handleRemoveSkill = (index: number) => {
-    const newSkills = skills.filter((_, i) => i !== index);
-    setSkills(newSkills);
-  };
-
-  // スキル更新
-  const handleSkillChange = (index: number, field: keyof SkillItem, value: string | number) => {
-    const newSkills = [...skills];
-    newSkills[index] = { ...newSkills[index], [field]: value };
-    setSkills(newSkills);
-  };
 
   // ファイルアップロード設定
   const uploadProps: UploadProps = {
@@ -208,6 +165,15 @@ const EngineerRegister: React.FC = () => {
     contractPrice?: number;
     contractPeriod?: number;
     workLocation?: string;
+    workTime?: string;
+    currentProject?: string;
+    projectEndDate?: dayjs.Dayjs;
+    notes?: string;
+    isPublic?: boolean;
+    totalExperience?: number;
+    selfPR?: string;
+    availableRoles?: string[];
+    availablePhases?: string[];
     japanese?: string;
     english?: string;
     chinese?: string;
@@ -217,35 +183,28 @@ const EngineerRegister: React.FC = () => {
     remarks?: string;
   }
 
-  const handleSubmit: FormSubmitHandler<EngineerFormValues> = async (values) => {
-    // メールアドレスが利用不可の場合は送信しない
-    if (emailAvailable === false) {
-      message.error('メールアドレスが既に使用されています');
-      return;
-    }
-
-    // スキルが0件の場合は警告
-    if (skills.length === 0) {
-      const confirmed = await new Promise((resolve) => {
-        message.warning({
-          content: 'スキル情報が登録されていません。このまま登録しますか？',
-          duration: 0,
-          key: 'skill-warning',
-          onClick: () => {
-            message.destroy('skill-warning');
-            resolve(true);
-          },
-        });
-        setTimeout(() => {
-          message.destroy('skill-warning');
-          resolve(false);
-        }, 5000);
-      });
-      if (!confirmed) return;
-    }
-
-    setLoading(true);
+  const handleSubmit = async () => {
     try {
+      // フォームの全ての値を取得（バリデーションは各ステップで実施済み）
+      const values = form.getFieldsValue(true) as EngineerFormValues;
+      console.log('Form values for submission:', values);
+
+      // 必須フィールドのチェック
+      if (!values.lastName || !values.firstName) {
+        message.error('氏名を入力してください');
+        return;
+      }
+      if (!values.email) {
+        message.error('メールアドレスを入力してください');
+        return;
+      }
+
+      // メールアドレスが利用不可の場合は送信しない
+      if (emailAvailable === false) {
+        message.error('メールアドレスが既に使用されています');
+        return;
+      }
+
       // データ整形
       const engineerData: EngineerCreateRequest = {
         name: `${values.lastName} ${values.firstName}`,
@@ -254,9 +213,8 @@ const EngineerRegister: React.FC = () => {
           : undefined,
         email: values.email,
         phone: values.phone,
-        engineerType: values.contractType === 'フリーランス' ? 'freelance' : 
-                      values.contractType === '業務委託' ? 'partner' : 'employee',
-        currentStatus: mapStatusToEnum(values.status),
+        engineerType: values.contractType === 'フリーランス' ? 'FREELANCE' : 'EMPLOYEE',
+        status: mapStatusToEnum(values.status || 'waiting'),
         availableDate: values.availableDate?.format('YYYY-MM-DD'),
         nearestStation: values.nearestStation,
         birthDate: values.birthDate?.format('YYYY-MM-DD'),
@@ -264,17 +222,15 @@ const EngineerRegister: React.FC = () => {
         githubUrl: values.githubUrl,
         portfolioUrl: values.portfolioUrl,
         joinDate: values.joinDate?.format('YYYY-MM-DD'),
-        yearsOfExperience: values.totalExperience,
+        yearsOfExperience: values.totalExperience || 0,
         tags: [],
       };
 
-      // エンジニア登録
-      const engineer = await engineerApi.create(engineerData);
-
-      // スキル情報の登録
-      if (skills.length > 0 && engineer.id) {
-        await updateEngineerSkills(engineer.id, skills);
-      }
+      // エンジニア登録（TanStack Queryを使用）
+      console.log('Submitting engineer data:', engineerData);
+      const response = await createEngineerMutation.mutateAsync(engineerData);
+      console.log('Response from server:', response);
+      const engineer = response.data;
 
       // 追加情報の更新（自己PR、対応可能ロール等）
       if (values.selfPR || values.availableRoles || values.availablePhases) {
@@ -304,53 +260,41 @@ const EngineerRegister: React.FC = () => {
       // 詳細画面へ遷移
       navigate(`/engineers/${engineer.id}`);
     } catch (error) {
-      errorLog('Registration failed:', error);
-      const errorMessage = getErrorMessage(error);
-      message.error(errorMessage);
-    } finally {
-      setLoading(false);
+      console.error('Registration error:', error);
+      // バリデーションエラーの場合はメッセージを表示
+      const err = error as any;
+      if (err?.errorFields) {
+        message.error('必須項目を入力してください');
+      } else {
+        errorLog('Registration failed:', error);
+        // TanStack Queryのエラーハンドリングがあるため、重複しないようにする
+      }
     }
   };
 
-  // ステータスのマッピング
+  // ステータスのマッピング（バックエンドのEnum値に合わせて大文字に変換）
   const mapStatusToEnum = (status: string): EngineerStatus => {
     const statusMap: Record<string, EngineerStatus> = {
-      'available': 'waiting',
-      'assigned': 'working',
-      'waiting': 'waiting',
-      'waiting_scheduled': 'waiting_soon',
-      'leave': 'leaving',
+      'available': 'WAITING',
+      'assigned': 'WORKING',
+      'waiting': 'WAITING',
+      'waiting_scheduled': 'WAITING_SOON',
+      'leave': 'WAITING',  // leavingはバックエンドに存在しないためWAITINGにマップ
     };
-    return statusMap[status] || 'waiting';
-  };
-
-  // スキル情報の更新
-  const updateEngineerSkills = async (engineerId: string, skillList: SkillItem[]) => {
-    try {
-      const skillData = {
-        programmingLanguages: skillList
-          .filter(s => s.name && isLanguage(s.name))
-          .map(s => ({ name: s.name, level: s.level, experience: s.experience })),
-        frameworks: skillList
-          .filter(s => s.name && isFramework(s.name))
-          .map(s => ({ name: s.name, level: s.level, experience: s.experience })),
-        databases: skillList
-          .filter(s => s.name && isDatabase(s.name))
-          .map(s => ({ name: s.name, level: s.level, experience: s.experience })),
-        tools: skillList
-          .filter(s => s.name && !isLanguage(s.name) && !isFramework(s.name) && !isDatabase(s.name))
-          .map(s => ({ name: s.name, level: s.level, experience: s.experience })),
-      };
-      
-      await engineerApi.updateSkillSheet(engineerId, skillData);
-    } catch (error) {
-      errorLog('Failed to update skills:', error);
-      throw error;
-    }
+    return statusMap[status] || 'WAITING';
   };
 
   // 追加情報の更新
   interface AdditionalInfo {
+    selfPR?: string;
+    availableRoles?: string[];
+    availablePhases?: string[];
+    workLocation?: string;
+    workTime?: string;
+    currentProject?: string;
+    projectEndDate?: string;
+    notes?: string;
+    isPublic?: boolean;
     japanese?: string;
     english?: string;
     chinese?: string;
@@ -362,7 +306,9 @@ const EngineerRegister: React.FC = () => {
 
   const updateAdditionalInfo = async (engineerId: string, info: AdditionalInfo) => {
     try {
-      await engineerApi.updatePartial(engineerId, info);
+      // TODO: APIエンドポイントが実装されたら有効化
+      // await engineerApi.updatePartial(engineerId, info);
+      console.log('Additional info update:', engineerId, info);
     } catch (error) {
       errorLog('Failed to update additional info:', error);
       // エラーは握りつぶす（メインの登録は成功しているため）
@@ -376,45 +322,13 @@ const EngineerRegister: React.FC = () => {
   }
 
   const uploadDocuments = async (engineerId: string, files: DocumentFiles) => {
-    const promises = [];
-    if (files.resume) {
-      promises.push(
-        axios.post(`/api/v1/engineers/${engineerId}/documents`, {
-          type: 'resume',
-          file: files.resume,
-        })
-      );
-    }
-    if (files.skillSheet) {
-      promises.push(
-        axios.post(`/api/v1/engineers/${engineerId}/documents`, {
-          type: 'skill_sheet',
-          file: files.skillSheet,
-        })
-      );
-    }
     try {
-      await Promise.all(promises);
+      // TODO: ファイルアップロード処理の実装
+      console.log('Document upload:', engineerId, files);
     } catch (error) {
       errorLog('Failed to upload documents:', error);
       // エラーは握りつぶす
     }
-  };
-
-  // スキル分類ヘルパー関数
-  const isLanguage = (skill: string): boolean => {
-    const languages = ['JavaScript', 'TypeScript', 'Python', 'Java', 'C#', 'C++', 'Go', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'Rust', 'Scala'];
-    return languages.some(lang => skill.toLowerCase().includes(lang.toLowerCase()));
-  };
-
-  const isFramework = (skill: string): boolean => {
-    const frameworks = ['React', 'Vue', 'Angular', 'Next.js', 'Nuxt', 'Express', 'Django', 'Flask', 'Spring', 'Rails', 'Laravel', '.NET'];
-    return frameworks.some(fw => skill.toLowerCase().includes(fw.toLowerCase()));
-  };
-
-  const isDatabase = (skill: string): boolean => {
-    const databases = ['MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Oracle', 'SQL Server', 'DynamoDB', 'Elasticsearch'];
-    return databases.some(db => skill.toLowerCase().includes(db.toLowerCase()));
   };
 
   // フォームデータの一時保存（localStorage）
@@ -422,7 +336,6 @@ const EngineerRegister: React.FC = () => {
     const formData = form.getFieldsValue();
     const draft = {
       formData,
-      skills,
       currentStep,
       savedAt: new Date().toISOString(),
     };
@@ -442,35 +355,36 @@ const EngineerRegister: React.FC = () => {
         // 24時間以内のデータのみ復元
         if (hoursSince < 24) {
           message.info({
-            content: '前回の入力内容を復元しますか？',
+            content: (
+              <div>
+                <div>前回の入力内容を復元しますか？</div>
+                <Space style={{ marginTop: 8 }}>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      message.destroy('restore-draft');
+                      localStorage.removeItem('engineer_register_draft');
+                    }}
+                  >
+                    破棄
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="small"
+                    onClick={() => {
+                      form.setFieldsValue(parsed.formData);
+                      setCurrentStep(parsed.currentStep || 0);
+                      message.destroy('restore-draft');
+                      message.success('入力内容を復元しました');
+                    }}
+                  >
+                    復元
+                  </Button>
+                </Space>
+              </div>
+            ),
             duration: 0,
             key: 'restore-draft',
-            btn: (
-              <Space>
-                <Button 
-                  size="small" 
-                  onClick={() => {
-                    message.destroy('restore-draft');
-                    localStorage.removeItem('engineer_register_draft');
-                  }}
-                >
-                  破棄
-                </Button>
-                <Button 
-                  type="primary" 
-                  size="small"
-                  onClick={() => {
-                    form.setFieldsValue(parsed.formData);
-                    setSkills(parsed.skills || []);
-                    setCurrentStep(parsed.currentStep || 0);
-                    message.destroy('restore-draft');
-                    message.success('入力内容を復元しました');
-                  }}
-                >
-                  復元
-                </Button>
-              </Space>
-            ),
           });
         } else {
           // 24時間以上経過したデータは削除
@@ -659,82 +573,6 @@ const EngineerRegister: React.FC = () => {
               </Col>
             </Row>
 
-            <Divider />
-            
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <Title level={5}>技術スキル</Title>
-                <Button
-                  type="dashed"
-                  icon={<PlusOutlined />}
-                  onClick={handleAddSkill}
-                >
-                  スキル追加
-                </Button>
-              </div>
-              
-              {skills.length === 0 ? (
-                <Alert
-                  message="スキルが登録されていません"
-                  description="「スキル追加」ボタンからスキルを追加してください"
-                  type="info"
-                  showIcon
-                />
-              ) : (
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  {skills.map((skill, index) => (
-                    <Card key={index} size="small">
-                      <Row gutter={[16, 16]} align="middle">
-                        <Col xs={24} sm={8}>
-                          <Input
-                            placeholder="スキル名（例: JavaScript）"
-                            value={skill.name}
-                            onChange={(e) => handleSkillChange(index, 'name', e.target.value)}
-                          />
-                        </Col>
-                        <Col xs={24} sm={6}>
-                          <Select
-                            style={{ width: '100%' }}
-                            placeholder="レベル"
-                            value={skill.level}
-                            onChange={(value) => handleSkillChange(index, 'level', value)}
-                          >
-                            {skillLevels.map((level) => (
-                              <Option key={level.value} value={level.value}>
-                                {level.label}
-                              </Option>
-                            ))}
-                          </Select>
-                        </Col>
-                        <Col xs={24} sm={6}>
-                          <InputNumber
-                            style={{ width: '100%' }}
-                            min={0}
-                            max={50}
-                            placeholder="経験年数"
-                            value={skill.experience}
-                            onChange={(value) => handleSkillChange(index, 'experience', value)}
-                            suffix="年"
-                          />
-                        </Col>
-                        <Col xs={24} sm={4}>
-                          <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            onClick={() => handleRemoveSkill(index)}
-                          >
-                            削除
-                          </Button>
-                        </Col>
-                      </Row>
-                    </Card>
-                  ))}
-                </Space>
-              )}
-            </div>
-
-            <Divider />
 
             <Row gutter={[16, 16]}>
               <Col xs={24}>
@@ -973,11 +811,9 @@ const EngineerRegister: React.FC = () => {
                   name="isPublic"
                   label="公開設定"
                   valuePropName="checked"
+                  extra="取引先企業への情報公開"
                 >
                   <Switch checkedChildren="公開" unCheckedChildren="非公開" />
-                  <Text type="secondary" className="ml-2">
-                    取引先企業への情報公開
-                  </Text>
                 </Form.Item>
               </Col>
             </Row>
@@ -1029,18 +865,6 @@ const EngineerRegister: React.FC = () => {
                   {form.getFieldValue('selfPR')}
                 </Descriptions.Item>
               </Descriptions>
-              {skills.length > 0 && (
-                <div className="mt-4">
-                  <Text strong>技術スキル：</Text>
-                  <div className="mt-2">
-                    {skills.map((skill, index) => (
-                      <Tag key={index} color="blue">
-                        {skill.name} (Lv.{skill.level}, {skill.experience}年)
-                      </Tag>
-                    ))}
-                  </div>
-                </div>
-              )}
             </Card>
 
             <Card title="契約・稼働情報">
@@ -1106,7 +930,7 @@ const EngineerRegister: React.FC = () => {
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={() => {
-              if (skills.length > 0 || form.getFieldsValue().email) {
+              if (form.getFieldsValue().email) {
                 saveDraft();
               }
               navigate('engineers/list');
@@ -1138,7 +962,6 @@ const EngineerRegister: React.FC = () => {
         <Form
           form={form}
           layout="vertical"
-          onFinish={handleSubmit}
           autoComplete="off"
         >
           {renderStepContent()}
@@ -1162,7 +985,6 @@ const EngineerRegister: React.FC = () => {
                   size="large"
                   onClick={() => {
                     form.resetFields();
-                    setSkills([]);
                     setCurrentStep(0);
                   }}
                 >
@@ -1178,7 +1000,7 @@ const EngineerRegister: React.FC = () => {
                         .then(() => {
                           setCurrentStep(currentStep + 1);
                         })
-                        .catch((info) => {
+                        .catch(() => {
                         });
                     }}
                   >
@@ -1189,8 +1011,8 @@ const EngineerRegister: React.FC = () => {
                     type="primary"
                     size="large"
                     icon={<SaveOutlined />}
-                    htmlType="submit"
-                    loading={loading}
+                    onClick={handleSubmit}
+                    loading={createEngineerMutation.isPending}
                   >
                     登録する
                   </Button>

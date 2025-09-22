@@ -3,6 +3,7 @@ import { EngineerService } from '../services/engineer.service';
 import { ApiResponse } from '../utils/response.util';
 import { AppError } from '../utils/error.handler';
 import { serializeBigInt } from '../utils/bigint.serializer';
+import { logger } from '../utils/logger';
 
 export class EngineerController {
   private service: EngineerService;
@@ -82,9 +83,27 @@ export class EngineerController {
   // エンジニア作成
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      logger.info('エンジニア登録開始', {
+        companyId: req.companyId,
+        email: req.body.email,
+        name: req.body.name
+      });
+      
       const engineer = await this.service.create(req.body, req.companyId!);
+      
+      logger.info('エンジニア登録成功', {
+        engineerId: engineer.id,
+        email: engineer.email
+      });
+      
       res.status(201).json(ApiResponse.success(engineer, 'エンジニアを登録しました'));
     } catch (error) {
+      logger.error('エンジニア登録エラー', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        requestBody: req.body,
+        companyId: req.companyId
+      });
       next(error);
     }
   };

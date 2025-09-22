@@ -46,11 +46,13 @@ export const useCreateEngineer = () => {
 
   return useMutation({
     mutationFn: (data: EngineerCreateRequest) => engineerApi.create(data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['engineers'] });
-      message.success('エンジニアを登録しました');
+      console.log('Engineer created successfully in hook:', data);
+      // メッセージはEngineerRegisterコンポーネントで表示するためここでは表示しない
     },
     onError: (error) => {
+      console.error('Engineer creation error in hook:', error);
       message.error(getErrorMessage(error));
     },
   });

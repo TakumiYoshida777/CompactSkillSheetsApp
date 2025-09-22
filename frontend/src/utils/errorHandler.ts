@@ -112,6 +112,8 @@ export class ErrorHandler {
   // 一般的なエラーハンドリング
   static handleError(error: Error | unknown, level: ErrorLevel = ErrorLevel.ERROR) {
     errorLog('エラー:', error);
+    console.error("エラー",error)
+    console.log("えらー")
 
     const errorMessage = error instanceof Error ? error.message : '予期しないエラーが発生しました';
 

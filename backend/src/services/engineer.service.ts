@@ -188,27 +188,52 @@ export class EngineerService {
   
   async create(data: any, companyId: number | string) {
     try {
+      // 入力データの詳細ログ
+      logger.info('エンジニア作成処理開始', {
+        companyId,
+        inputData: {
+          name: data.name,
+          email: data.email,
+          engineerType: data.engineerType,
+          status: data.status,
+          isPublic: data.isPublic
+        }
+      });
+
       const engineer = await this.prisma.$transaction(async (prisma) => {
         // エンジニア作成
+        const createData = {
+          companyId: BigInt(typeof companyId === 'string' ? parseInt(companyId.match(/\d+/)?.[0] || '1', 10) : companyId),
+          name: data.name,
+          nameKana: data.nameKana,
+          email: data.email,
+          phone: data.phone,
+          birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
+          gender: data.gender,
+          nearestStation: data.nearestStation,
+          githubUrl: data.githubUrl,
+          engineerType: data.engineerType || 'EMPLOYEE',
+          currentStatus: data.status || 'WAITING',
+          availableDate: data.availableDate ? new Date(data.availableDate) : undefined,
+          isPublic: data.isPublic !== undefined ? data.isPublic : true,
+          userId: data.userId ? BigInt(data.userId) : undefined
+        };
+
+        logger.debug('Prismaエンジニア作成データ', {
+          engineerType: createData.engineerType,
+          currentStatus: createData.currentStatus,
+          isPublic: createData.isPublic
+        });
+
         const newEngineer = await prisma.engineer.create({
-          data: {
-            companyId: BigInt(typeof companyId === 'string' ? parseInt(companyId.match(/\d+/)?.[0] || '1', 10) : companyId),
-            name: data.name,
-            nameKana: data.nameKana,
-            email: data.email,
-            phone: data.phone,
-            birthDate: data.birthDate ? new Date(data.birthDate) : undefined,
-            gender: data.gender,
-            nearestStation: data.nearestStation,
-            githubUrl: data.githubUrl,
-            engineerType: data.engineerType || 'EMPLOYEE',
-            currentStatus: data.status || 'WAITING',
-            availableDate: data.availableDate ? new Date(data.availableDate) : undefined,
-            isPublic: data.isPublic !== undefined ? data.isPublic : true,
-            userId: data.userId ? BigInt(data.userId) : undefined
-          }
+          data: createData
         });
         
+        logger.info('エンジニア作成成功', {
+          engineerId: newEngineer.id.toString(),
+          email: newEngineer.email
+        });
+
         // スキルシート初期化
         await prisma.skillSheet.create({
           data: {
@@ -218,12 +243,32 @@ export class EngineerService {
           }
         });
         
+        logger.debug('スキルシート初期化完了', {
+          engineerId: newEngineer.id.toString()
+        });
+
         return newEngineer;
       });
       
       return engineer;
     } catch (error) {
-      logger.error('エンジニア作成エラー:', error);
+      // エラーの詳細ログ
+      logger.error('エンジニア作成エラー:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        inputData: data,
+        companyId,
+        errorType: error?.constructor?.name,
+        // Prismaエラーの詳細
+        prismaCode: (error as any)?.code,
+        prismaMeta: (error as any)?.meta
+      });
+      
+      // Prismaの特定のエラーをハンドリング
+      if ((error as any)?.code === 'P2002') {
+        throw new AppError('メールアドレスが既に登録されています', 400);
+      }
+      
       throw new AppError('エンジニアの登録に失敗しました', 500);
     }
   }

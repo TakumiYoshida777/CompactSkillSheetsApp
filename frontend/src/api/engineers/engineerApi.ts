@@ -45,13 +45,17 @@ export const engineerApi = {
   async create(data: EngineerCreateRequest): Promise<ApiResponse<Engineer>> {
     // クライアントサイドバリデーション
     const validation = validateEngineerCreateRequest(data);
-    if (!validation.isValid) {
+    console.log("validation",validation)
+
+    // バリデーションエラーがある場合
+    if (!validation.isValid) {  // isValid === false はエラーがある状態
+      console.error('Validation errors:', validation.errors);
       throw parseApiError({
         response: {
           status: 422,
           data: {
             code: 'VALIDATION_ERROR',
-            message: '入力内容に誤りがあります',
+            message: validation.errors.join(', ') || '入力内容に誤りがあります',
             details: { errors: validation.errors },
           },
         },
@@ -60,8 +64,10 @@ export const engineerApi = {
 
     try {
       const response = await axios.post<ApiResponse<Engineer>>(API_BASE, data);
+      console.log('Engineer created successfully:', response.data);
       return response.data;
     } catch (error) {
+      console.error('Engineer creation failed:', error);
       throw parseApiError(error);
     }
   },

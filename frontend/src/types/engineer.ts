@@ -1,8 +1,4 @@
 /**
- * エンジニア関連の型定義
- */
-
-/**
  * APIレスポンスの基本構造
  */
 export interface ApiResponse<T> {
@@ -19,23 +15,22 @@ export interface ApiResponse<T> {
 }
 
 /**
- * エンジニア種別
+ * エンジニア種別（バックエンドのEnum値に合わせて大文字）
  */
-export type EngineerType = 'employee' | 'partner' | 'freelance';
+export type EngineerType = 'EMPLOYEE' | 'FREELANCE';
 
 /**
- * エンジニアステータス
+ * エンジニアステータス（バックエンドのEnum値に合わせて大文字）
  */
-export type EngineerStatus = 'working' | 'waiting' | 'waiting_soon' | 'leaving';
+export type EngineerStatus = 'WORKING' | 'WAITING' | 'WAITING_SOON';
 
 /**
  * エンジニアステータスの日本語表示マッピング
  */
 export const EngineerStatusLabels: Record<EngineerStatus, string> = {
-  working: '稼働中',
-  waiting: '待機中',
-  waiting_soon: '待機予定',
-  leaving: '退職予定',
+  WORKING: '稼働中',
+  WAITING: '待機中',
+  WAITING_SOON: '待機予定',
 };
 
 /**
@@ -188,7 +183,7 @@ export interface EngineerCreateRequest {
   email: string;
   phone?: string;
   engineerType: EngineerType;
-  currentStatus?: EngineerStatus;
+  status?: EngineerStatus;
   availableDate?: string;
   nearestStation?: string;
   birthDate?: string;
