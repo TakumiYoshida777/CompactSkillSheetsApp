@@ -131,7 +131,8 @@ router.post(
     body('email')
       .isEmail()
       .withMessage('有効なメールアドレスを入力してください')
-      .normalizeEmail()
+      .trim()
+      .toLowerCase()
   ],
   authController.sendAuthCode
 );
@@ -147,7 +148,8 @@ router.post(
     body('email')
       .isEmail()
       .withMessage('有効なメールアドレスを入力してください')
-      .normalizeEmail(),
+      .trim()
+      .toLowerCase(),
     body('code')
       .notEmpty()
       .withMessage('認証コードを入力してください')
