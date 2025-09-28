@@ -28,6 +28,10 @@ import v1Routes from './routes/v1';
 // 環境変数の読み込み
 dotenv.config();
 
+// デバッグ: 環境変数の確認
+console.log('GMAIL_USER from env:', process.env.GMAIL_USER);
+console.log('GMAIL_PASSWORD exists:', !!process.env.GMAIL_PASSWORD);
+
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 8000;

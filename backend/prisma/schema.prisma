@@ -991,6 +991,26 @@ model MaintenanceSchedule {
   @@map("maintenance_schedules")
 }
 
+// 認証コード
+model AuthCode {
+  id            BigInt    @id @default(autoincrement())
+  email         String    @db.VarChar(255)
+  code          String    @db.VarChar(6)
+  expiresAt     DateTime
+  attempts      Int       @default(0)
+  maxAttempts   Int       @default(5)
+  isUsed        Boolean   @default(false)
+  usedAt        DateTime?
+  ipAddress     String?   @db.VarChar(45)
+  userAgent     String?   @db.Text
+  createdAt     DateTime  @default(now())
+
+  @@index([email])
+  @@index([code])
+  @@index([expiresAt])
+  @@map("auth_codes")
+}
+
 // お知らせ
 model Announcement {
   id              BigInt             @id @default(autoincrement())

@@ -96,4 +96,4 @@ redis/data/
 postgres/data/
 
 # Serena MCP
-.serena/
+.serena/.env

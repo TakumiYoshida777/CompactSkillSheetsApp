@@ -9,50 +9,125 @@ import {
   Typography,
   Space,
   Divider,
-  Checkbox,
   Row,
   Col,
 } from 'antd';
 import {
   UserOutlined,
-  LockOutlined,
   LoginOutlined,
-  GoogleOutlined,
-  GithubOutlined,
   TeamOutlined,
+  MailOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../../stores/authStore';
 
-const { Title, Text, Link: AntLink } = Typography;
+const { Title, Text } = Typography;
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, isLoading } = useAuthStore();
+  const { isLoading } = useAuthStore();
   const [form] = Form.useForm();
-  const [rememberMe, setRememberMe] = useState(false);
+  const [isCodeSent, setIsCodeSent] = useState(false);
+  const [email, setEmail] = useState('');
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
 
-  const handleLogin = async (values: { email: string; password: string }) => {
+  // 認証コード送信
+  const handleSendCode = async () => {
     try {
-      await login(values.email, values.password, rememberMe);
-      
-      // ユーザーのロールに応じてリダイレクト
-      const user = useAuthStore.getState().user;
-      if (user?.roles.includes('engineer')) {
-        navigate('/engineer/dashboard');
-      } else if (user?.roles.includes('admin')) {
-        navigate('/dashboard');
+      const values = await form.validateFields(['email']);
+      setSendingCode(true);
+
+      const response = await fetch('http://localhost:8000/api/auth/send-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: values.email }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        message.success('認証コードをメールで送信しました');
+        setEmail(values.email);
+        setIsCodeSent(true);
       } else {
-        navigate('/dashboard');
+        message.error(data.error?.message || '認証コードの送信に失敗しました');
       }
-      
-      message.success('ログインに成功しました');
     } catch (error) {
-      message.error(error.response?.data?.message || 'ログインに失敗しました');
+      message.error('認証コードの送信に失敗しました');
+    } finally {
+      setSendingCode(false);
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
-    message.info(`${provider}ログインは現在開発中です`);
+  // 認証コード検証
+  const handleVerifyCode = async (values: { code: string }) => {
+    try {
+      setVerifyingCode(true);
+
+      const response = await fetch('http://localhost:8000/api/auth/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          code: values.code
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // トークンを保存
+        const authStore = useAuthStore.getState();
+        authStore.setAuth({
+          user: data.data.user,
+          accessToken: data.data.accessToken,
+          refreshToken: data.data.refreshToken,
+        });
+
+        // ユーザーのロールに応じてリダイレクト
+        if (data.data.user?.roles?.includes('engineer')) {
+          navigate('/engineer/dashboard');
+        } else if (data.data.user?.roles?.includes('admin')) {
+          navigate('/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
+
+        message.success('ログインに成功しました');
+      } else {
+        message.error(data.error?.message || '認証に失敗しました');
+      }
+    } catch (error) {
+      message.error('認証に失敗しました');
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
+  // 再送信
+  const handleResendCode = async () => {
+    setIsCodeSent(false);
+    form.setFieldsValue({ code: '' });
+    await handleSendCode();
+  };
+
+  // 別のメールアドレスで試す
+  const handleChangeEmail = () => {
+    setIsCodeSent(false);
+    setEmail('');
+    form.resetFields();
+  };
+
+  // デモアカウントでログイン
+  const handleDemoLogin = () => {
+    form.setFieldsValue({
+      email: 'admin@demo-ses.example.com',
+    });
+    message.info('デモアカウントのメールアドレスを入力しました。「認証コードを送信」をクリックしてください。');
   };
 
   return (
@@ -83,7 +158,9 @@ const Login: React.FC = () => {
               スキルシート管理システム
             </Title>
             <Text type="secondary">
-              アカウントにログインしてください
+              {isCodeSent
+                ? '認証コードを入力してください'
+                : 'メールアドレスを入力してください'}
             </Text>
           </div>
 
@@ -91,152 +168,139 @@ const Login: React.FC = () => {
           <Form
             form={form}
             name="login"
-            onFinish={handleLogin}
+            onFinish={isCodeSent ? handleVerifyCode : undefined}
             autoComplete="off"
             layout="vertical"
             requiredMark={false}
           >
-            <Form.Item
-              name="email"
-              rules={[
-                { required: true, message: 'メールアドレスを入力してください' },
-                { type: 'email', message: '有効なメールアドレスを入力してください' },
-              ]}
-            >
-              <Input
-                prefix={<UserOutlined />}
-                placeholder="メールアドレス"
-                size="large"
-              />
-            </Form.Item>
+            {!isCodeSent ? (
+              <>
+                {/* メールアドレス入力 */}
+                <Form.Item
+                  name="email"
+                  rules={[
+                    { required: true, message: 'メールアドレスを入力してください' },
+                    { type: 'email', message: '有効なメールアドレスを入力してください' },
+                  ]}
+                >
+                  <Input
+                    prefix={<MailOutlined />}
+                    placeholder="メールアドレス"
+                    size="large"
+                  />
+                </Form.Item>
 
-            <Form.Item
-              name="password"
-              rules={[
-                { required: true, message: 'パスワードを入力してください' },
-                { min: 8, message: 'パスワードは8文字以上である必要があります' },
-              ]}
-            >
-              <Input.Password
-                prefix={<LockOutlined />}
-                placeholder="パスワード"
-                size="large"
-              />
-            </Form.Item>
-
-            <Form.Item>
-              <Row justify="space-between" align="middle">
-                <Col>
-                  <Checkbox
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    size="large"
+                    block
+                    loading={sendingCode}
+                    icon={<MailOutlined />}
+                    onClick={handleSendCode}
                   >
-                    ログイン情報を記憶する
-                  </Checkbox>
-                </Col>
-                <Col>
-                  <Link to="/forgot-password">
-                    パスワードを忘れた方
-                  </Link>
-                </Col>
-              </Row>
-            </Form.Item>
+                    認証コードを送信
+                  </Button>
+                </Form.Item>
+              </>
+            ) : (
+              <>
+                {/* 認証コード入力 */}
+                <Form.Item style={{ marginBottom: 12 }}>
+                  <Text type="secondary">
+                    {email} に認証コードを送信しました
+                  </Text>
+                </Form.Item>
 
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                size="large"
-                block
-                loading={isLoading}
-                icon={<LoginOutlined />}
-              >
-                ログイン
-              </Button>
-            </Form.Item>
+                <Form.Item
+                  name="code"
+                  rules={[
+                    { required: true, message: '認証コードを入力してください' },
+                    { len: 6, message: '認証コードは6桁です' },
+                    { pattern: /^[0-9]+$/, message: '認証コードは数字のみです' },
+                  ]}
+                >
+                  <Input
+                    placeholder="6桁の認証コード"
+                    size="large"
+                    maxLength={6}
+                    style={{ textAlign: 'center', fontSize: '20px', letterSpacing: '8px' }}
+                  />
+                </Form.Item>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    size="large"
+                    block
+                    loading={verifyingCode}
+                    icon={<LoginOutlined />}
+                  >
+                    ログイン
+                  </Button>
+                </Form.Item>
+
+                <Form.Item>
+                  <Row justify="space-between">
+                    <Col>
+                      <Button type="link" onClick={handleResendCode} disabled={sendingCode}>
+                        認証コードを再送信
+                      </Button>
+                    </Col>
+                    <Col>
+                      <Button type="link" onClick={handleChangeEmail}>
+                        別のメールアドレスで試す
+                      </Button>
+                    </Col>
+                  </Row>
+                </Form.Item>
+              </>
+            )}
           </Form>
 
           <Divider>または</Divider>
 
-          {/* ソーシャルログイン */}
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            <Button
-              size="large"
-              block
-              icon={<GoogleOutlined />}
-              onClick={() => handleSocialLogin('Google')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              Googleでログイン
-            </Button>
-
-            <Button
-              size="large"
-              block
-              icon={<GithubOutlined />}
-              onClick={() => handleSocialLogin('GitHub')}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              GitHubでログイン
-            </Button>
-          </Space>
-
-          {/* アカウント作成リンク */}
-          <div style={{ textAlign: 'center', marginTop: '16px' }}>
-            <Text type="secondary">
-              アカウントをお持ちでない方は{' '}
-            </Text>
-            <Link to="/register">
-              <Button type="link" style={{ padding: 0 }}>
-                <strong>新規登録</strong>
-              </Button>
-            </Link>
-          </div>
-
-          {/* 取引先企業向けログインリンク */}
-          <div style={{ textAlign: 'center', marginTop: '8px' }}>
-            <Link to="/client/login">
-              <Button type="link" icon={<TeamOutlined />}>
-                取引先企業の方はこちら
-              </Button>
-            </Link>
-          </div>
-
-          {/* デモアカウント情報 */}
-          <Card
-            size="small"
-            style={{
-              backgroundColor: '#f0f2f5',
-              marginTop: '16px',
-            }}
+          {/* デモアカウント */}
+          <Button
+            size="large"
+            block
+            icon={<TeamOutlined />}
+            onClick={handleDemoLogin}
+            disabled={isCodeSent}
           >
-            <Space direction="vertical" size="small" style={{ width: '100%' }}>
-              <Text strong>デモアカウント:</Text>
-              <Button
-                size="small"
-                block
-                onClick={() => {
-                  form.setFieldsValue({
-                    email: 'admin@demo-ses.example.com',
-                    password: 'password123'
-                  });
-                }}
-              >
-                管理者でログイン
-              </Button>
-              <Text type="secondary" style={{ fontSize: '12px' }}>
-                デモ用: admin@demo-ses.example.com / password123
-              </Text>
-            </Space>
-          </Card>
+            管理者デモアカウントでログイン
+          </Button>
+
+          {/* その他のリンク */}
+          <Space direction="vertical" size="small" style={{ width: '100%', textAlign: 'center' }}>
+            <div>
+              <Text type="secondary">エンジニアの方は </Text>
+              <Link to="/engineer/login">
+                <Button type="link" style={{ padding: 0 }}>
+                  エンジニアログイン
+                </Button>
+              </Link>
+            </div>
+
+            <div>
+              <Text type="secondary">取引先企業の方は </Text>
+              <Link to="/client/login">
+                <Button type="link" style={{ padding: 0 }}>
+                  取引先ログイン
+                </Button>
+              </Link>
+            </div>
+
+            <div style={{ marginTop: '16px' }}>
+              <Text type="secondary">アカウントをお持ちでない方は </Text>
+              <Link to="/register">
+                <Button type="link" style={{ padding: 0 }}>
+                  <strong>新規登録</strong>
+                </Button>
+              </Link>
+            </div>
+          </Space>
         </Space>
       </Card>
     </div>

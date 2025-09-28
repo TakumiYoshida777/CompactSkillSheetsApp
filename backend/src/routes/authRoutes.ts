@@ -120,4 +120,43 @@ router.post(
  * @access  Private
  */
 
+/**
+ * @route   POST /api/auth/send-code
+ * @desc    認証コード送信
+ * @access  Public
+ */
+router.post(
+  '/send-code',
+  [
+    body('email')
+      .isEmail()
+      .withMessage('有効なメールアドレスを入力してください')
+      .normalizeEmail()
+  ],
+  authController.sendAuthCode
+);
+
+/**
+ * @route   POST /api/auth/verify-code
+ * @desc    認証コード検証
+ * @access  Public
+ */
+router.post(
+  '/verify-code',
+  [
+    body('email')
+      .isEmail()
+      .withMessage('有効なメールアドレスを入力してください')
+      .normalizeEmail(),
+    body('code')
+      .notEmpty()
+      .withMessage('認証コードを入力してください')
+      .isLength({ min: 6, max: 6 })
+      .withMessage('認証コードは6桁である必要があります')
+      .matches(/^[0-9]+$/)
+      .withMessage('認証コードは数字のみ入力してください')
+  ],
+  authController.verifyAuthCode
+);
+
 export default router;

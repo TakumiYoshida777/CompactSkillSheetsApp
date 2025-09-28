@@ -376,6 +376,135 @@ export class AuthController {
       });
     }
   }
+
+  /**
+   * 認証コード送信
+   */
+  async sendAuthCode(req: Request, res: Response) {
+    try {
+      // バリデーションエラーチェック
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: '入力値にエラーがあります',
+            details: errors.array()
+          }
+        });
+      }
+
+      const { email } = req.body;
+      const ipAddress = req.ip;
+      const userAgent = req.headers['user-agent'];
+
+      // 認証メールサービスをインポート
+      const { sendAuthCode } = await import('../services/authEmailService');
+      const result = await sendAuthCode(email, ipAddress, userAgent);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          message: result.message
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: {
+            code: 'EMAIL_ERROR',
+            message: result.message
+          }
+        });
+      }
+    } catch (error) {
+      errorLog('認証コード送信エラー:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: '認証コード送信中にエラーが発生しました'
+        }
+      });
+    }
+  }
+
+  /**
+   * 認証コード検証
+   */
+  async verifyAuthCode(req: Request, res: Response) {
+    try {
+      // バリデーションエラーチェック
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: '入力値にエラーがあります',
+            details: errors.array()
+          }
+        });
+      }
+
+      const { email, code } = req.body;
+      const ipAddress = req.ip;
+
+      // 認証メールサービスをインポート
+      const { verifyAuthCode } = await import('../services/authEmailService');
+      const result = await verifyAuthCode(email, code, ipAddress);
+
+      if (result.success && result.user) {
+        // JWTトークンを生成
+        const jwt = require('jsonwebtoken');
+        const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+        const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';
+
+        const payload = {
+          userId: result.user.id,
+          email: result.user.email,
+          companyId: result.user.companyId,
+          roles: result.user.roles || []
+        };
+
+        const accessToken = jwt.sign(payload, JWT_SECRET, {
+          expiresIn: '8h'
+        });
+
+        const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, {
+          expiresIn: '30d'
+        });
+
+        res.json({
+          success: true,
+          data: {
+            user: result.user,
+            accessToken,
+            refreshToken,
+            expiresIn: 28800 // 8時間（秒）
+          },
+          message: result.message
+        });
+      } else {
+        res.status(401).json({
+          success: false,
+          error: {
+            code: 'AUTH_ERROR',
+            message: result.message
+          }
+        });
+      }
+    } catch (error) {
+      errorLog('認証コード検証エラー:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: '認証コード検証中にエラーが発生しました'
+        }
+      });
+    }
+  }
 }
 
 export const authController = new AuthController();
